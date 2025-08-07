@@ -1976,7 +1976,7 @@ ol {
 	list-style: none;
 }
 
-.footer__widget ul li a {
+.footer__widget ul li a  {
 	color: #b7b7b7;
 	font-size: 15px;
 }
