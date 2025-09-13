@@ -4,21 +4,33 @@ const path=require('path')
 const env=require('dotenv').config()
 const connectDB=require('./config/db')
 const userRouter= require('./routes/userRouter')
-
+const adminRouter=require('./routes/adminRouter')
+const session=require('express-session')
 connectDB()
 
 
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    maxAge: 1000 * 60 * 60, 
+    secure: false,
+    httpOnly: true
+  }
+}));
 
 app.set('view engine', 'ejs');
 app.set('views',[path.join(__dirname,'views/user'),path.join(__dirname,'views/admin')])
 app.use(express.static(path.join(__dirname, 'public')));
 app.use("/",userRouter)
-app.use((req,res)=>{
-    res.status(404).render('404')
-})
+app.use("/admin",adminRouter)
+//app.use((req,res)=>{
+    //res.status(404).render('404')
+//})                               
 
 app.listen(process.env.PORT,()=>{
     console.log("server created");

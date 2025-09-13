@@ -1,0 +1,149 @@
+<%- include("../../views/partials/user/header") %>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<style>
+  body {
+    background: #f8f9fa;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* OTP Container */
+  .otp-container {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 30px;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border: 1px solid #f0f0f0;
+  }
+
+  /* Heading */
+  .otp-container h2 {
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 24px;
+    color: #333;
+  }
+
+  /* OTP input boxes */
+  .otp-inputs input {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    margin: 0 5px;
+    transition: 0.2s ease;
+  }
+
+  .otp-inputs input:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 6px rgba(40, 167, 69, 0.3);
+    outline: none;
+  }
+
+  /* Verify OTP button */
+  .btn-verify {
+    background: #28a745;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    transition: 0.3s;
+  }
+
+  .btn-verify:hover {
+    background: #218838;
+  }
+
+  /* Timer */
+  #timer {
+    font-size: 14px;
+    color: #555;
+  }
+
+  /* Resend OTP link */
+  #resendLink {
+    font-size: 14px;
+    color: #007bff;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  #resendLink.active {
+    opacity: 1;
+    pointer-events: auto;
+    font-weight: 600;
+  }
+</style>
+
+<div class="otp-container">
+  <h2>OTP Verification</h2>
+
+  <form action="/verify-otp" method="POST">
+    <input type="hidden" id="message" value="<%= typeof message !== 'undefined' ? message : '' %>"/>
+    <input type="hidden" name="email" value="<%= email %>"/>
+
+    <div class="otp-inputs d-flex justify-content-center mb-3">
+      <input type="text" maxlength="1" name="otp[]" required>
+      <input type="text" maxlength="1" name="otp[]" required>
+      <input type="text" maxlength="1" name="otp[]" required>
+      <input type="text" maxlength="1" name="otp[]" required>
+      <input type="text" maxlength="1" name="otp[]" required>
+      <input type="text" maxlength="1" name="otp[]" required>
+    </div>
+
+    <button type="submit" class="btn btn-verify w-100">Verify OTP</button>
+  </form>
+
+  <div class="timer mt-2 mb-2" id="timer"></div>
+  <a href="/resend_otp" id="resendLink" class="d-block text-center">Resend OTP</a>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const message = document.getElementById('message').value;
+    if (message) {
+      swal(message);
+    }
+  });
+
+
+function startTimer(duration) {
+    let seconds = duration;
+    let timer = document.getElementById("timer");
+    let resendLink = document.getElementById("resendLink");
+
+    resendLink.classList.remove("active"); 
+    timer.style.display = "block";
+
+    let countdown = setInterval(() => {
+      timer.textContent = `Please wait ${seconds} seconds before requesting another code.`;
+      seconds--;
+
+      if (seconds < 0) {
+        clearInterval(countdown);
+        timer.textContent = "";
+        resendLink.classList.add("active"); 
+      }
+    }, 1000);
+  }
+
+  document.querySelectorAll(".otp-inputs input").forEach((input, idx, inputs) => {
+    input.addEventListener("input", () => {
+      if (input.value && idx < inputs.length - 1) {
+        inputs[idx + 1].focus();
+      }
+    });
+  });
+
+  startTimer(60);
+</script>
+
+<%- include("../../views/partials/user/footer") %>

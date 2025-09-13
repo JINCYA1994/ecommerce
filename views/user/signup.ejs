@@ -1,0 +1,172 @@
+
+
+<%-include("../../views/partials/user/header")%>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup | FootChic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- CSS Links -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-papX2UML7TRO7kDk4UfBkx9Uj7DvuP+nayKYBy7KIlEw6cUwzbf7tMoD7g8bkBl9mrUPex8Z/YrbRu6f8j8Ig==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+  <style>
+    .signup-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 40px;
+      border: 3px solid #000;
+      border-radius: 20px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+      background-color: #fff;
+      text-align: center;
+    }
+
+    .signup-container h2 {
+      font-weight: 700;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .form-control {
+      background-color: #ddd;
+      border: none;
+      margin-bottom: 15px;
+      height: 45px;
+      padding-left: 15px;
+    }
+
+    .btn-signup {
+      width: 100%;
+      height: 45px;
+      font-weight: 600;
+      background-color: #000;
+      color: #fff;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .login-link {
+      margin-top: 15px;
+      display: block;
+      font-size: 14px;
+    }
+.google-signup p {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  border-radius: 30px;
+  padding: 8px 20px;
+  text-decoration: none;
+  font-weight: 600;
+  color: #555;
+  background-color: #fff;
+  transition: box-shadow 0.3s;
+}
+
+.google-btn:hover {
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.google-btn img {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+    
+  </style>
+</head>
+<body>
+
+  <div class="signup-container">
+    <h2>Signup</h2>
+    <form action="/signup" method="POST">
+      <input type="hidden" id="message" value="<%= message %>" name="message"/>
+      <input type="text" class="form-control" id="username" name="username" placeholder="Username">
+      <input type="text" class="form-control" id="email" name="email" placeholder="Email" >
+      <input type="password" class="form-control" id="password" name="password" placeholder="Password" >
+      <input type="password" class="form-control"  id="confirmPassword"  name="confirmPassword" placeholder="Confirm Password" >
+      <button type="submit" class="btn btn-signup">Signup</button>
+    </form>
+
+    <a href="/login" class="login-link">Already have an account? Login</a>
+
+    <div class="google-signup">
+  <p>Or</p>
+  <a href="/auth/google" class="google-btn">
+    <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Google Icon" />
+    <span>Google</span>
+  </a>
+</div>
+
+  </div>
+
+</body>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const message = document.getElementById('message').value; 
+    if (message) {
+         swal(message); 
+         }
+  document.querySelector('form').addEventListener('submit', formvalidate); });
+
+  function formvalidate(e) { 
+    var username=document.getElementById('username').value.trim()
+    var email =document.getElementById('email').value.trim(); 
+    var password =document.getElementById('password').value.trim(); 
+    var confirmPassword = document.getElementById('confirmPassword').value.trim(); 
+    if (username=== ""||email === "" || password === "" || confirmPassword === "")
+     { 
+        
+  swal("All fields are required");
+  e.preventDefault(); 
+  return false
+ } 
+const emailformat=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if(!emailformat.test(email)){
+ swal( "Please enter a valid email address")
+  e.preventDefault(); 
+  return false
+}
+
+if (password !== confirmPassword) {
+  swal("Passwords do not match");
+   e.preventDefault(); 
+  
+  return false; 
+  } 
+  const strongpassword=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
+if(!strongpassword.test(password)){
+swal("Password must have at least:\n- 1 uppercase letter\n- 1 lowercase letter\n- 1 number\n- 1 special character\n- Minimum 6 characters");
+  e.preventDefault(); 
+  return false
+}
+
+  return true;
+   
+  }
+
+</script>
+
+
+
+
+
+</html>
+
+
+<%-include("../../views/partials/user/footer")%>

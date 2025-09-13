@@ -1,0 +1,121 @@
+<%-include("../../views/partials/user/header")%>
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | FootChic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS Links -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-papX2UML7TRO7kDk4UfBkx9Uj7DvuP+nayKYBy7KIlEw6cUwzbf7tMoD7g8bkBl9mrUPex8Z/YrbRu6f8j8Ig==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 40px;
+      border: 3px solid #000;
+      border-radius: 20px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+      background-color: #fff;
+      text-align: center;
+    }
+
+    .login-container h2 {
+      font-weight: 700;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .form-control {
+      background-color: #ddd;
+      border: none;
+      margin-bottom: 15px;
+      height: 45px;
+      padding-left: 15px;
+    }
+
+    .btn-login {
+      width: 100%;
+      height: 45px;
+      font-weight: 600;
+      background-color: #000;
+      color: #fff;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .signup-link {
+      margin-top: 15px;
+      display: block;
+      font-size: 14px;
+    }
+
+    .google-login p {
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .google-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ccc;
+      border-radius: 30px;
+      padding: 8px 20px;
+      text-decoration: none;
+      font-weight: 600;
+      color: #555;
+      background-color: #fff;
+      transition: box-shadow 0.3s;
+    }
+
+    .google-btn:hover {
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .google-btn img {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>Login</h2>
+    <form action="/login" method="POST">
+      <input type="hidden" id="message" value="<%= message %>" name="message"/>
+      <input type="email" class="form-control" name="email" placeholder="Email" required>
+      <input type="password" class="form-control" name="password" placeholder="Password" required>
+      <button type="submit" class="btn btn-login">Login</button>
+    </form>
+
+    <a href="/signup" class="signup-link">Don't have an account? Signup</a>
+
+    <div class="google-login">
+      <p>Or</p>
+      <a href="/auth/google" class="google-btn">
+        <img src="https://img.icons8.com/color/48/000000/google-logo.png">
+        <span>Google</span>
+      </a>
+    </div>
+  </div>
+
+</body>
+
+
+
+
+
+</html>
+
+<%-include("../../views/partials/user/footer")%>

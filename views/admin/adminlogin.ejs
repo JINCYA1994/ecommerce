@@ -1,0 +1,95 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login | FootChic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS Links -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-papX2UML7TRO7kDk4UfBkx9Uj7DvuP+nayKYBy7KIlEw6cUwzbf7tMoD7g8bkBl9mrUPex8Z/YrbRu6f8j8Ig==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <style>
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 40px;
+      border: 3px solid #000;
+      border-radius: 20px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+      background-color: #fff;
+      text-align: center;
+    }
+
+    .login-container h2 {
+      font-weight: 700;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .form-control {
+      background-color: #ddd;
+      border: none;
+      margin-bottom: 15px;
+      height: 45px;
+      padding-left: 15px;
+    }
+
+    .btn-login {
+      width: 100%;
+      height: 45px;
+      font-weight: 600;
+      background-color: #000;
+      color: #fff;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>Admin Login</h2>
+      <% if (message) { %>
+    <div class="alert alert-danger"><%= message %></div>
+  <% } %>
+    <form action="/admin/login" method="POST"   id="adminloginForm">
+      
+      <input type="text" class="form-control" name="email"   id="email" placeholder=" Email">
+      <input type="password" class="form-control" name="password" id="password" placeholder=" Password">
+      <button type="submit" class="btn btn-login">Login</button>
+    </form>
+  </div>
+
+</body>
+<script>
+document.getElementById('adminloginForm').addEventListener('submit',function(e){
+  const email=document.getElementById('email').value.trim()
+  const password=document.getElementById('password').value.trim()
+if(!email||!password){
+  swal(' Both Email and Password are required')
+  e.preventDefault()
+  return 
+}
+const emailformat=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if(!emailformat.test(email)){
+ swal( "Please enter a valid email address")
+  e.preventDefault(); 
+  return
+}
+ const strongpassword=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
+if(!strongpassword.test(password)){
+swal("Password must have at least:\n- 1 uppercase letter\n- 1 lowercase letter\n- 1 number\n- 1 special character\n- Minimum 6 characters");
+  e.preventDefault(); 
+  return 
+}
+
+
+})
+</script>
+</html>
+
+
