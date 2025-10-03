@@ -1,9 +1,6 @@
 <%-include("../../views/partials/user/header")%>
 
 
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +12,7 @@
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-papX2UML7TRO7kDk4UfBkx9Uj7DvuP+nayKYBy7KIlEw6cUwzbf7tMoD7g8bkBl9mrUPex8Z/YrbRu6f8j8Ig==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
   <style>
     .login-container {
@@ -92,10 +90,10 @@
 
   <div class="login-container">
     <h2>Login</h2>
-    <form action="/login" method="POST">
+    <form    id="loginForm"  action="/login" method="POST">
       <input type="hidden" id="message" value="<%= message %>" name="message"/>
-      <input type="email" class="form-control" name="email" placeholder="Email" required>
-      <input type="password" class="form-control" name="password" placeholder="Password" required>
+      <input type="text" id="email" class="form-control" name="email" placeholder="Email" >
+      <input type="password" id="password" class="form-control" name="password" placeholder="Password" >
       <button type="submit" class="btn btn-login">Login</button>
     </form>
 
@@ -111,11 +109,41 @@
   </div>
 
 </body>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const message = document.getElementById('message').value; 
+    if (message) {
+         swal(message); 
+         }
+  document.querySelector('form').addEventListener('submit', formvalidate); });
 
+  function formvalidate(e) { 
+    var email =document.getElementById('email').value.trim(); 
+    var password =document.getElementById('password').value.trim(); 
 
+if(email === "" || password === "")
+     { 
+        
+  swal("All fields are required");
+  e.preventDefault(); 
+  return false
+ } 
 
+const emailformat=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if(!emailformat.test(email)){
+ swal( "Please enter a valid email address")
+  e.preventDefault(); 
+  return false
+}
 
+        if (password.length < 6) {
+          swal("Password must be at least 6 characters",);
+          e.preventDefault();
+          return false;
+        }
+return true
+  }
+</script>
 
-</html>
 
 <%-include("../../views/partials/user/footer")%>

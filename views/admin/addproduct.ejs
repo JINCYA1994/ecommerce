@@ -1,0 +1,155 @@
+<%- include("../../views/partials/admin/header") %>
+
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+</head>
+
+<style>
+  .error-message {
+    color: red;
+  }
+  .crop-container {
+    margin-bottom: 20px;
+  }
+  .cropper-box {
+    max-width: 400px;
+    max-height: 400px;
+    margin-bottom: 10px;
+  }
+  .cropper-preview {
+    max-width: 200px;
+    max-height: 200px;
+    margin-top: 10px;
+    display: none;
+    border: 1px solid #ccc;
+    padding: 5px;
+  }
+</style>
+
+<section class="content-main">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="content-title mb-4 text-center">Add New Product</h2>
+
+          <form id="productForm" action="/admin/add-product" method="POST">
+            <!-- Product Fields -->
+            <div class="mb-3">
+              <label class="form-label">Product Name</label>
+              <input type="text" class="form-control" name="name" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="description" rows="3" required></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Price</label>
+              <input type="number" class="form-control" name="price" min="0" required>
+            </div>
+
+            <!-- Image Uploads -->
+            <h4>Upload up to 4 Images</h4>
+            <div id="imageInputs">
+              <% for (let i = 1; i <= 4; i++) { %>
+                <div class="crop-container">
+                  <input type="file" id="input<%=i%>" accept="image/*" class="form-control mb-2">
+
+                  <!-- Cropper container -->
+                  <div class="cropper-box">
+                    <img id="cropImage<%=i%>" style="max-width:100%; display:none;" />
+                  </div>
+
+                  <!-- Cropped preview -->
+                  <img id="preview<%=i%>" class="cropper-preview" alt="Preview <%=i%>">
+
+                  <button type="button" class="btn btn-sm btn-primary mt-2" id="cropBtn<%=i%>">Crop & Upload</button>
+                  <input type="hidden" name="images[]" id="imageUrl<%=i%>">
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Submit -->
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-success">Publish</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+  const cloudName = "YOUR_CLOUD_NAME";   // replace
+  const uploadPreset = "YOUR_UPLOAD_PRESET"; // replace
+
+  function setupCropper(inputId, cropImageId, previewId, cropBtnId, hiddenInputId) {
+    let cropper;
+    const input = document.getElementById(inputId);
+    const cropImage = document.getElementById(cropImageId);
+    const preview = document.getElementById(previewId);
+    const cropBtn = document.getElementById(cropBtnId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+
+    input.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        cropImage.src = event.target.result;
+        cropImage.style.display = "block";
+
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(cropImage, {
+          aspectRatio: 1,
+          viewMode: 1,
+          movable: true,
+          scalable: true,
+          zoomable: true,
+          rotatable: true,
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    cropBtn.addEventListener("click", () => {
+      if (!cropper) return;
+
+      cropper.getCroppedCanvas().toBlob((blob) => {
+        const croppedUrl = URL.createObjectURL(blob);
+        preview.src = croppedUrl;
+        preview.style.display = "block";
+       cropImage.style.display = "none";
+       cropper.destroy();  
+        cropper = null;
+        const formData = new FormData();
+        formData.append("file", blob);
+        formData.append("upload_preset", uploadPreset);
+
+        fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            hiddenInput.value = data.secure_url;
+            alert("Image uploaded successfully!");
+          })
+          .catch((err) => console.error(err));
+      });
+    });
+  }
+
+  // Setup for all 4 inputs
+  setupCropper("input1", "cropImage1", "preview1", "cropBtn1", "imageUrl1");
+  setupCropper("input2", "cropImage2", "preview2", "cropBtn2", "imageUrl2");
+  setupCropper("input3", "cropImage3", "preview3", "cropBtn3", "imageUrl3");
+  setupCropper("input4", "cropImage4", "preview4", "cropBtn4", "imageUrl4");
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

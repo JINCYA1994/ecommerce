@@ -1,0 +1,82 @@
+<%-include("../../views/partials/admin/header")%>
+
+<div class="container mt-5 pt-5">
+  <!-- Heading + Search + Clear -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Customer List</h3>
+    
+    <!-- Search Form -->
+    <form class="d-flex" method="GET" action="/admin/users">
+      <input 
+        type="text" 
+        name="search" 
+        class="form-control me-2" 
+        placeholder="Search..." 
+        value="<%= typeof search !== 'undefined' ? search : '' %>"
+      />
+      <button type="submit" class="btn btn-primary me-2">Search</button>
+      <a href="/admin/users" class="btn btn-secondary">Clear</a>
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <!-- <th>User ID</th> -->
+      <th>Username</th>
+      <th>Email</th>
+      <th>Phone Number</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if(users.length > 0) { %>
+      <% users.forEach(function(user){ %>
+        <tr>
+          <!-- <td><%= user._id %></td> -->
+          <td><%= user.username %></td>
+          <td><%= user.email %></td>
+          <td><%= user.phonenumber %></td>
+          <td>
+            <% if(user.isBlocked) { %>
+              <a href="/admin/unblock/<%= user._id %>" class="btn btn-success">Unblock</a>
+            <% } else { %>
+              <a href="/admin/block/<%= user._id %>" class="btn btn-danger">Block</a>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="5" class="text-center">No users found</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<!-- Pagination -->
+<nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center">
+    <% if(currentPage > 1) { %>
+      <li class="page-item">
+        <a class="page-link" href="/admin/users?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>">Previous</a>
+      </li>
+    <% } %>
+
+    <% for(let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+        <a class="page-link" href="/admin/users?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
+      </li>
+    <% } %>
+
+    <% if(currentPage < totalPages) { %>
+      <li class="page-item">
+        <a class="page-link" href="/admin/users?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>">Next</a>
+      </li>
+    <% } %>
+  </ul>
+</nav>
+
+<%-include("../../views/partials/admin/footer")%>
