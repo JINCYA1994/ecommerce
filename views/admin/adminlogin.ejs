@@ -53,18 +53,21 @@
 
   <div class="login-container">
     <h2>Admin Login</h2>
-      <% if (message) { %>
-    <div class="alert alert-danger"><%= message %></div>
-  <% } %>
-    <form action="/admin/login" method="POST"   id="adminloginForm">
+
+    <% if (message && message.length > 0) { %>
+      <div class="alert alert-danger"><%= message %></div>
+    <% } %>
+
+
+    <form action="/admin/login" method="POST" id="adminloginForm">
       
-      <input type="text" class="form-control" name="email"   id="email" placeholder=" Email">
+      <input type="text" class="form-control" name="email" id="email" placeholder=" Email">
       <input type="password" class="form-control" name="password" id="password" placeholder=" Password">
       <button type="submit" class="btn btn-login">Login</button>
     </form>
   </div>
 
-</body>
+
 <script>
 document.getElementById('adminloginForm').addEventListener('submit',function(e){
   const email=document.getElementById('email').value.trim()
@@ -89,7 +92,30 @@ swal("Password must have at least:\n- 1 uppercase letter\n- 1 lowercase letter\n
 
 
 })
+
+
+  // Hide error when typing again
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const alertBox = document.querySelector('.alert');
+
+  function clearAlert() {
+    if (alertBox) {
+      alertBox.style.display = 'none';
+    }
+  }
+
+  emailInput.addEventListener('input', clearAlert);
+  passwordInput.addEventListener('input', clearAlert);
+
+
+
+
+
 </script>
+
+  
+</body>
 </html>
 
 

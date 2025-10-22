@@ -31,16 +31,17 @@ email:{
     trim:true,
   
  },  
-  mobilenumber: {
-      type: Number,
-    
+phonenumber: {
+      type: String,
+      trim:true,
+    default:"Not given",
     },
     role:{
       type:String,
       enum:['admin','user'],
       default:'user'
     }, 
-    isActive: {
+    isBlocked: {
       type: Boolean,
       default: false,
     },

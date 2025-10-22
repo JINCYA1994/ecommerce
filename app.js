@@ -6,9 +6,12 @@ const connectDB=require('./config/db')
 const userRouter= require('./routes/userRouter')
 const adminRouter=require('./routes/adminRouter')
 const session=require('express-session')
+
+const flash = require("connect-flash");
+
+
+
 connectDB()
-
-
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
@@ -23,6 +26,18 @@ app.use(session({
   }
 }));
 
+
+
+
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  next();
+});
+
+
+
 app.set('view engine', 'ejs');
 app.set('views',[path.join(__dirname,'views/user'),path.join(__dirname,'views/admin')])
 app.use(express.static(path.join(__dirname, 'public')));
@@ -31,6 +46,7 @@ app.use("/admin",adminRouter)
 //app.use((req,res)=>{
     //res.status(404).render('404')
 //})                               
+
 
 app.listen(process.env.PORT,()=>{
     console.log("server created");
