@@ -40,11 +40,22 @@
           <td><%= user.email %></td>
           <td><%= user.phonenumber %></td>
           <td>
-            <% if(user.isBlocked) { %>
-              <a href="/admin/unblock/<%= user._id %>" class="btn btn-success">Unblock</a>
-            <% } else { %>
-              <a href="/admin/block/<%= user._id %>" class="btn btn-danger">Block</a>
-            <% } %>
+           <% if(user.isBlocked) { %>
+  <button 
+    class="btn btn-success"
+    onclick="confirmUnblock('<%= user._id %>')"
+  >
+    Unblock
+  </button>
+<% } else { %>
+  <button 
+    class="btn btn-danger"
+    onclick="confirmBlock('<%= user._id %>')"
+  >
+    Block
+  </button>
+<% } %>
+
           </td>
         </tr>
       <% }) %>
@@ -78,5 +89,46 @@
     <% } %>
   </ul>
 </nav>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  function confirmBlock(id) {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This user will be blocked!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, block user"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = `/admin/block/${id}`;
+      }
+    });
+  }
+
+  function confirmUnblock(id) {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This user will be unblocked!",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#28a745",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, unblock user"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = `/admin/unblock/${id}`;
+      }
+    });
+  }
+</script>
+
+
+
+
+
+
 
 <%-include("../../views/partials/admin/footer")%>

@@ -6,7 +6,7 @@ const connectDB=require('./config/db')
 const userRouter= require('./routes/userRouter')
 const adminRouter=require('./routes/adminRouter')
 const session=require('express-session')
-
+const passport=require('./config/passport')
 const flash = require("connect-flash");
 
 
@@ -25,8 +25,8 @@ app.use(session({
     httpOnly: true
   }
 }));
-
-
+app.use(passport.initialize())
+app.use(passport.session())
 
 
 app.use(flash());

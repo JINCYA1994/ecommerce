@@ -22,12 +22,11 @@ const variantSchema = new Schema({
                         
 })
 
-// Main Product schema
+
 const productSchema = new Schema({
   category_id: { type: Schema.Types.ObjectId, ref: 'Category' },
   product_name: { type: String },
   product_description: { type: String },
-
   variants: [variantSchema]                      
 }, { 
   timestamps: true 

@@ -6,17 +6,17 @@ const categoryController=require('../controllers/admin/categoryController')
  const addproductController=require('../controllers/admin/addproductController')
  const productController=require('../controllers/admin/productController')
  const editproductController=require('../controllers/admin/editproductController')
- const{userauth,adminAuth}=require('../middlewares/auth')
+ const{userAuth,adminAuth}=require('../middlewares/auth')
 const upload = require('../config/multer'); 
 
 
 router.get('/login',adminController.loadLogin) 
 router.post('/login',adminController.verifyLogin)
 router.get('/logout',adminController.logout)
-
+router.get('/pageerror',adminController.pageError)
 
 //dashboard
-router.get('/dashboard',adminController.loadDashboard)
+router.get('/dashboard',adminAuth,adminController.loadDashboard)
 
 
 
@@ -34,11 +34,12 @@ router.get('/category/unlist/:id',categoryController.unlistCategory)
 router.post('/category/delete/:id',categoryController.deleteCategory)
     
 //  add product
-router.get('/products/add',addproductController.addproduct)
+router.get('/products/add',addproductController. getAddProduct)
 router.post('/products',upload.fields([
   { name: 'originalImages', maxCount: 100 },
   { name: 'croppedImagesData', maxCount: 100 }
-]), addproductController.addProductPost);
+]), addproductController.  postAddProduct);
+
 
 //product management
 router.get('/products',productController.getProducts)

@@ -88,6 +88,7 @@
   <form action="/verify-otp" method="POST">
     <input type="hidden" id="message" value="<%= typeof message !== 'undefined' ? message : '' %>"/>
     <input type="hidden" name="email" value="<%= email %>"/>
+    <input type="hidden" name="purpose" value="<%= purpose %>"/>
 
     <div class="otp-inputs d-flex justify-content-center mb-3">
       <input type="text" maxlength="1" name="otp[]" required>
@@ -102,16 +103,16 @@
   </form>
 
   <div class="timer mt-2 mb-2" id="timer"></div>
-  <a href="/resend_otp" id="resendLink" class="d-block text-center">Resend OTP</a>
+  <a href="resend_otp" id="resendLink" class="d-block text-center">Resend OTP</a>
 </div>
 
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const message = document.getElementById('message').value;
-    if (message) {
+    if (message) 
       swal(message);
-    }
+
   });
 
 

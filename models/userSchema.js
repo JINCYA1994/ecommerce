@@ -19,7 +19,7 @@ email:{
 
  password: {
     type:String,
-    required: true,
+    required: false,
  },
  firstname:{
   type:String,
@@ -31,6 +31,11 @@ email:{
     trim:true,
   
  },  
+ googleId:{
+  type:String,
+  unique:true,
+   sparse: true 
+},
 phonenumber: {
       type: String,
       trim:true,
@@ -38,7 +43,7 @@ phonenumber: {
     },
     role:{
       type:String,
-      enum:['admin','user'],
+      enum:['admin','user'], 
       default:'user'
     }, 
     isBlocked: {

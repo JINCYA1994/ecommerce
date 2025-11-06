@@ -2,59 +2,67 @@
 const Product = require('../../models/productSchema');
  const cloudinary = require('../../config/cloudinary');
 
-const getProducts=async(req,res)=>{
-try {
+
+
+const getProducts = async (req, res) => {
+  try {
     let search = req.query.search || "";
     let page = parseInt(req.query.page) || 1;
-    let limit = 2;
+    let limit = 10; // fixed number of rows per page
 
-   let query = { isDeleted: { $ne: true } };  
+    let query = { isDeleted: { $ne: true } };
 
-   if (search) {
-      query.product_name  = { $regex: search, $options: "i" }; 
+    if (search) {
+      query.product_name = { $regex: search, $options: "i" };
     }
 
-
-
-
-const totalproducts = await Product.countDocuments(query);
-
- 
-   let products = await Product.find(query)
-      .skip((page - 1) * limit)
-      .limit(limit)
+    // Fetch products
+    let allProducts = await Product.find(query)
+      .populate('category_id')
       .sort({ createdAt: -1 })
-       .populate('category_id').lean() ;
+      .lean();
 
-     console.log(products)  
-// Filter deleted sizes
-products.forEach(product => {
-  product.variants.forEach(variant => {
-    variant.sizes = variant.sizes.filter(size => !size.isDeleted);
-  });
-product.variants = product.variants.filter(variant => variant.sizes.length > 0);
-});
+    // Filter and flatten all variant-size combinations
+    let allItems = [];
+    allProducts.forEach(product => {
+      product.variants.forEach(variant => {
+        variant.sizes
+          .filter(size => !size.isDeleted)
+          .forEach(size => {
+            allItems.push({
+              product,
+              variant,
+              size
+            });
+          });
+      });
+    });
 
-products = products.filter(product => product.variants.length > 0);
+    // Total count for pagination
+    const totalItems = allItems.length;
+    const totalPages = Math.ceil(totalItems / limit);
 
-
-
-
-    const totalPages = Math.ceil(totalproducts / limit);
+    // Paginate manually
+    const startIndex = (page - 1) * limit;
+    const paginatedItems = allItems.slice(startIndex, startIndex + limit);
 
     res.render('product', {
-    products,
+      products: paginatedItems, // send flattened list
       search,
       currentPage: page,
       totalPages,
-  success: req.flash('success'),
-  error: req.flash('error')
+      success: req.flash('success'),
+      error: req.flash('error')
     });
   } catch (err) {
-    console.error("Error loading categories:", err);
+    console.error("Error loading products:", err);
     res.status(500).send("Server Error");
   }
 };
+
+
+
+
 
 //list products
 

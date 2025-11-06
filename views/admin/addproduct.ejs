@@ -266,11 +266,11 @@ function validateForm() {
     document.getElementById('nameError').textContent = "Name must be at least 3 characters"; 
     valid = false; 
   }
-  else if (!/^[a-zA-Z0-9\s]+$/.test(name)) 
-  { 
-    document.getElementById('nameError').textContent = "Product name must not contain special characters";
-     valid = false; 
-  }
+  // else if (!/^[a-zA-Z0-9\s]+$/.test(name)) 
+  // { 
+  //   document.getElementById('nameError').textContent = "Product name must not contain special characters";
+  //    valid = false; 
+  //  }
 
   if(!description){
      document.getElementById('descriptionError').textContent = 'Description is required';

@@ -36,11 +36,6 @@
   }
 </style>
 
-
-
-
-
-
 <section class="content-main">
   <div class="col-lg-12">
     <div class="card mb-4">
@@ -205,13 +200,15 @@
 
     // Save cropped image
     saveBtn.addEventListener("click", () => {
+     
+
       if (!cropper) return;
       const canvas = cropper.getCroppedCanvas({ width: 500, height: 500 });
       canvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         previewEl.src = url;
         cropperContainer.style.display = "none";
-        croppedImagesData[i] = blob;
+        croppedImagesData[i] = { blob, index: i };
       }, "image/jpeg", 0.9);
     });
   }
@@ -246,11 +243,7 @@ valid= false
     document.getElementById('nameError').textContent = "Name must be at least 3 characters"; 
     valid = false; 
   }
-  else if (!/^[a-zA-Z0-9\s]+$/.test(name)) 
-  { 
-    document.getElementById('nameError').textContent = "Product name must not contain special characters";
-     valid = false; 
-  }
+
   if(!description){
      document.getElementById('descriptionError').textContent = 'Description is required';
       valid=false;
@@ -313,10 +306,12 @@ const formData=new FormData(form)
     }
   }
 
+Object.values(croppedImagesData).forEach((item, index) => {
+  formData.append('croppedImagesData', item.blob, `image_${item.index}.jpg`);
+  formData.append('croppedIndex', item.index); // <-- send which index changed
+});
 
-  Object.keys(croppedImagesData).forEach((key, index) => {
-    formData.append('croppedImagesData', croppedImagesData[key], `image_${index}.jpg`);
-  });
+
 
   try {
     const response = await fetch(form.action, {

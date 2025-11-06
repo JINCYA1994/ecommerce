@@ -4,40 +4,26 @@ const bcrypt = require('bcryptjs');
 
 
 
-
-
-
-
-// const loadLogin=async(req,res)=>{
-//   try{
-   
-//     res.render('adminlogin',{message:''})
-//   console.log('Admin login page loaded successfully');
-//   }catch (error) {
-//     console.log("Error loading admin login:", error.message);
-//     res.render("404");
-//   }
-// }
-
 const loadLogin = async (req, res) => {
   try {
     res.render("adminlogin", { message: res.locals.error_msg });
   } catch (error) {
     console.log("Error loading admin login:", error.message);
-    res.render("404");
+    res.render("admin404");
   }
 };
 
 
 
-
-
+const pageError=async(req,res)=>{
+  res.render('admin404')
+}
 
 
 const verifyLogin=async(req,res)=>{
 const{email,password}=req.body
 if(!email||!password){
-return res.render('adminlogin',{message:'Email and Password are required'})
+return res.redirect('/admin/login',{message:'Email and Password are required'})
 }
 try{
 const admin= await User.findOne({email})
@@ -57,29 +43,38 @@ if (!isMatch) {
   return res.redirect("/admin/login");
 }
 
+    req.session.admin = {
+      id: admin._id,
+      email: admin.email,
+      username: admin.username,
+      role: admin.role
+    };
 
+    console.log(" Admin session set:", req.session.admin);
 
- req.session.admin =admin._id;
+//  req.session.admin =admin._id;
     return res.redirect("/admin/dashboard");
 
 
     }
     catch (error) {
     console.error("Admin login error:", error.message);
-    res.render('adminlogin', { message: "Something went wrong. Please try again." });
+    res.redirect('/admin/login', { message: "Something went wrong. Please try again." });
   }
  }
 
 
 
 const loadDashboard=async (req,res) => {
-  if(req.session.admin){
+
     try {
+       console.log("Dashboard accessed by:", req.session.admin);
       res.render('dashboard')
     } catch (error) {
         console.error("Admin login error:", error.message);
+         res.redirect('/admin/login');
     }
-  }
+  
   
 }
 
@@ -107,4 +102,4 @@ try {
 
 
 
- module.exports={loadLogin,verifyLogin,loadDashboard,logout}
+ module.exports={loadLogin,verifyLogin,loadDashboard,logout,pageError}

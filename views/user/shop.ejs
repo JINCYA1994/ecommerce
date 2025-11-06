@@ -1,0 +1,255 @@
+<%- include("../../views/partials/user/header") %>
+
+<section class="py-5">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-4">Shop Products</h2>
+
+    <!-- 🔍 Search + Clear (Moved to right) -->
+    <div class="d-flex justify-content-end align-items-center mb-4 flex-wrap gap-2">
+      <form id="searchForm" method="get" action="/shop" class="d-flex" style="max-width: 400px;">
+        <input 
+          type="text" 
+          name="search" 
+          class="form-control me-2" 
+          placeholder="Search products..."
+          value="<%= search %>"
+          
+        >
+        <a href="/shop" class="btn btn-outline-secondary">Clear</a>
+      </form>
+    </div>
+
+    <div class="row">
+      <!-- 🧭 Sidebar Filters -->
+      <aside class="col-lg-3 col-md-4 mb-4">
+        <form id="filterForm" method="get" action="/shop">
+
+          <!-- Category -->
+          <h5 class="fw-semibold mb-2">Category</h5>
+          <select name="category" class="form-select mb-4" onchange="applyFilter()">
+            <option value="">All</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat._id %>" <%= category == cat._id ? 'selected' : '' %>>
+                <%= cat.name %>
+              </option>
+            <% }) %>
+          </select>
+
+          <!-- Price -->
+          <h5 class="fw-semibold mb-2">Price Range (₹)</h5>
+          <div class="d-flex gap-2 mb-4">
+            <input type="number" name="minPrice" class="form-control" placeholder="Min ₹"
+              value="<%= minPrice %>" onchange="applyFilter()">
+            <input type="number" name="maxPrice" class="form-control" placeholder="Max ₹"
+              value="<%= maxPrice %>" onchange="applyFilter()">
+          </div>
+
+          <!-- Sort -->
+          <h5 class="fw-semibold mb-2">Sort By</h5>
+          <select name="sort" class="form-select mb-4" onchange="applyFilter()">
+            <option value="">Default</option>
+            <option value="lowToHigh" <%= sort === 'lowToHigh' ? 'selected' : '' %>>Price: Low to High</option>
+            <option value="highToLow" <%= sort === 'highToLow' ? 'selected' : '' %>>Price: High to Low</option>
+            <option value="aToZ" <%= sort === 'aToZ' ? 'selected' : '' %>>A → Z</option>
+            <option value="zToA" <%= sort === 'zToA' ? 'selected' : '' %>>Z → A</option>
+          </select>
+
+        </form>
+      </aside>
+
+      <!-- 🛍️ Product Grid -->
+      <div class="col-lg-9 col-md-8">
+        <% if (products && products.length > 0) { %>
+          <div class="row g-4">
+            <% products.forEach(product => { %>
+              <div class="col-lg-4 col-md-6 d-flex">
+                <div class="card border-0 shadow-sm w-100 position-relative">
+
+                  <!-- Wishlist Icon -->
+                  <span class="wishlist-icon position-absolute top-0 end-0 p-2">
+                    <i class="fa fa-heart"></i>
+                  </span>
+
+                  <!-- Clickable Image -->
+                  <a href="/productDetails/<%= product._id %>">
+                    <img 
+                      src="<%= product.randomVariant?.images[0] || product.variants[0]?.images[0] || '/img/placeholder.jpg' %>" 
+                      class="card-img-top main-image" 
+                      alt="<%= product.product_name %>"
+                    >
+                  </a>
+
+                  <div class="card-body text-center">
+
+                    <!-- Color Variants -->
+                    <div class="d-flex justify-content-center mb-3 flex-wrap">
+                      <% product.variants.forEach(variant => { %>
+                        <% if (variant.images && variant.images[0]) { %>
+                          <img 
+                            src="<%= variant.images[0] %>" 
+                            alt="<%= variant.color %>" 
+                            class="color-thumb"
+                            data-main-image="<%= variant.images[0] %>"
+                          >
+                        <% } %>
+                      <% }) %>
+                    </div>
+
+                    <h6 class="fw-bold"><%= product.product_name %></h6>
+
+                    <p class="text-muted mb-1">
+                      ₹<%= product.randomVariant?.discount_price || product.randomVariant?.price || product.variants[0]?.price %>
+                    </p>
+<% if (product.reviews && product.reviews.length > 0) { %>
+  <% 
+    let totalRating = 0;
+    product.reviews.forEach(r => totalRating += r.rating);
+    let avgRating = totalRating / product.reviews.length;
+  %>
+
+  <div class="mb-2">
+    <% for (let i = 1; i <= 5; i++) { %>
+      <% if (i <= Math.round(avgRating)) { %>
+        <i class="fa fa-star text-warning"></i>
+      <% } else { %>
+        <i class="fa fa-star-o text-warning"></i>
+      <% } %>
+    <% } %>
+    <small>(<%= product.reviews.length %>)</small>
+  </div>
+
+<% } else { %>
+  <div class="mb-2 text-muted small">
+    No reviews yet
+  </div>
+<% } %>
+
+
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="text-center py-5">
+            <h4 class="text-muted">No products found.</h4>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+<!-- Pagination -->
+<div class="d-flex justify-content-center mt-5">
+  <nav>
+    <ul class="pagination">
+      <% if (currentPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link" href="?page=<%= currentPage - 1 %>&category=<%= category %>&search=<%= search %>&sort=<%= sort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>">Previous</a>
+        </li>
+      <% } %>
+
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link" href="?page=<%= i %>&category=<%= category %>&search=<%= search %>&sort=<%= sort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>"><%= i %></a>
+        </li>
+      <% } %>
+
+      <% if (currentPage < totalPages) { %>
+        <li class="page-item">
+          <a class="page-link" href="?page=<%= currentPage + 1 %>&category=<%= category %>&search=<%= search %>&sort=<%= sort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>">Next</a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
+</div>
+
+
+
+
+</section>
+
+<!-- 🧠 JS for Auto Filter + Image Preview + Wishlist -->
+<script>
+  function applyFilter() {
+    document.getElementById('filterForm').submit();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // ✅ Change main image when variant clicked
+    document.querySelectorAll(".color-thumb").forEach(thumb => {
+      thumb.addEventListener("click", () => {
+        const mainImage = thumb.closest(".card").querySelector(".main-image");
+        mainImage.src = thumb.dataset.mainImage;
+      });
+    });
+
+    // ❤️ Wishlist Toggle
+    document.querySelectorAll(".wishlist-icon i").forEach(icon => {
+      icon.addEventListener("click", e => {
+        e.stopPropagation();
+        icon.classList.toggle("active");
+      });
+    });
+  });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Submit on Enter key in search
+  document.querySelector("input[name='search']").addEventListener("keypress", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      document.getElementById('searchForm').submit();
+    }
+  });
+});
+
+
+</script>
+
+<style>
+aside {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+}
+h5 {
+  font-size: 1rem;
+}
+
+.card {
+  transition: transform 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.wishlist-icon i {
+  font-size: 22px;
+  color: #ccc;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.3s ease;
+}
+.wishlist-icon i.active {
+  color: #ff4d4d;
+  transform: scale(1.2);
+}
+.wishlist-icon i:hover {
+  transform: scale(1.2);
+}
+
+.color-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border 0.3s ease;
+}
+.color-thumb:hover {
+  border: 2px solid #000;
+}
+</style>
+
+<%- include("../../views/partials/user/footer") %>

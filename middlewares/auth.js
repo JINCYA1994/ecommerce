@@ -1,8 +1,8 @@
  const User=require('../models/userSchema')
- const userauth=(req,res,next)=>{
+ const userAuth=(req,res,next)=>{
     if(req.session.user){
         User.findById(req.session.user.id).then(data=>{
-            if(data && !data.isActive){
+            if(data && !data.isBlocked){
                 next()
             }else{
 
@@ -18,28 +18,15 @@
     }
  }
 
-const adminAuth=(req,res,next)=>{
-    if(req.session && req.session.user){
-User.findById(req.session.user.id).then(data=>{
-    if(data && data.role==='admin'){
-        req.user=data
-        next()
-    }
-    else{
-        res.redirect('/admin/adminlogin')
-    }
-}).catch(error=>{
-    console.log('Error in adminoauth middileware',error)
-    res.status(500).send('Internal Server Error')
-})
 
-
-}else{
-    res.redirect('/admin/adminlogin')
-}
-
-}
+const adminAuth = (req, res, next) => {
+  if (req.session && req.session.admin && req.session.admin.role === 'admin') {
+    next();
+  } else {
+    res.redirect('/admin/login');
+  }
+};
 
 
 
- module.exports={userauth,adminAuth}
+ module.exports={userAuth,adminAuth}
