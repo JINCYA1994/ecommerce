@@ -46,11 +46,14 @@ console.log(req.body)
     const errors = {}; 
 
  
-    if (!product_name || product_name.trim().length < 3) 
-      {
-      errors.product_name = 'Product name must be at least 3 characters';
-    } 
-   
+if (
+  !product_name ||
+  !/^[A-Za-z][A-Za-z0-9\s,'\/-]*$/.test(product_name.trim()) ||  
+  (product_name.match(/[A-Za-z]/g) || []).length < 3
+) {
+  errors.product_name = 'Invalid product name (must start with a letter, contain at least 3 letters, only letters, numbers, spaces, "-", ",", and "/" allowed)';
+}
+
 
     if (!product_description || product_description.trim().length < 10) {
       errors.product_description = 'Description must be at least 10 characters';
@@ -77,8 +80,8 @@ console.log(req.body)
       errors.size = 'Size must be between 6-10';
     }
 
-  if (stock === undefined || stock === null || isNaN(Number(stock)) || Number(stock) < 0) {
-  errors.stock = 'Invalid stock';
+  if (stock === undefined || stock === null || isNaN(Number(stock)) || Number(stock) < 0||Number(stock)>100) {
+  errors.stock = 'Stock must be between 0 and 100';
 }
 
 

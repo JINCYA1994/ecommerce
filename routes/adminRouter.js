@@ -26,7 +26,7 @@ router.get('/block/:id',customerController.blockUser)
 router.get('/users',customerController.getUsers)
 
 //Catogory Management
-router.get('/category',categoryController.getcategory)
+router.get('/category',adminAuth,categoryController.getcategory)
 router.post('/category' ,categoryController.addCategory);
 router.post('/category/edit/:id', categoryController.updateCategory);
 router.get('/category/list/:id',categoryController.listCategory)
@@ -34,7 +34,7 @@ router.get('/category/unlist/:id',categoryController.unlistCategory)
 router.post('/category/delete/:id',categoryController.deleteCategory)
     
 //  add product
-router.get('/products/add',addproductController. getAddProduct)
+router.get('/products/add',adminAuth,addproductController. getAddProduct)
 router.post('/products',upload.fields([
   { name: 'originalImages', maxCount: 100 },
   { name: 'croppedImagesData', maxCount: 100 }

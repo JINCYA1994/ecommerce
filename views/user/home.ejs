@@ -142,131 +142,159 @@
 </style>
 
 
+<section class="py-5 bg-light">
+  <div class="container">
+    <h3 class="fw-bold mb-4 text-center">✨ New Arrivals</h3>
 
+    <% if (newArrivals && newArrivals.length > 0) { %>
+      <div class="row g-4">
+        <% newArrivals.forEach(product => { %>
+          <div class="col-lg-3 col-md-6 d-flex">
+            <div class="card border-0 shadow-sm w-100 position-relative product-card">
 
+              <!-- 💖 Wishlist Icon -->
+              <button class="wishlist-btn position-absolute top-0 end-0 p-2 border-0 bg-transparent">
+                <i class="fa fa-heart"></i>
+              </button>
 
+              <!-- 🖼️ Product Image -->
+              <% 
+                const defaultVariant = product.variants?.[0];
+                const defaultImage = defaultVariant?.images?.[0] || '/img/placeholder.jpg';
+              %>
 
-<!--newarrival-->
-<section class="new-arrivals py-5">
-   <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="fw-bold mb-0">New Arrivals</h2>
-      <a href="/shop" class="text-dark fw-bold">See More &raquo;</a>
-    </div>
-    <div class="row g-4">
-      <% newArrivals.forEach(product => { %>
-        <div class="col-lg-3 col-md-4 col-sm-6 d-flex">
-          <div class="card border-0 shadow-sm w-100 position-relative">
-            
-            <!-- Wishlist Icon -->
-           
-              <span class="wishlist-icon position-absolute top-0 end-0 p-2">
-                    <i class="fa fa-heart"></i>
-                  </span>
+              <a 
+                href="/productDetails/<%= product._id %>?variant=<%= defaultVariant?._id %>" 
+                class="product-link"
+                data-product-id="<%= product._id %>"
+                data-variant-id="<%= defaultVariant?._id %>"
+              >
+                <img 
+                  src="<%= defaultImage %>"
+                  class="card-img-top main-image"
+                  alt="<%= product.product_name %>"
+                  style="height: 250px; object-fit: cover;"
+                >
+              </a>
 
-               
+              <div class="card-body text-center">
 
-            <!-- Main Product Image -->
-            <img 
-              src="<%= product.variants[0]?.images[0] || '/img/placeholder.jpg' %>" 
-              class="card-img-top main-image" 
-              alt="<%= product.product_name %>"
-              data-product-id="<%= product._id %>"
-            >
-
-            <div class="card-body text-center">
-              <!-- Color Variants -->
-              <div class="d-flex justify-content-center mb-3 flex-wrap">
-                <% product.variants.forEach((variant, index) => { %>
-                  <% if (variant.images && variant.images[0]) { %>
+                <!-- 🎨 Color Variants -->
+                <div class="d-flex justify-content-center mb-3 flex-wrap">
+                  <% 
+                    const shownColors = new Set();
+                    product.variants.forEach(variant => {
+                      if (variant.images?.[0] && !shownColors.has(variant.color)) {
+                        shownColors.add(variant.color);
+                  %>
                     <img 
                       src="<%= variant.images[0] %>" 
                       alt="<%= variant.color %>" 
                       class="color-thumb"
                       data-main-image="<%= variant.images[0] %>"
+                      data-variant-id="<%= variant._id %>"
+                      style="width:40px; height:40px; border-radius:50%; object-fit:cover; margin:3px; cursor:pointer;"
                     >
-                  <% } %>
-                <% }) %>
+                  <% 
+                      }
+                    }); 
+                  %>
+                </div>
+
+                <!-- 🏷️ Product Name -->
+                <h6 class="fw-bold"><%= product.product_name %></h6>
+
+                <!-- 💸 Price + Discount -->
+                <% 
+                  const variant = defaultVariant;
+                  if (variant?.discount_price && variant.discount_price < variant.price) { 
+                    const discountPercent = Math.round(((variant.price - variant.discount_price) / variant.price) * 100);
+                %>
+                  <p class="mb-1">
+                    <span class="text-muted text-decoration-line-through me-2">₹<%= variant.price %></span>
+                    <span class="text-success fw-bold">₹<%= variant.discount_price %></span>
+                    <span class="badge bg-danger ms-1"><%= discountPercent %>% OFF</span>
+                  </p>
+                <% } else { %>
+                  <p class="fw-bold text-success mb-1">₹<%= variant?.price %></p>
+                <% } %>
               </div>
-
-              <!-- Product Name -->
-              <h6 class="fw-bold"><%= product.product_name %></h6>
-
-              <!-- Product Price -->
-              <p class="text-muted mb-1">
-                ₹<%= product.variants[0]?.discount_price || product.variants[0]?.price %>
-              </p>
-
-              <a href="/productDetails/<%= product._id %>" class="btn btn-outline-dark btn-sm mt-2">View Details</a>
             </div>
           </div>
-        </div>
-      <% }) %>
-    </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="text-center text-muted">No new arrivals found.</p>
+    <% } %>
   </div>
 </section>
 
+
+
 <style>
-
-/* Wishlist Icon */
-.wishlist-icon i {
-  font-size: 22px;
-  color: #ccc; /* Default grey */
-  cursor: pointer;
-  transition: transform 0.2s, color 0.3s ease;
+.product-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
-.wishlist-icon i.active {
-  color: #ff4d4d; /* Red when active */
-  transform: scale(1.2);
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
-
-.wishlist-icon i:hover {
-  transform: scale(1.2);
+.wishlist-btn {
+  color: #999;
+  font-size: 1.2rem;
+  transition: color 0.3s;
 }
-
-/* Color variant thumbnails */
-.color-thumb {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: border 0.3s ease;
+.wishlist-btn.active {
+  color: red;
+}
+.wishlist-btn:hover {
+  color: red;
 }
 .color-thumb:hover {
   border: 2px solid #000;
 }
-
-
-
 </style>
 
-
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    // 🖼️ Change main image on clicking color variant
-    const colorThumbs = document.querySelectorAll(".color-thumb");
-    colorThumbs.forEach(thumb => {
-      thumb.addEventListener("click", () => {
-        const mainImage = thumb.closest(".card").querySelector(".main-image");
-        mainImage.src = thumb.dataset.mainImage;
-      });
-    });
+document.addEventListener("DOMContentLoaded", () => {
 
-    // ❤️ Wishlist toggle
-    const wishlistIcons = document.querySelectorAll(".wishlist-icon i");
-    wishlistIcons.forEach(icon => {
-      icon.addEventListener("click", e => {
-        e.stopPropagation();
-        icon.classList.toggle("active");
-      });
+  // 🧠 Change main image + update link when color clicked
+  document.querySelectorAll(".color-thumb").forEach(thumb => {
+    thumb.addEventListener("click", () => {
+      const card = thumb.closest(".card");
+      const mainImage = card.querySelector(".main-image");
+      const productLink = card.querySelector(".product-link");
+
+      if (!card || !mainImage || !productLink) return;
+
+      const productId = productLink.dataset.productId;
+      const variantId = thumb.dataset.variantId;
+      const newImage = thumb.dataset.mainImage;
+
+      // ✅ Update main image
+      mainImage.src = newImage;
+
+      // ✅ Update product link href
+      const newHref = `/productDetails/${productId}?variant=${variantId}`;
+      productLink.href = newHref;
+
+      // ✅ Also update click event for main image
+      mainImage.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = newHref;
+      };
     });
   });
+
+  // 💖 Wishlist toggle
+  document.querySelectorAll(".wishlist-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      btn.classList.toggle("active");
+    });
+  });
+});
 </script>
-
-
 
 
 

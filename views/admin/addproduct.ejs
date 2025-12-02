@@ -100,12 +100,12 @@ function addVariant() {
     </div>
     <div class="mb-3">
       <label class="form-label">Size (6-10)</label>
-      <input type="number" class="form-control" id="size${variantIndex}" name="variants[${variantIndex}][size]">
+      <input type="text" class="form-control" id="size${variantIndex}" name="variants[${variantIndex}][size]">
       <div class="text-danger small mt-1" id="sizeError${variantIndex}"></div>
     </div>
     <div class="mb-3">
       <label class="form-label">Stock</label>
-      <input type="number" class="form-control" id="stock${variantIndex}" name="variants[${variantIndex}][stock]" min="0">
+      <input type="text" class="form-control" id="stock${variantIndex}" name="variants[${variantIndex}][stock]" min="0">
       <div class="text-danger small mt-1" id="stockError${variantIndex}"></div>
     </div>
 
@@ -258,19 +258,21 @@ function validateForm() {
   document.getElementById('descriptionError').textContent = '';
   document.getElementById('categoryError').textContent = '';
 
-  if(!name){ 
-    document.getElementById('nameError').textContent ="Product name is required"; 
-    valid=false; 
-  }
-  else if(name.length<3){ 
-    document.getElementById('nameError').textContent = "Name must be at least 3 characters"; 
-    valid = false; 
-  }
-  // else if (!/^[a-zA-Z0-9\s]+$/.test(name)) 
-  // { 
-  //   document.getElementById('nameError').textContent = "Product name must not contain special characters";
-  //    valid = false; 
-  //  }
+if (!name) {
+  document.getElementById('nameError').textContent = 'Product name is required';
+  valid = false;
+} 
+else if (!/^[A-Za-z][A-Za-z0-9\s,'\/-]*$/.test(name.trim())) {
+  document.getElementById('nameError').textContent = 
+    'Name must start with a letter and can contain only letters, numbers, spaces, "-", ",", or "/"';
+  valid = false;
+} 
+else if ((name.match(/[A-Za-z]/g) || []).length < 3) {
+  document.getElementById('nameError').textContent = 
+    'Name must contain at least 3 letters';
+  valid = false;
+}
+
 
   if(!description){
      document.getElementById('descriptionError').textContent = 'Description is required';
@@ -304,8 +306,8 @@ function validateForm() {
       document.getElementById(`discountPriceError${i}`).textContent="Invalid discount price";
        valid=false;
     }
-    if (!stock || Number(stock)<0){
-       document.getElementById(`stockError${i}`).textContent="Invalid stock"; 
+    if (!stock || Number(stock)<0||Number(stock)>100){
+       document.getElementById(`stockError${i}`).textContent="'Stock must be between 0 and 100'"; 
        valid=false; 
     }
     if (!color || !/^[A-Za-z\s]+$/.test(color)){ 

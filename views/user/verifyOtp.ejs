@@ -106,45 +106,60 @@
   <a href="resend_otp" id="resendLink" class="d-block text-center">Resend OTP</a>
 </div>
 
-
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const message = document.getElementById('message').value;
-    if (message) 
-      swal(message);
+document.addEventListener("DOMContentLoaded", function () {
+  const message = document.getElementById("message").value;
+  if (message) swal(message);
 
-  });
+  const otpInputs = document.querySelectorAll(".otp-inputs input");
+  const timerDisplay = document.getElementById("timer");
+  const resendLink = document.getElementById("resendLink");
 
-
-function startTimer(duration) {
-    let seconds = duration;
-    let timer = document.getElementById("timer");
-    let resendLink = document.getElementById("resendLink");
-
-    resendLink.classList.remove("active"); 
-    timer.style.display = "block";
-
-    let countdown = setInterval(() => {
-      timer.textContent = `Please wait ${seconds} seconds before requesting another code.`;
-      seconds--;
-
-      if (seconds < 0) {
-        clearInterval(countdown);
-        timer.textContent = "";
-        resendLink.classList.add("active"); 
-      }
-    }, 1000);
-  }
-
-  document.querySelectorAll(".otp-inputs input").forEach((input, idx, inputs) => {
+  // Focus next input automatically
+  otpInputs.forEach((input, idx) => {
     input.addEventListener("input", () => {
-      if (input.value && idx < inputs.length - 1) {
-        inputs[idx + 1].focus();
+      if (input.value && idx < otpInputs.length - 1) {
+        otpInputs[idx + 1].focus();
       }
     });
   });
 
+  // Start countdown
   startTimer(60);
+
+  // When user clicks "Resend OTP"
+  resendLink.addEventListener("click", function () {
+    otpInputs.forEach(input => input.value = "");
+    localStorage.removeItem("otpEndTime");
+  });
+
+  function startTimer(duration) {
+    let endTime = localStorage.getItem("otpEndTime");
+
+    // if no previous timer or expired, create new
+    if (!endTime || Date.now() > endTime) {
+      endTime = Date.now() + duration * 1000;
+      localStorage.setItem("otpEndTime", endTime);
+    }
+
+    resendLink.classList.remove("active");
+
+    const countdown = setInterval(() => {
+      const remaining = Math.floor((endTime - Date.now()) / 1000);
+
+      if (remaining <= 0) {
+        clearInterval(countdown);
+        timerDisplay.textContent = "";
+        resendLink.classList.add("active");
+        localStorage.removeItem("otpEndTime"); // clear timer storage
+      } else {
+        timerDisplay.textContent = `Please wait ${remaining} seconds before requesting another code.`;
+      }
+    }, 1000);
+  }
+});
+
+
 </script>
 
 <%- include("../../views/partials/user/footer") %>

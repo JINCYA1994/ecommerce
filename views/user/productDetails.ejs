@@ -16,19 +16,20 @@
       <!-- LEFT SIDE -->
       <div class="col-md-5">
         <div class="main-image mb-3 text-center position-relative">
+          <!-- show activeVariant image -->
           <img id="mainImage"
-               src="<%= product.variants[0].images[0] %>"
+               src="<%= (activeVariant && activeVariant.images && activeVariant.images[0]) ? activeVariant.images[0] : (product.variants[0].images[0] || '/img/placeholder.jpg') %>"
                class="img-fluid border rounded"
                alt="<%= product.product_name %>"
-               style="transition: transform 0.2s ease;">
+               style="transition: transform 0.2s ease; max-height: 500px; object-fit: contain;">
         </div>
 
-        <!-- Thumbnail images (same color variant) -->
+        <!-- Thumbnail images (for activeVariant only) -->
         <div id="imageThumbnails" class="d-flex gap-2 justify-content-center">
-          <% product.variants[0].images.forEach(image => { %>
+          <% (activeVariant && activeVariant.images ? activeVariant.images : (product.variants[0].images || [])).forEach(image => { %>
             <img src="<%= image %>"
                  class="img-thumbnail"
-                 style="width:60px; height:60px; cursor:pointer;"
+                 style="width:60px; height:60px; cursor:pointer; object-fit:cover;"
                  onclick="changeMainImage('<%= image %>')">
           <% }) %>
         </div>
@@ -40,13 +41,23 @@
         <!-- Product Name -->
         <h3 class="fw-bold mb-3"><%= product.product_name %></h3>
 
-        <!-- Price and Discount -->
+        <% 
+          const price = (activeVariant && activeVariant.price) || product.variants[0].price;
+          const discount = (activeVariant && activeVariant.discount_price) || product.variants[0].discount_price;
+        %>
+
         <div class="d-flex align-items-center mb-2">
-          <h4 class="fw-bold text-success me-3">₹<%= product.variants[0].discount_price %></h4>
-          <h5 class="text-muted text-decoration-line-through me-2">₹<%= product.variants[0].price %></h5>
-          <span class="badge bg-success">
-            <%= Math.round(((product.variants[0].price - product.variants[0].discount_price) / product.variants[0].price) * 100) %>% off
-          </span>
+          <% if (discount && discount < price) { %>
+            <!-- Show Discounted Price -->
+            <h4 class="fw-bold text-success me-3">₹<%= discount %></h4>
+            <h5 class="text-muted text-decoration-line-through me-2">₹<%= price %></h5>
+            <span class="badge bg-success">
+              <%= Math.round(((price - discount) / price) * 100) %>% off
+            </span>
+          <% } else { %>
+            <!-- Show Only Original Price -->
+            <h4 class="fw-bold text-success">₹<%= price %></h4>
+          <% } %>
         </div>
 
         <!-- Ratings -->
@@ -57,39 +68,42 @@
         <!-- Description -->
         <p class="text-muted"><%= product.product_description %></p>
 
-    <!-- SIZE SELECTION + SIZE GUIDE -->
-<div class="d-flex align-items-center mb-3">
+      <div class="d-flex align-items-center mb-3">
   <strong class="me-3">Size:</strong>
-
   <div id="sizeOptions" class="d-flex gap-2 flex-wrap me-3">
-    <% product.variants[0].sizes.forEach(sizeObj => { %>
-      <% if(!sizeObj.isDeleted && sizeObj.isListed) { %>
-        <button class="btn btn-outline-secondary btn-sm size-btn"
-                onclick="selectSize('<%= sizeObj.size %>', event)">
-          <%= sizeObj.size %>
-        </button>
-      <% } %>
-    <% }) %>
+    <% 
+      const sizesToShow = (activeVariant && activeVariant.sizes) || product.variants[0].sizes || [];
+      sizesToShow.forEach(sizeObj => { 
+        if(!sizeObj.isDeleted && sizeObj.isListed) {
+    %>
+      <button 
+        class="btn btn-outline-secondary btn-sm size-btn"
+        onclick="selectSize('<%= sizeObj.size %>', <%= sizeObj.stock %>, event)">
+        <%= sizeObj.size %>
+      </button>
+    <% 
+        }
+      });
+    %>
   </div>
-
-  <!-- 🧭 SIZE GUIDE -->
   <div class="d-flex align-items-center" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#sizeGuideModal">
     <span class="text-decoration-underline fw-semibold">SIZE GUIDE</span>
-   
   </div>
 </div>
 
+<p id="stockInfo" class="text-muted mt-2"></p>
 
-        <!-- COLOR VARIANTS -->
+
+        <!-- COLOR VARIANTS (links -> page reload with ?variant=) -->
         <div class="d-flex align-items-center mb-3">
           <strong class="me-3">Color:</strong>
           <div id="colorOptions" class="d-flex gap-2">
-            <% product.variants.forEach((variant, index) => { %>
-              <img src="<%= variant.images[0] %>"
-                   class="img-thumbnail border border-dark-subtle"
-                   style="width:60px; height:60px; cursor:pointer;"
-                   onclick="changeColorVariant(<%= index %>)"
-                   title="<%= variant.color %>">
+            <% product.variants.forEach((variant) => { %>
+              <a href="/productDetails/<%= product._id %>?variant=<%= variant._id %>" title="<%= variant.color %>" class="d-inline-block">
+                <img src="<%= variant.images && variant.images[0] ? variant.images[0] : '/img/placeholder.jpg' %>"
+                     class="img-thumbnail border border-dark-subtle"
+                     style="width:60px; height:60px; cursor:pointer; object-fit:cover;">
+              </a>
             <% }) %>
           </div>
         </div>
@@ -106,20 +120,23 @@
 
         <!-- Buttons -->
         <div class="mt-4 d-flex gap-3 align-items-center">
-          <button class="btn btn-dark px-4">Add To Cart</button>
-          <button class="btn btn-danger px-4">Buy Now</button>
-         <i id="wishlistIcon" class="fa-regular fa-heart fs-4 text-secondary" style="cursor:pointer;" onclick="toggleWishlist(this)"></i>
+          <form action="/cart/add" method="POST" class="d-inline">
+            <!-- Example hidden fields to send product and selected variant to server -->
+            <input type="hidden" name="productId" value="<%= product._id %>">
+            <input type="hidden" name="variantId" value="<%= (activeVariant && activeVariant._id) || product.variants[0]._id %>" id="formVariantId">
+            <input type="hidden" name="quantity" id="formQuantity" value="1">
+            <button type="submit" class="btn btn-dark px-4">Add To Cart</button>
+          </form>
 
+          <form action="/checkout" method="POST" class="d-inline">
+            <input type="hidden" name="productId" value="<%= product._id %>">
+            <input type="hidden" name="variantId" value="<%= (activeVariant && activeVariant._id) || product.variants[0]._id %>">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn btn-danger px-4">Buy Now</button>
+          </form>
+
+          <i id="wishlistIcon" class="fa-regular fa-heart fs-4 text-secondary" style="cursor:pointer;" onclick="toggleWishlist(this)"></i>
         </div>
-
-        <% 
-          const totalStock = product.variants[0].sizes.reduce((acc, s) => acc + (s.stock || 0), 0);
-        %>
-        <% if(totalStock > 0){ %>
-          <p class="mt-3 text-success">In Stock: <%= totalStock %></p>
-        <% } else { %>
-          <p class="mt-3 text-danger fw-bold">Out of Stock</p>
-        <% } %>
 
       </div>
     </div>
@@ -133,10 +150,10 @@
     <% } else { %>
       <% reviews.forEach(r => { %>
         <div class="border rounded p-3 mb-3">
-          <strong><%= r.name %></strong>
+          <strong><%= r.user?.username || r.name %></strong>
           <span class="text-warning">⭐ <%= r.rating %></span>
           <p class="mb-1"><%= r.comment %></p>
-          <small class="text-muted"><%= r.createdAt.toDateString() %></small>
+          <small class="text-muted"><%= new Date(r.createdAt).toDateString() %></small>
         </div>
       <% }) %>
     <% } %>
@@ -167,71 +184,69 @@
       <button type="submit" class="btn btn-success">Submit Review</button>
     </form>
 
-    <!--  RELATED PRODUCTS -->
-<hr class="my-5">
-<h4 class="fw-bold mb-4">Related Products</h4>
+    <!-- RELATED PRODUCTS -->
+    <hr class="my-5">
+    <h4 class="fw-bold mb-4">Related Products</h4>
 
-<div class="row">
-  <% related.forEach(rp => { %>
-    <div class="col-md-3 mb-4">
-      <div class="card border-0 shadow-sm h-100 position-relative">
+    <div class="row">
+      <% related.forEach(rp => { %>
+        <div class="col-md-3 mb-4">
+          <div class="card border-0 shadow-sm h-100 position-relative">
 
-        <!-- Clickable Image -->
-        <a href="/productDetails/<%= rp._id %>">
-          <img 
-            src="<%= rp.variants[0]?.images[0] || '/img/placeholder.jpg' %>" 
-            class="card-img-top" 
-            alt="<%= rp.product_name %>">
-        </a>
+            <!-- Clickable Image -->
+            <a href="/productDetails/<%= rp._id %>?variant=<%= (rp.variants && rp.variants[0]) ? rp.variants[0]._id : '' %>">
+              <img 
+                src="<%= rp.variants[0]?.images[0] || '/img/placeholder.jpg' %>" 
+                class="card-img-top" 
+                alt="<%= rp.product_name %>">
+            </a>
 
-        <div class="card-body text-center">
+            <div class="card-body text-center">
+              <h6 class="fw-bold"><%= rp.product_name %></h6>
 
-          <!-- Product Name -->
-          <h6 class="fw-bold"><%= rp.product_name %></h6>
+              <p class="text-success fw-bold mb-2">
+                ₹<%= rp.variants[0]?.discount_price || rp.variants[0]?.price %>
+              </p>
 
-          <!-- Price -->
-          <p class="text-success fw-bold mb-2">
-            ₹<%= rp.variants[0]?.discount_price || rp.variants[0]?.price %>
-          </p>
-
-          <!-- Rating (from Review collection) -->
-          <% if (rp.averageRating && rp.averageRating > 0) { %>
-            <div class="mb-2">
-              <% for (let i = 1; i <= 5; i++) { %>
-                <% if (i <= Math.round(rp.averageRating)) { %>
-                  <i class="fa fa-star text-warning"></i>
-                <% } else { %>
-                  <i class="fa fa-star-o text-warning"></i>
-                <% } %>
+              <% if (rp.averageRating && rp.averageRating > 0) { %>
+                <div class="mb-2">
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <% if (i <= Math.round(rp.averageRating)) { %>
+                      <i class="fa fa-star text-warning"></i>
+                    <% } else { %>
+                      <i class="fa fa-star-o text-warning"></i>
+                    <% } %>
+                  <% } %>
+                  <small>(<%= rp.reviewCount || 0 %>)</small>
+                </div>
+              <% } else { %>
+                <div class="mb-2 text-muted small">No reviews yet</div>
               <% } %>
-              <small>(<%= rp.reviewCount || 0 %>)</small>
+
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <% rp.variants.forEach(variant => { %>
+                  <% if (variant.images && variant.images[0]) { %>
+                    <a href="/productDetails/<%= rp._id %>?variant=<%= variant._id %>">
+                      <img 
+                        src="<%= variant.images[0] %>" 
+                        class="rounded border"
+                        style="width:40px;height:40px;cursor:pointer;object-fit:cover;"
+                        title="<%= variant.color %>">
+                    </a>
+                  <% } %>
+                <% }) %>
+              </div>
+
             </div>
-          <% } else { %>
-            <div class="mb-2 text-muted small">No reviews yet</div>
-          <% } %>
-
-          <!-- Color Thumbnails -->
-          <div class="d-flex justify-content-center gap-2 flex-wrap">
-            <% rp.variants.forEach(variant => { %>
-              <% if (variant.images && variant.images[0]) { %>
-                <img 
-                  src="<%= variant.images[0] %>" 
-                  class="rounded border"
-                  style="width:40px;height:40px;cursor:pointer;"
-                  title="<%= variant.color %>"
-                  onclick="window.location='/productDetails/<%= rp._id %>'">
-              <% } %>
-            <% }) %>
           </div>
-
         </div>
-      </div>
+      <% }) %>
     </div>
-  <% }) %>
-</div>
 
+  </div>
 </section>
-<!-- 🧩 SIZE GUIDE MODAL -->
+
+<!-- SIZE GUIDE MODAL (unchanged) -->
 <div class="modal fade" id="sizeGuideModal" tabindex="-1" aria-labelledby="sizeGuideLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -265,9 +280,48 @@
     </div>
   </div>
 </div>
+<style>
+#flashMessage {
+  animation: fadeInOut 3s ease-in-out;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+</style>
 
+<!-- scripts -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+
+    let selectedStock = 0; // store selected size stock
+
+
+ function showFlashMessage(message, type = 'danger') {
+      let flashBox = document.getElementById('flashMessage');
+      if (!flashBox) {
+        flashBox = document.createElement('div');
+        flashBox.id = 'flashMessage';
+        flashBox.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3 shadow`;
+        flashBox.style.zIndex = '2000';
+        document.body.appendChild(flashBox);
+      }
+
+      flashBox.textContent = message;
+      flashBox.style.display = 'block';
+
+      // Hide after 3 seconds
+      setTimeout(() => {
+        flashBox.style.display = 'none';
+      }, 3000);
+    }
+
+
+
+
+
 
     // Review form toggle
     window.toggleReviewForm = function() {
@@ -280,80 +334,87 @@
       event.preventDefault();
       const input = document.getElementById("quantity");
       let qty = parseInt(input.value) || 1;
-      qty = Math.max(1, qty + delta);
+      const maxQty = Math.min(3, selectedStock || 3);
+
+      qty += delta;
+      if (qty < 1) qty = 1;
+      if (qty > maxQty) {
+        qty = maxQty;
+        showFlashMessage(`⚠️ You can order a maximum of ${maxQty} quantity for this size.`);
+      }
+
       input.value = qty;
+      const formQty = document.getElementById('formQuantity');
+      if (formQty) formQty.value = qty;
+    }
+
+    // Size selection + show stock
+    window.selectSize = function(size, stock, event) {
+      document.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("btn-dark"));
+      event.target.classList.add("btn-dark");
+
+      selectedStock = stock;
+      const stockInfo = document.getElementById("stockInfo");
+      if (stock > 0) {
+        stockInfo.textContent = `Available stock: ${stock}`;
+        stockInfo.classList.remove("text-danger");
+        stockInfo.classList.add("text-success");
+      } else {
+        stockInfo.textContent = "Out of stock for this size";
+        stockInfo.classList.remove("text-success");
+        stockInfo.classList.add("text-danger");
+      }
+
+      // Reset quantity to 1 when changing size
+      const qtyInput = document.getElementById("quantity");
+      qtyInput.value = 1;
+      const formQty = document.getElementById('formQuantity');
+      if (formQty) formQty.value = 1;
+    }
+
+    // Wishlist toggle
+    window.toggleWishlist = function(icon) {
+      icon.classList.toggle("fa-solid");
+      icon.classList.toggle("fa-regular");
+      icon.classList.toggle("text-danger");
+      icon.classList.toggle("text-secondary");
     }
 
     // Main image change
     window.changeMainImage = function(src) {
-      document.getElementById("mainImage").src = src;
+      const m = document.getElementById("mainImage");
+      if (m) m.src = src;
     }
-
-    // Color variant change
-    window.changeColorVariant = function(index) {
-      const variants = <%- JSON.stringify(product.variants) %>;
-      const variant = variants[index];
-      document.getElementById("mainImage").src = variant.images[0];
-
-      // Update thumbnails
-      const thumbContainer = document.getElementById("imageThumbnails");
-      thumbContainer.innerHTML = "";
-      variant.images.forEach(img => {
-        const thumb = document.createElement("img");
-        thumb.src = img;
-        thumb.className = "img-thumbnail";
-        thumb.style = "width:60px;height:60px;cursor:pointer;";
-        thumb.onclick = () => changeMainImage(img);
-        thumbContainer.appendChild(thumb);
-      });
-
-      // Update size buttons
-      const sizeContainer = document.getElementById("sizeOptions");
-      sizeContainer.innerHTML = "";
-      variant.sizes.forEach(s => {
-        if(!s.isDeleted && s.isListed) {
-          const btn = document.createElement("button");
-          btn.className = "btn btn-outline-secondary btn-sm size-btn";
-          btn.textContent = s.size;
-          btn.onclick = (event) => selectSize(s.size, event);
-          sizeContainer.appendChild(btn);
-        }
-      });
-
-
-
-    }
-
-    // Size select highlight
-    window.selectSize = function(size, event) {
-      document.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("btn-dark"));
-      event.target.classList.add("btn-dark");
-    }
-
- // Wishlist toggle
-window.toggleWishlist = function(icon) {
-  icon.classList.toggle("fa-solid");
-  icon.classList.toggle("fa-regular");
-  icon.classList.toggle("text-danger");
-  icon.classList.toggle("text-secondary");
-}
 
     // Zoom effect
     const mainImage = document.getElementById("mainImage");
-    mainImage.addEventListener("mousemove", e => {
-      const rect = e.target.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      mainImage.style.transformOrigin = `${x}px ${y}px`;
-      mainImage.style.transform = "scale(1.5)";
-    });
-    mainImage.addEventListener("mouseleave", () => {
-      mainImage.style.transform = "scale(1)";
-    });
+    if (mainImage) {
+      mainImage.addEventListener("mousemove", e => {
+        const rect = e.target.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        mainImage.style.transformOrigin = `${x}px ${y}px`;
+        mainImage.style.transform = "scale(1.5)";
+      });
+      mainImage.addEventListener("mouseleave", () => {
+        mainImage.style.transform = "scale(1)";
+      });
+    }
+
+
+
+
+
+
+    //  Auto-select first size *after* all functions exist
+    const firstSizeButton = document.querySelector('.size-btn');
+    if (firstSizeButton) {
+      firstSizeButton.classList.add('btn-dark');
+      firstSizeButton.click(); // now this will properly trigger selectSize()
+    }
+
   });
-
-
-  
 </script>
+
 
 <%- include("../../views/partials/user/footer") %>

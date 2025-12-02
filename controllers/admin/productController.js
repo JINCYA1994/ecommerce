@@ -69,13 +69,13 @@ const getProducts = async (req, res) => {
 const listProduct=async (req,res) => {
   try {
     const {productId,variantId,sizeId}=req.params
-
+     let page = parseInt(req.query.page) || 1
 await Product.updateOne(
   {_id:productId },
  { $set: { "variants.$[v].sizes.$[s].isListed": true } },
   { arrayFilters: [{ "v._id": variantId }, { "s._id": sizeId }] }
 );
-    res.redirect('/admin/products')
+    res.redirect(`/admin/products?page=${page || 1}`)
   } catch (err) {
     console.error(err)
     res.status(500).send('server Error')
@@ -88,13 +88,13 @@ await Product.updateOne(
 const unlistProduct=async (req,res) => {
   try {
     const {productId,variantId,sizeId}=req.params
-
+   let page = parseInt(req.query.page) || 1
 await Product.updateOne(
   {_id:productId },
  { $set: { "variants.$[v].sizes.$[s].isListed": false } },
   { arrayFilters: [{ "v._id": variantId }, { "s._id": sizeId }] }
 );
-    res.redirect('/admin/products')
+    res.redirect(`/admin/products?page=${page || 1}`)
   } catch (err) {
     console.error(err)
     res.status(500).send('server Error')
@@ -116,7 +116,7 @@ await Product.updateOne(
 );
 
 console.log("Size deleted successfully")
-res.redirect('/admin/products')
+res.redirect(`/admin/products?page=${page || 1}`)
 }
 catch(err){
 console.log(err.message)

@@ -2,7 +2,7 @@
  const Otp=require('../../models/otpSchema')
 const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
-
+const session=require('express-session')
 
 const bcrypt = require('bcryptjs');
 
@@ -19,6 +19,11 @@ const loadHomepage=async (req,res)=>{
       .sort({ createdAt: -1 })
       .limit(4)
       .lean();
+
+
+
+
+
  const user=req.session.user
  if(user){
 
@@ -58,17 +63,19 @@ const loginpost= async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.render('login', { message: 'Invalid credentials.' });
+            return res.render('login', { message: 'User Not Found.' });
         }
-
+if (user.isBlocked) {
+      return res.render('login', { message: 'Your account has been blocked by admin' });
+    }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.render('login', { message: 'Invalid credentials.' });
+            return res.render('login', { message: 'Incorrect Password.' });
         }
 
    
         req.session.user = user;
-        res.redirect('/');
+        res.redirect('/home');
 
     } catch (error) {
         console.error(error);
@@ -78,7 +85,7 @@ const loginpost= async (req, res) => {
 
 const loadlogin=(req,res)=>{
    try {
-    res.render('login', { message: "" }); 
+   res.render('login', { message: "" }); 
   } catch (error) {
     console.error('Error rendering login page:', error.message);
     res.status(500).send('Something went wrong!');
@@ -147,22 +154,24 @@ return res.render('signup', { message: 'Password must contain at least 1 upperca
 const hashedpassword=await bcrypt.hash(password,10) 
 
 
-const otp=generateOTP() 
-await Otp.deleteMany({ email, purpose: "signup" });
-const newOtp = new Otp({ 
-    email,
-    otp,
-    purpose: "signup" 
-  });
+const existingOtp = await Otp.findOne({ email, purpose: "signup" });
 
- await newOtp.save(); 
+if (!existingOtp) {
+  const otp = generateOTP();
+  await Otp.deleteMany({ email, purpose: "signup" });
+  const newOtp = new Otp({ email, otp, purpose: "signup" });
+  await newOtp.save();
+  console.log("New OTP created:", otp);
 
-console.log(" OTP saved:", newOtp);
 
-const emailSent=await sendOtpEmail(email,otp)
- if(!emailSent){ 
-return res.render('signup',{ message: 'Failed to send OTP. Please try again later.' });
- } 
+
+  const emailSent = await sendOtpEmail(email, otp);
+  if (!emailSent) {
+    return res.render('signup', { message: 'Failed to send OTP. Please try again later.' });
+  }
+} else {
+  console.log("Existing OTP still valid. Skipping new email send.");
+}
 req.session.tempUser = {
     username,
     email,
@@ -210,9 +219,10 @@ const otp = otpArray.join('');
 
     
     req.session.tempUser = null;
+    req.session.user = newUser;
 
-   req.flash("success_msg", "Signup successful. Please login.");
-   return res.redirect("/login")
+req.flash("success_msg", "Signup successful. Please login.");
+   return res.redirect("/home")
   } catch (error) {
     console.error('OTP verification error:', error);
     res.render('verifyOtp', { email: req.body.email, purpose: "signup",message: 'Something went wrong' });

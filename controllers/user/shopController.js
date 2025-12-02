@@ -1,109 +1,109 @@
-const User = require('../../models/userSchema');
+
+
 const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
-const Review= require('../../models/reviewSchema');
-
-
 
 const loadShop = async (req, res) => {
   try {
-    const categoryFilter = req.query.category || "";
+    const category = req.query.category || "";
     const minPrice = parseInt(req.query.minPrice) || 0;
     const maxPrice = parseInt(req.query.maxPrice) || 1000000;
     const search = req.query.search || "";
     const sort = req.query.sort || "";
     const page = parseInt(req.query.page) || 1;
-    const limit = 9; // number of products per page
+    const limit = 9; // products per page
 
-    // Base query
-    let query = {};
+    //  Fetch all active categories
+    const categories = await Category.find({ isListed: true });
 
-      if (categoryFilter) {
-      const category = await Category.findOne({ name: categoryFilter });
-      if (category) {
-        query.category_id = category._id;
+    // 🧩 Build dynamic query
+     let query = {};
+   
+// if (category) {
+//   query.category_id = category;
+// }
+  
+    if (category) {
+      const selectedCategory = await Category.findOne({ _id: category, isListed: true });
+      if (selectedCategory) {
+        query.category_id = selectedCategory._id;
+      } else {
+        // If category is unlisted, show empty result
+        query.category_id = null;
       }
+    } else {
+      // No category filter → show only products from listed categories
+      const listedCategoryIds = categories.map(cat => cat._id);
+      query.category_id = { $in: listedCategoryIds };
     }
-
-
-
-
+    // Search filter
     if (search) query.product_name = { $regex: search, $options: "i" };
 
-    // Fetch products
-    let allProducts = await Product.find(query)
-      .populate("category_id")
-      .lean();
+    // 💰 Price filter — handles both price & discount_price
+    query.$or = [
+      { "variants.discount_price": { $gte: minPrice, $lte: maxPrice } },
+      {
+        $and: [
+          { "variants.discount_price": { $exists: false } },
+          { "variants.price": { $gte: minPrice, $lte: maxPrice } },
+        ],
+      },
+    ];
 
-    const productIds = allProducts.map(p => p._id);
-    const allReviews = await Review.find({ product: { $in: productIds } }).lean();
-     allProducts.forEach(product => {
-      product.reviews = allReviews.filter(r => r.product.toString() === product._id.toString());
-    });
-
-    // Filter by price
-    allProducts = allProducts.filter(p => {
-      if (p.variants.length > 0 && p.variants[0].price != null) {
-        return p.variants.some(v => v.price >= minPrice && v.price <= maxPrice);
-      }
-      return false;
-    });
-
-    // Random variant for each product
-    allProducts.forEach(p => {
-      if (p.variants && p.variants.length > 0) {
-        const randomIndex = Math.floor(Math.random() * p.variants.length);
-        p.randomVariant = p.variants[randomIndex];
-      }
-    });
-
-    // Sorting
+    // Sorting logic
+    let sortOption = {};
     if (sort === "lowToHigh") {
-      allProducts.sort((a, b) => (a.randomVariant?.price || 0) - (b.randomVariant?.price || 0));
+      sortOption["variants.discount_price"] = 1;
+      sortOption["variants.price"] = 1;
     } else if (sort === "highToLow") {
-      allProducts.sort((a, b) => (b.randomVariant?.price || 0) - (a.randomVariant?.price || 0));
+      sortOption["variants.discount_price"] = -1;
+      sortOption["variants.price"] = -1;
     } else if (sort === "aToZ") {
-      allProducts.sort((a, b) => a.product_name.localeCompare(b.product_name));
+      sortOption["product_name"] = 1;
     } else if (sort === "zToA") {
-      allProducts.sort((a, b) => b.product_name.localeCompare(a.product_name));
+      sortOption["product_name"] = -1;
     }
 
-    // Pagination
-    const totalProducts = allProducts.length;
+    //  Pagination setup
+    const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
-    const paginatedProducts = allProducts.slice((page - 1) * limit, page * limit);
+    const skip = (page - 1) * limit;
 
-    const categories = await Category.find({ isDeleted: false, isListed: true });
-    const user=req.session.user
-   if(user){
+    // 🧾 Fetch filtered products
+    const products = await Product.find(query)
+      .populate("category_id")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-  const userData=await User.findOne({_id:user._id})
- res.render("shop", {
-      products: paginatedProducts,
+    // 🪄 Pick a variant to display
+    products.forEach((p) => {
+      if (p.variants && p.variants.length > 0) {
+        p.randomVariant = p.variants.reduce((min, v) =>
+          (v.discount_price || v.price) < (min.discount_price || min.price)
+            ? v
+            : min
+        );
+      }
+    });
+ const userData = req.session.user || null;
+    // Render EJS
+    res.render("shop", {
+      products,
       categories,
-      category: categoryFilter,
+      category,
       search,
-      minPrice,
-      maxPrice,
       sort,
       currentPage: page,
-      totalPages,userData
-    })}
-    else{
- return  res.render("shop", {
-      products: paginatedProducts,
-      categories,
-      category: categoryFilter,
-      search,
+      totalPages,
       minPrice,
       maxPrice,
-      sort,
-      currentPage: page,
-      totalPages
-    })}
+      userData
+    });
   } catch (error) {
-    console.error("Error loading shop:", error.message);
-    res.render("404");
+    console.log("Error in loadShop:", error);
+    res.redirect("/pageNotFound");
   }
 };
 

@@ -163,8 +163,16 @@ const postAddProduct = async (req, res) => {
     const errors = [];
     const { name, description, category } = req.body;
 
-    if (!name || name.trim().length < 3)
-      errors.push('Invalid product name (min 3 characters, letters & numbers only)');
+ 
+if (
+  !name ||
+  !/^[A-Za-z][A-Za-z0-9\s,'\/-]*$/.test(name.trim()) ||  
+  (name.match(/[A-Za-z]/g) || []).length < 3
+) {
+  errors.name = 'Invalid product name (must start with a letter, contain at least 3 letters, only letters, numbers, spaces, "-", ",", and "/" allowed)';
+}
+
+
     if (!description || description.trim().length < 10)
       errors.push('Description must be at least 10 characters');
     if (!category)
@@ -191,8 +199,8 @@ const postAddProduct = async (req, res) => {
         if (!v.size || isNaN(v.size) || Number(v.size) <= 0) {
           errors.push(`Variant ${i + 1}: Invalid size.`);
         }
-        if (!v.stock || isNaN(v.stock) || Number(v.stock) < 0) {
-          errors.push(`Variant ${i + 1}: Stock must be 0 or more.`);
+        if (!v.stock || isNaN(v.stock) || Number(v.stock) < 0||Number(v.stock)>100) {
+          errors.push(`Variant ${i + 1}: 'Stock must be between 0 and 100'`);
         }
       });
     }

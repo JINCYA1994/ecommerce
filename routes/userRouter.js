@@ -10,6 +10,7 @@ const profileController=require('../controllers/user/profileController')
 
 
 router.get('/',userController.loadHomepage)  
+router.get('/home',userAuth,userController.loadHomepage)  
 router.get('/login',userController.loadlogin)  
 router.post('/login',userController.loginpost) 
 router.post('/signup',userController.registerSignup)
@@ -18,6 +19,10 @@ router.post('/verify-otp',userController.verifyOtp)
 router.get('/resend_otp',userController.resendOtp)
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
 router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signup'}),(req,res)=>{
+      console.log("Google login successful. User:", req.user);
+
+
+    req.session.user = req.user;
      res.redirect('/')
 })
 router.get('/logout',userController.logout)

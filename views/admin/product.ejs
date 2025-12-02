@@ -91,15 +91,15 @@
         </td>
         <td>
           <% if (sizeObj.isListed) { %>
-            <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/unlist" class="btn btn-success btn-sm">Listed</a>
+            <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/unlist?page=<%= currentPage %>" class="btn btn-success btn-sm">Listed</a>
           <% } else { %>
-            <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/list" class="btn btn-danger btn-sm">Unlisted</a>
+            <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/list?page=<%= currentPage %>" class="btn btn-danger btn-sm">Unlisted</a>
           <% } %>
         </td>
         <td>
           <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/edit" class="btn btn-sm btn-warning mb-1">Edit</a>
           <form 
-            action="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/delete" 
+            action="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/delete?page=<%= currentPage %>" 
             method="POST" 
             class="d-inline delete-form">
             <button type="submit" class="btn btn-sm btn-danger">Delete</button>

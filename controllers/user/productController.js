@@ -2,31 +2,51 @@ const User=require('../../models/userSchema')
 const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
 const Review = require('../../models/reviewSchema');
-
+const session=require('express-session')
 // 📄 Load Product Details Page
 const loadProductDetails = async (req, res) => {
   try {
     const productId = req.params.id;
+    const selectedVariantId = req.query.variant; // 🟢 read clicked variant ID
 
     const product = await Product.findById(productId)
       .populate('category_id')
       .lean();
 
+    if (!product) {
+      return res.status(404).send('Product not found');
+    }
+
+    // 🟢 Find active variant based on query or fallback to first one
+    let activeVariant = product.variants[0];
+    if (selectedVariantId) {
+      const found = product.variants.find(
+        (v) => v._id.toString() === selectedVariantId
+      );
+      if (found) activeVariant = found;
+    }
+
     const related = await Product.find({
       category_id: product.category_id,
-      _id: { $ne: productId }
-    }).limit(4).lean();
-
-    const reviews = await Review.find({ product: productId })
-      .populate('user', 'username') // to show user name in reviews
+      _id: { $ne: productId },
+    })
+      .limit(4)
       .lean();
 
-    // product.reviews = reviews;
-
-    res.render('productDetails', { product, related,reviews});
+    const reviews = await Review.find({ product: productId })
+      .populate('user', 'username')
+      .lean();
+ const userData = req.session.user || null;
+    res.render('productDetails', {
+      product,
+      related,
+      reviews,
+      activeVariant,
+      userData
+    });
   } catch (error) {
-    console.error("Error loading product details:", error);
-    res.status(500).send("Something went wrong");
+    console.error('Error loading product details:', error.message);
+    res.status(500).send('Server error');
   }
 };
 

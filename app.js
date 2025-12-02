@@ -6,6 +6,7 @@ const connectDB=require('./config/db')
 const userRouter= require('./routes/userRouter')
 const adminRouter=require('./routes/adminRouter')
 const session=require('express-session')
+const MongoStore = require('connect-mongo'); 
 const passport=require('./config/passport')
 const flash = require("connect-flash");
 
@@ -15,16 +16,24 @@ connectDB()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    maxAge: 1000 * 60 * 60, 
-    secure: false,
-    httpOnly: true
-  }
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false, // ✅ Only save session when something stored
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URL, // ✅ Same DB connection
+      collectionName: 'sessions',
+      ttl: 7 * 24 * 60 * 60, // ✅ 7 days in seconds
+    }),
+    cookie: {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // ✅ 7 days in ms
+      httpOnly: true,
+      secure: false, // ✅ keep false in localhost, true in HTTPS
+      sameSite: 'lax',
+    },
+  })
+);
 app.use(passport.initialize())
 app.use(passport.session())
 

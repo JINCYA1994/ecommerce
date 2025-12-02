@@ -121,7 +121,7 @@
 
           <div class="mb-3">
             <label class="form-label">Stock</label>
-            <input type="number" class="form-control" name="stock"  id="stock" value="<%= size.stock %>">
+            <input type="text" class="form-control" name="stock"  id="stock" value="<%= size.stock %>">
               <div class="text-danger small mt-1" id="stockError"></div>
           </div>
 
@@ -233,16 +233,20 @@ document.getElementById('discountPriceError').textContent=''
 document.getElementById('sizeError').textContent=''
 document.getElementById('stockError').textContent=''
 document.getElementById('imageError').textContent=''
-
-
-if(!name){
-document.getElementById('nameError').textContent='Product name is required'
-valid= false
+if (!name) {
+  document.getElementById('nameError').textContent = 'Product name is required';
+  valid = false;
+} 
+else if (!/^[A-Za-z][A-Za-z0-9\s,'\/-]*$/.test(name.trim())) {
+  document.getElementById('nameError').textContent = 
+    'Name must start with a letter and can contain only letters, numbers, spaces, "-", ",", or "/"';
+  valid = false;
+} 
+else if ((name.match(/[A-Za-z]/g) || []).length < 3) {
+  document.getElementById('nameError').textContent = 
+    'Name must contain at least 3 letters';
+  valid = false;
 }
- else if(name.length<3){ 
-    document.getElementById('nameError').textContent = "Name must be at least 3 characters"; 
-    valid = false; 
-  }
 
   if(!description){
      document.getElementById('descriptionError').textContent = 'Description is required';
@@ -265,8 +269,8 @@ if (discountPrice && (Number(discountPrice) > Number(price) || Number(discountPr
       document.getElementById('discountPriceError').textContent="Invalid discount price";
        valid=false;
     }
-    if (!stock || Number(stock)<0){
-       document.getElementById('stockError').textContent="Invalid stock"; 
+    if (!stock || Number(stock)<0||Number(stock)>100){
+       document.getElementById('stockError').textContent="'Stock must be between 0 and 100'"; 
        valid=false; 
     }
     if (!color || !/^[A-Za-z\s]+$/.test(color)){ 
