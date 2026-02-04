@@ -37,82 +37,59 @@
 <table class="table table-bordered table-striped align-middle text-center">
   <thead class="table-dark">
     <tr>
-      <th>#</th>
+      <th>No</th>
       <th>Product Name</th>
-      <th>Description</th>
       <th>Category</th>
-      <th>Color</th>
-      <th>Price</th>
-      <th>Discount</th>
-      <th>Size</th>
-      <th>Stock</th>
-      <th>Images</th>
-      <th>Status</th>
-      <th>Actions</th>
+      <th>Variants</th>
+     
     </tr>
   </thead>
-  <tbody>
-  <% if (products && products.length > 0) { %>
-    <% let count = 1; %>
-    <% products.forEach(item => { 
-         const product = item.product;
-         const variant = item.variant;
-         const sizeObj = item.size;
-    %>
-      <tr>
-        <td><%= count++ %></td>
-        <td><%= product.product_name %></td>
-        <td class="description">
-          <%= product.product_description.substring(0, 50) %>...
-          <% if(product.product_description.length > 50) { %>
-            <button class="btn btn-link p-0" onclick="showModal('<%= encodeURIComponent(product.product_description) %>')">Read more</button>
-          <% } %>
-        </td>
-        <td><%= product.category_id ? (product.category_id.category_name || product.category_id.name || 'N/A') : 'N/A' %></td>
-        <td><%= variant.color || 'N/A' %></td>
-        <td>₹<%= variant.price %></td>
-        <td><%= variant.discount_price ? '₹' + variant.discount_price : '-' %></td>
-        <td><%= sizeObj.size || '-' %></td>
-        <td>
-          <% if (sizeObj.stock > 0) { %>
-            <%= sizeObj.stock %> pcs
-          <% } else { %>
-            <span class="text-danger">Out of Stock</span>
-          <% } %>
-        </td>
-        <td>
-          <% if (variant.images && variant.images.length > 0) { %>
-            <img src="<%= variant.images[0] %>" style="width:65px; height:65px; object-fit:cover; border-radius:8px; border:2px solid green;">
-            <br>
-            <span class="badge bg-success">Cover</span>
-          <% } else { %>
-            <span class="text-muted">No Image</span>
-          <% } %>
-        </td>
-        <td>
-          <% if (sizeObj.isListed) { %>
-            <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/unlist?page=<%= currentPage %>" class="btn btn-success btn-sm">Listed</a>
-          <% } else { %>
-            <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/list?page=<%= currentPage %>" class="btn btn-danger btn-sm">Unlisted</a>
-          <% } %>
-        </td>
-        <td>
-          <a href="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/edit" class="btn btn-sm btn-warning mb-1">Edit</a>
-          <form 
-            action="/admin/products/<%= product._id %>/variant/<%= variant._id %>/size/<%= sizeObj._id %>/delete?page=<%= currentPage %>" 
-            method="POST" 
-            class="d-inline delete-form">
-            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-          </form>
-        </td>
-      </tr>
-    <% }) %>
-  <% } else { %>
-    <tr><td colspan="12" class="text-center text-muted">No products found</td></tr>
-  <% } %>
-</tbody>
 
+  <tbody>
+    <% if(products && products.length > 0){ %>
+      <% products.forEach((product, index) => { %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= product.product_name %></td>
+          <td>
+            <%= product.category_id 
+                ? (product.category_id.category_name || product.category_id.name) 
+                : 'N/A' %>
+          </td>
+
+          <!-- Variants Count + View Button -->
+          <td>
+            <span class="badge bg-info">
+              <!-- <%= product.variants.length %> Variants -->
+               
+<% product.variants.forEach(variant => { %>
+  <div>
+    Color: <%= variant.color %> —
+    Sizes: <%= variant.sizes.length %>
+  </div>
+<% }) %>
+
+              
+            </span>
+            <br>
+            <button 
+              class="btn btn-sm btn-outline-primary mt-1"
+              onclick="openVariantModal('<%= product._id %>')">
+              View
+            </button>
+          </td>
+
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="5" class="text-muted">No products found</td>
+      </tr>
+    <% } %>
+  </tbody>
 </table>
+
+
 
 <!-- Pagination -->
 <nav aria-label="Page navigation">
@@ -136,48 +113,117 @@
     <% } %>
   </ul>
 </nav>
-
-<!-- Description Modal -->
-<div class="modal fade" id="descModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="variantModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Full Description</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title">Product Variants</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="modalDescription"></div>
+
+      <div class="modal-body">
+        <table class="table table-bordered text-center">
+         <thead class="table-dark">
+  <tr>
+    <th>Image</th>
+    <th>Color</th>
+    <th>Price</th>
+    <th>Discount</th>
+    <th>Size</th>
+    <th>Status</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+          <tbody id="variantTableBody">
+            <!-- JS will insert rows -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-function showModal(desc) {
-  document.getElementById('modalDescription').innerText = decodeURIComponent(desc);
-  var myModal = new bootstrap.Modal(document.getElementById('descModal'));
-  myModal.show();
-}
+const productsData = <%- JSON.stringify(products) %>;
 
-// SweetAlert Delete
-document.querySelectorAll('.delete-form').forEach(form => {
-  form.addEventListener('submit', function(e) {
-    e.preventDefault(); 
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        form.submit(); 
-      }
+function openVariantModal(productId) {
+  const product = productsData.find(p => p._id === productId);
+  const tbody = document.getElementById("variantTableBody");
+  tbody.innerHTML = "";
+
+  product.variants.forEach(variant => {
+    variant.sizes.forEach(size => {
+      if (size.isDeleted) return;
+
+      tbody.innerHTML += `
+        <tr>
+          <td>
+            <img src="${variant.images?.[0] || ''}"
+                 style="width:60px;height:60px;object-fit:cover">
+          </td>
+          <td>${variant.color || 'N/A'}</td>
+          <td>₹${variant.price}</td>
+          <td>${variant.discount_price || '-'}</td>
+          <td>${size.size}</td>
+          <td>
+            ${size.isListed
+              ? '<span class="badge bg-success">Listed</span>'
+              : '<span class="badge bg-danger">Unlisted</span>'}
+          </td>
+          <td>
+            <a href="/admin/products/${product._id}/variant/${variant._id}/size/${size._id}/${size.isListed ? 'unlist' : 'list'}"
+               class="btn btn-sm btn-secondary mb-1">
+               ${size.isListed ? 'Unlist' : 'List'}
+            </a>
+
+            <form method="POST"
+              action="/admin/products/${product._id}/variant/${variant._id}/size/${size._id}/delete"
+              class="d-inline delete-form">
+              <button type="submit" class="btn btn-sm btn-danger">
+                Delete
+              </button>
+            </form>
+            <a href="/admin/products/${product._id}/variant/${variant._id}/size/${size._id}/edit"
+   class="btn btn-sm btn-warning">
+   Edit
+</a>
+
+          </td>
+        </tr>
+      `;
     });
   });
+
+  const modal = new bootstrap.Modal(
+    document.getElementById("variantModal")
+  );
+  modal.show();
+}
+
+/* SweetAlert delete confirmation */
+document.addEventListener("submit", function (e) {
+  if (e.target.classList.contains("delete-form")) {
+    e.preventDefault();
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!"
+    }).then(result => {
+      if (result.isConfirmed) {
+        e.target.submit();
+      }
+    });
+  }
 });
 </script>
+
 
 <%- include("../../views/partials/admin/footer") %>
 

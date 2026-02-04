@@ -14,11 +14,11 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // ✅ Find existing user
+        //Find existing user
         let user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
-          // ✅ Create new user
+          // Create new user
           user = new User({
             googleId: profile.id,
             username: profile.displayName,
@@ -27,7 +27,7 @@ passport.use(
           await user.save();
         }
 
-        return done(null, user); // ✅ Must pass user, not newUser or undefined
+        return done(null, user); // Must pass user, not newUser or undefined
       } catch (err) {
         return done(err, null);
       }
@@ -35,12 +35,12 @@ passport.use(
   )
 );
 
-// ✅ Serialize user (store user._id in session)
+// Serialize user (store user._id in session)
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// ✅ Deserialize user (fetch user by id from DB)
+//  Deserialize user (fetch user by id from DB)
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);

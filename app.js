@@ -37,6 +37,14 @@ app.use(
 app.use(passport.initialize())
 app.use(passport.session())
 
+app.use((req, res, next) => {
+  res.set(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, private'
+  );
+  next();
+});
+
 
 app.use(flash());
 app.use((req, res, next) => {

@@ -2,63 +2,44 @@
 const Product = require('../../models/productSchema');
  const cloudinary = require('../../config/cloudinary');
 
-
-
 const getProducts = async (req, res) => {
   try {
     let search = req.query.search || "";
     let page = parseInt(req.query.page) || 1;
-    let limit = 10; // fixed number of rows per page
+    let limit = 10;
+    let skip = (page - 1) * limit;
 
-    let query = { isDeleted: { $ne: true } };
+    let query = { };
 
     if (search) {
       query.product_name = { $regex: search, $options: "i" };
     }
 
-    // Fetch products
-    let allProducts = await Product.find(query)
-      .populate('category_id')
+    const products = await Product.find(query)
+      .populate("category_id")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
-    // Filter and flatten all variant-size combinations
-    let allItems = [];
-    allProducts.forEach(product => {
-      product.variants.forEach(variant => {
-        variant.sizes
-          .filter(size => !size.isDeleted)
-          .forEach(size => {
-            allItems.push({
-              product,
-              variant,
-              size
-            });
-          });
-      });
-    });
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limit);
 
-    // Total count for pagination
-    const totalItems = allItems.length;
-    const totalPages = Math.ceil(totalItems / limit);
-
-    // Paginate manually
-    const startIndex = (page - 1) * limit;
-    const paginatedItems = allItems.slice(startIndex, startIndex + limit);
-
-    res.render('product', {
-      products: paginatedItems, // send flattened list
+    res.render("product", {
+      products,
       search,
       currentPage: page,
       totalPages,
-      success: req.flash('success'),
-      error: req.flash('error')
+      success: req.flash("success"),
+      error: req.flash("error")
     });
   } catch (err) {
-    console.error("Error loading products:", err);
+    console.error(err);
     res.status(500).send("Server Error");
   }
 };
+
+
 
 
 

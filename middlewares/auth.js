@@ -9,8 +9,9 @@ const userAuth = async (req, res, next) => {
         req.session.user = userData;
         next();
       } else {
-        req.session.destroy();
-        res.redirect('/login');
+        req.session.destroy(() => {
+          res.redirect('/login');
+        });
       }
     } else {
       res.redirect('/login');

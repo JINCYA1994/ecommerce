@@ -14,102 +14,220 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-papX2UML7TRO7kDk4UfBkx9Uj7DvuP+nayKYBy7KIlEw6cUwzbf7tMoD7g8bkBl9mrUPex8Z/YrbRu6f8j8Ig==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-  <style>
-    .login-container {
-      max-width: 400px;
-      margin: 100px auto;
-      padding: 40px;
-      border: 3px solid #000;
-      border-radius: 20px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-      background-color: #fff;
-      text-align: center;
-    }
+<style>
+body{
+  background:#f6f2ea;
+  font-family: "Segoe UI", sans-serif;
+}
 
-    .login-container h2 {
-      font-weight: 700;
-      margin-bottom: 30px;
-      font-size: 24px;
-    }
+.login-wrapper{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
 
-    .form-control {
-      background-color: #ddd;
-      border: none;
-      margin-bottom: 15px;
-      height: 45px;
-      padding-left: 15px;
-    }
+.login-card{
+  width:900px;
+  height:520px;
+  display:flex;
+  border-radius:25px;
+  overflow:hidden;
+  background:#fff;
+}
 
-    .btn-login {
-      width: 100%;
-      height: 45px;
-      font-weight: 600;
-      background-color: #000;
-      color: #fff;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
+/* LEFT SIDE */
+.login-left{
+  width:45%;
+  background:linear-gradient(135deg,#111,#444);
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
 
-    .signup-link {
-      margin-top: 15px;
-      display: block;
-      font-size: 14px;
-    }
+.brand h2{
 
-    .google-login p {
-      margin-bottom: 10px;
-      font-weight: 500;
-    }
+  font-size:34px;
+  margin-top:15px;
+  color:#fff;
+}
 
-    .google-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #ccc;
-      border-radius: 30px;
-      padding: 8px 20px;
-      text-decoration: none;
-      font-weight: 600;
-      color: #555;
-      background-color: #fff;
-      transition: box-shadow 0.3s;
-    }
+.brand p{
+  font-size:14px;
+  opacity:0.8;
+  color:#fff;
+}
 
-    .google-btn:hover {
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
-    }
+.brand h3{
+  margin-top:25px;
+  font-size:26px;
+  color:#fff;
+}
 
-    .google-btn img {
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
-    }
-  </style>
+.logo-circle{
+  width:90px;
+  height:90px;
+  background:white;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:0 auto 12px;
+}
+
+.logo-circle img{
+  width:55px;
+  height:55px;
+  object-fit:contain;
+}
+
+/* RIGHT SIDE */
+.login-right{
+  width:55%;
+  padding:60px;
+}
+
+.login-right h2{
+  font-size:30px;
+  margin-bottom:30px;
+}
+
+.input-group-ui{
+  display:flex;
+  align-items:center;
+  border:1px solid #e0d8cc;
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:20px;
+}
+
+.input-group-ui i{
+  color:#888;
+  margin-right:10px;
+}
+
+.input-group-ui input{
+  border:none;
+  outline:none;
+  width:100%;
+  font-size:15px;
+}
+
+.forgot{
+  display:block;
+  text-align:right;
+  font-size:14px;
+  color:#2a66ff;
+  margin-bottom:25px;
+  text-decoration:none;
+}
+
+.btn-login-ui{
+  width:100%;
+  background:#c99a5b;
+  border:none;
+  padding:14px 0;
+  border-radius:30px;
+  color:#fff;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+/* Google button – match login button */
+.google-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border:1px solid #e0d8cc;
+  border-radius:30px;
+  padding:12px 0;
+  font-weight:600;
+  color:#555;
+  background:#fff;
+  margin-top:18px;
+  transition: box-shadow 0.3s;
+}
+
+.google-btn img{
+  width:22px;
+  height:22px;
+}
+
+.google-btn:hover{
+  box-shadow:0 6px 15px rgba(0,0,0,0.15);
+}
+
+.signup-text{
+  margin-top:25px;
+  font-size:14px;
+}
+
+.signup-text a{
+  color:#2a66ff;
+  text-decoration:none;
+}
+</style>
+
 </head>
 <body>
 
-  <div class="login-container">
-    <h2>Login</h2>
-    <form    id="loginForm"  action="/login" method="POST">
-      <input type="hidden" id="message" value="<%= message %>" name="message"/>
-      <input type="text" id="email" class="form-control" name="email" placeholder="Email" >
-      <input type="password" id="password" class="form-control" name="password" placeholder="Password" >
-     
-      <button type="submit" class="btn btn-login">Login</button>
-    </form>
-  <a href="/forgot-password" class="d-block text-end text-decoration-none mb-2" style="font-size:14px; color:#007bff;">
-    Forgot Password?
-  </a>
-    <a href="/signup" class="signup-link">Don't have an account? Signup</a>
+ <div class="login-wrapper">
+  <div class="login-card">
 
-    <div class="google-login">
-      <p>Or</p>
-      <a href="/auth/google" class="google-btn">
-        <img src="https://img.icons8.com/color/48/000000/google-logo.png">
-        <span>Google</span>
-      </a>
+    <!-- LEFT PANEL -->
+    <div class="login-left">
+      <div class="brand">
+      <div class="logo-circle">
+       <img src="/img/footchiclogo.png" alt="Footchic Logo">
+       </div>
+        <h2>Footchic</h2>
+        <p>Your Style Starts Here</p>
+        <h3>Welcome Back..!</h3>
+      </div>
     </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="login-right">
+      <h2>Login</h2>
+
+      <form id="loginForm" action="/login" method="POST">
+        <input type="hidden" id="message" value="<%= message %>" name="message"/>
+
+        <div class="input-group-ui">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="text" id="email" name="email" placeholder="Enter your email">
+        </div>
+
+        <div class="input-group-ui">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="password" name="password" placeholder="Enter your password">
+        </div>
+
+        <a href="/forgot-password" class="forgot">Forgot your password?</a>
+
+        <button type="submit" class="btn-login-ui">Login</button>
+      </form>
+
+   
+           <a href="/auth/google" class="google-btn">
+        <img src="https://img.icons8.com/color/48/000000/google-logo.png">
+        <span> Login with Google</span>
+      </a>
+
+      <p class="signup-text">
+        Don't have an account? <a href="/signup">Sign up</a>
+      </p>
+    </div>
+
   </div>
+</div>
+
 
 </body>
 <script>
@@ -121,7 +239,7 @@ document.addEventListener('DOMContentLoaded',function(){
   document.querySelector('form').addEventListener('submit', formvalidate); });
 
   function formvalidate(e) { 
-    var email =document.getElementById('email').value.trim(); 
+    var email =document.getElementById('email').value; 
     var password =document.getElementById('password').value.trim(); 
 
 if(email === "" || password === "")
@@ -131,6 +249,7 @@ if(email === "" || password === "")
   e.preventDefault(); 
   return false
  } 
+
 
 const emailformat=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 if(!emailformat.test(email)){

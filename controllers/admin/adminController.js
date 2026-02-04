@@ -19,30 +19,34 @@ const pageError=async(req,res)=>{
   res.render('admin404')
 }
 
+const verifyLogin = async (req, res) => {
+  const { email, password } = req.body;
 
-const verifyLogin=async(req,res)=>{
-const{email,password}=req.body
-if(!email||!password){
-return res.redirect('/admin/login',{message:'Email and Password are required'})
-}
-try{
-const admin= await User.findOne({email})
+  if (!email || !password) {
+    req.flash("error_msg", "Email and Password are required");
+    return res.redirect("/admin/login");
+  }
 
-if (!admin) {
-  req.flash("error_msg", "Email does not exist");
-  return res.redirect("/admin/login");
-}
+  try {
+    const admin = await User.findOne({ email });
 
-if (admin.role !== "admin") {
-  req.flash("error_msg", "Access denied: Not an admin");
-  return res.redirect("/admin/login");
-}
-const isMatch = await bcrypt.compare(password, admin.password);
-if (!isMatch) {
-  req.flash("error_msg", "Invalid Password");
-  return res.redirect("/admin/login");
-}
+    if (!admin) {
+      req.flash("error_msg", "Email does not exist");
+      return res.redirect("/admin/login");
+    }
 
+    if (admin.role !== "admin") {
+      req.flash("error_msg", "Access denied: Not an admin");
+      return res.redirect("/admin/login");
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      req.flash("error_msg", "Invalid Password");
+      return res.redirect("/admin/login");
+    }
+
+ 
     req.session.admin = {
       id: admin._id,
       email: admin.email,
@@ -50,18 +54,23 @@ if (!isMatch) {
       role: admin.role
     };
 
-    console.log(" Admin session set:", req.session.admin);
+  
+    req.session.save(err => {
+      if (err) {
+        console.log("Session save error:", err);
+       
+        return res.redirect("/admin/login");
+      }
+      console.log("Admin session saved in DB:", req.session.admin);
+      return res.redirect("/admin/dashboard");
+    });
 
-//  req.session.admin =admin._id;
-    return res.redirect("/admin/dashboard");
-
-
-    }
-    catch (error) {
+  } catch (error) {
     console.error("Admin login error:", error.message);
-    res.redirect('/admin/login', { message: "Something went wrong. Please try again." });
+    req.flash("error_msg", "Something went wrong. Please try again.");
+    return res.redirect("/admin/login");
   }
- }
+};
 
 
 

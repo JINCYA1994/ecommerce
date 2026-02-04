@@ -10,17 +10,17 @@ const getEditProduct=async(req,res)=>{
  const product=await Product.findById(productId).lean()
  const categories=await Category.find({}).lean()
 if(!product){
-    res.flash('error','Product not found')
+    req.flash('error','Product not found')
     return res.redirect('/admin/products')
 }
 const variant=product.variants.find(v=>v._id.toString()===variantId)
 if(!variant){
-    res.flash('error','Variant not found')
+    req.flash('error','Variant not found')
     return res.redirect('/admin/products')
 }
 const size=variant.sizes.find(s=>s._id.toString()===sizeId)
 if(!size){
-    res.flash('error','Size not found')
+    req.flash('error','Size not found')
    return  res.redirect('/admin/products')
 }
 
@@ -48,10 +48,10 @@ console.log(req.body)
  
 if (
   !product_name ||
-  !/^[A-Za-z][A-Za-z0-9\s,'\/-]*$/.test(product_name.trim()) ||  
+  !/^[A-Za-z][A-Za-z0-9\s,'/-]*$/.test(product_name.trim()) ||  
   (product_name.match(/[A-Za-z]/g) || []).length < 3
 ) {
-  errors.product_name = 'Invalid product name (must start with a letter, contain at least 3 letters, only letters, numbers, spaces, "-", ",", and "/" allowed)';
+  errors.product_name = "Invalid product name (must start with a letter, contain at least 3 letters, and only letters, numbers, spaces, ', -, / allowed)";
 }
 
 

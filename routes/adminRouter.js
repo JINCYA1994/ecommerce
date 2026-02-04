@@ -8,9 +8,9 @@ const categoryController=require('../controllers/admin/categoryController')
  const editproductController=require('../controllers/admin/editproductController')
  const{userAuth,adminAuth}=require('../middlewares/auth')
 const upload = require('../config/multer'); 
+const preventAdminLogin = require('../middlewares/preventAdminLogin');
 
-
-router.get('/login',adminController.loadLogin) 
+router.get('/login',preventAdminLogin,adminController.loadLogin) 
 router.post('/login',adminController.verifyLogin)
 router.get('/logout',adminController.logout)
 router.get('/pageerror',adminController.pageError)
@@ -21,35 +21,44 @@ router.get('/dashboard',adminAuth,adminController.loadDashboard)
 
 
 //Customer Management
-router.get('/unblock/:id',customerController.unblockUser)
-router.get('/block/:id',customerController.blockUser)
-router.get('/users',customerController.getUsers)
+router.get('/unblock/:id',adminAuth,customerController.unblockUser)
+router.get('/block/:id',adminAuth,customerController.blockUser)
+router.get('/users',adminAuth,customerController.getUsers)
 
 //Catogory Management
 router.get('/category',adminAuth,categoryController.getcategory)
-router.post('/category' ,categoryController.addCategory);
-router.post('/category/edit/:id', categoryController.updateCategory);
-router.get('/category/list/:id',categoryController.listCategory)
-router.get('/category/unlist/:id',categoryController.unlistCategory)
-router.post('/category/delete/:id',categoryController.deleteCategory)
+router.post('/category' ,adminAuth,categoryController.addCategory);
+router.post('/category/edit/:id',adminAuth, categoryController.updateCategory);
+router.get('/category/list/:id',adminAuth,categoryController.listCategory)
+router.get('/category/unlist/:id',adminAuth,categoryController.unlistCategory)
+router.post('/category/delete/:id',adminAuth,categoryController.deleteCategory)
     
 //  add product
 router.get('/products/add',adminAuth,addproductController. getAddProduct)
-router.post('/products',upload.fields([
+router.post('/products',adminAuth,upload.fields([
   { name: 'originalImages', maxCount: 100 },
   { name: 'croppedImagesData', maxCount: 100 }
 ]), addproductController.  postAddProduct);
 
 
 //product management
-router.get('/products',productController.getProducts)
-router.post('/products/:productId/variant/:variantId/size/:sizeId/delete',productController.deleteSize)
-router.get('/products/:productId/variant/:variantId/size/:sizeId/list',productController.listProduct)
-router.get('/products/:productId/variant/:variantId/size/:sizeId/unlist',productController.unlistProduct)
+router.get('/products',adminAuth,productController.getProducts)
+router.post('/products/:productId/variant/:variantId/size/:sizeId/delete',adminAuth,productController.deleteSize)
+router.get('/products/:productId/variant/:variantId/size/:sizeId/list',adminAuth,productController.listProduct)
+router.get('/products/:productId/variant/:variantId/size/:sizeId/unlist',adminAuth,productController.unlistProduct)
 
 // edit product
-router.get('/products/:productId/variant/:variantId/size/:sizeId/edit',editproductController.getEditProduct)
-router.post('/products/:productId/variant/:variantId/size/:sizeId/edit',upload.fields([
+
+
+
+
+router.get(
+  "/products/:productId/variant/:variantId/size/:sizeId/edit",
+  adminAuth,
+  editproductController.getEditProduct
+);
+
+router.post('/products/:productId/variant/:variantId/size/:sizeId/edit',adminAuth,upload.fields([
   { name: 'originalImages', maxCount: 100 },
   { name: 'croppedImagesData', maxCount: 100 }
 ]),editproductController.updateProduct)

@@ -3,11 +3,11 @@ const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
 const Review = require('../../models/reviewSchema');
 const session=require('express-session')
-// 📄 Load Product Details Page
+//  Load Product Details Page
 const loadProductDetails = async (req, res) => {
   try {
     const productId = req.params.id;
-    const selectedVariantId = req.query.variant; // 🟢 read clicked variant ID
+    const selectedVariantId = req.query.variant; //  read clicked variant ID
 
     const product = await Product.findById(productId)
       .populate('category_id')

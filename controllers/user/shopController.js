@@ -11,12 +11,12 @@ const loadShop = async (req, res) => {
     const search = req.query.search || "";
     const sort = req.query.sort || "";
     const page = parseInt(req.query.page) || 1;
-    const limit = 9; // products per page
+    const limit = 9; // products per page 
 
     //  Fetch all active categories
     const categories = await Category.find({ isListed: true });
 
-    // 🧩 Build dynamic query
+    //  Build dynamic query
      let query = {};
    
 // if (category) {
