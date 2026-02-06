@@ -53,41 +53,47 @@
 
   </div>
 </section>
-<!-- Banner Carousel End -->
-
+            
 <section class="top-categories py-5 bg-light">
   <div class="container">
-    <!-- Heading -->
+
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="fw-bold mb-0">Top Categories</h2>
       <a href="/shop" class="text-dark fw-bold">See More &raquo;</a>
     </div>
 
     <div class="row g-4">
-      <% const topCategories = [
-        { name: "Sports", image: "/img/sports.jpg", link: "/shop?category=Sports" },
-        { name: "Clogs", image: "/img/clogs.webp", link: "/shop?category=Clogs" },
-        { name: "Slippers/Flip-Flops", image: "/img/slippers.webp", link: "/shop?category=Slippers/Flip-Flops" }
-      ]; %>
 
-      <% topCategories.forEach(category => { %>
-        <div class="col-lg-4 col-md-6 col-sm-12 d-flex">
-          <div class="card border-0 shadow-sm w-100 text-center">
-            <!-- Clickable Image -->
-            <a href="<%= category.link %>">
-              <img src="<%= category.image %>" alt="<%= category.name %>" class="card-img-top category-img">
-            </a>
+      <% if(categories && categories.length > 0){ %>
+        <% categories.slice(0,3).forEach(category => { %>
 
-            <!-- Category Name -->
-            <div class="card-body">
-              <h5 class="fw-bold"><%= category.name %></h5>
+          <div class="col-lg-4 col-md-6 col-sm-12 d-flex">
+            <div class="card border-0 shadow-sm w-100 text-center">
+
+              <a href="/shop?category=<%= category._id %>">
+                <img 
+                  src="/img/<%= category.name.toLowerCase() %>.jpg" 
+                  alt="<%= category.name %>" 
+                  class="card-img-top category-img"
+                >
+              </a>
+
+              <div class="card-body">
+                <h5 class="fw-bold"><%= category.name %></h5>
+              </div>
+
             </div>
           </div>
-        </div>
-      <% }) %>
+
+        <% }) %>
+      <% } else { %>
+        <p class="text-center text-muted">No categories found.</p>
+      <% } %>
+
     </div>
   </div>
 </section>
+
 <style>.top-categories .category-img {
   width: 100%;
   height: 250px;
@@ -105,6 +111,20 @@
 .top-categories h5 {
   margin-top: 10px;
 }
+.add-cart-btn{
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-block;
+  transition: 0.3s ease;
+}
+
+.add-cart-btn:hover{
+  background-color: #000;
+  color: #fff;
+}
+
+
 </style>
 
 
@@ -179,6 +199,8 @@
 
               <div class="card-body text-center">
 
+
+
                 <!-- 🎨 Color Variants -->
                 <div class="d-flex justify-content-center mb-3 flex-wrap">
                   <% 
@@ -215,9 +237,16 @@
                     <span class="text-success fw-bold">₹<%= variant.discount_price %></span>
                     <span class="badge bg-danger ms-1"><%= discountPercent %>% OFF</span>
                   </p>
+
                 <% } else { %>
                   <p class="fw-bold text-success mb-1">₹<%= variant?.price %></p>
                 <% } %>
+<a href="/addToCart/<%= product._id %>?variant=<%= defaultVariant?._id %>" 
+class="btn btn-outline-dark mt-2 px-4 py-2 add-cart-btn"
+>
+  Add to Cart
+</a>
+
               </div>
             </div>
           </div>
@@ -226,6 +255,7 @@
     <% } else { %>
       <p class="text-center text-muted">No new arrivals found.</p>
     <% } %>
+ 
   </div>
 </section>
 

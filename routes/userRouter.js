@@ -59,11 +59,16 @@ router.get('/logout',userController.logout)
 
 //profile Management
 
-router.get('/forgot-password',profileController.getForgotPassPage)
-router.post('/forgot-email-valid',profileController.forgotEmailValid)
-router.post('/forgot-verify-otp',profileController.forgotVerifyOtp)
+router.get('/forgot-password', profileController.getForgotPassPage);
+router.post('/forgot-email-valid', profileController.forgotEmailValid);
+
+router.get('/forgot-verify-otp', profileController.getForgotVerifyOtpPage);
+router.post('/forgot-verify-otp', profileController.forgotVerifyOtp);
+
 router.post('/resend-otp', profileController.resendOtp);
-router.post('/reset-password',profileController.resetPassword)
+
+router.get('/reset-password-page', profileController.getResetPasswordPage);
+router.post('/reset-password', profileController.resetPassword);
 
 //shop
 router.get('/shop',shopController.loadShop)

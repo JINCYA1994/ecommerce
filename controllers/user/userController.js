@@ -11,35 +11,61 @@ const nodemailer = require("nodemailer");
 
 
 
-const loadHomepage=async (req,res)=>{
-    try {
+// const loadHomepage=async (req,res)=>{
+//     try {
 
 
- const newArrivals = await Product.find()
+//  const newArrivals = await Product.find()
+//       .sort({ createdAt: -1 })
+//       .limit(4)
+//       .lean();
+
+
+
+
+//  const user=req.session.user
+//  if(user){
+
+//   const userData=await User.findOne({_id:user._id})
+// res.render('home',{newArrivals,userData})
+//  }
+// else{
+//  return  res.render('home',{newArrivals})
+// }
+      
+//     } catch (error) {
+//        console.log('Home page not found',error.message)
+//        res.status(500).send('Server error') 
+//     }
+// }
+
+const loadHomepage = async (req, res) => {
+  try {
+
+    const newArrivals = await Product.find()
       .sort({ createdAt: -1 })
       .limit(4)
       .lean();
 
+    const categories = await Category.find({ isListed: true })
+      .limit(3)
+      .lean();
 
+    const user = req.session.user;
 
+    if (user) {
+      const userData = await User.findOne({ _id: user._id });
 
-
- const user=req.session.user
- if(user){
-
-  const userData=await User.findOne({_id:user._id})
-res.render('home',{newArrivals,userData})
- }
-else{
- return  res.render('home',{newArrivals})
-}
-      
-    } catch (error) {
-       console.log('Home page not found',error.message)
-       res.status(500).send('Server error') 
+      return res.render("home", { newArrivals, userData, categories });
+    } else {
+      return res.render("home", { newArrivals, categories });
     }
-}
 
+  } catch (error) {
+    console.log("Home page not found", error.message);
+    res.status(500).send("Server error");
+  }
+};
 
 
 
@@ -106,7 +132,11 @@ async function sendOtpEmail(email, otp) {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   },
-  connectionTimeout: 10000 
+       tls: {
+    ciphers: "SSLv3",
+    rejectUnauthorized: false
+  }
+  // connectionTimeout: 10000 
 });
 
 const info = await transporter.sendMail({

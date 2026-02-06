@@ -1,5 +1,37 @@
 <%- include("../../views/partials/user/header") %>
 
+
+
+<style>
+
+
+.product-title{
+  min-height: 45px; /* Name length change aayalum same height */
+}
+
+.add-cart-btn{
+  background: linear-gradient(135deg, #c99a5b, #b8894d);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  width: 55%; 
+  margin: 0 auto;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.add-cart-btn:hover{
+  background: linear-gradient(135deg, #b8894d, #a7773f);
+  transform: translateY(-2px);
+  color: white;
+  
+  }
+</style>
+
+
 <section class="py-5">
   <div class="container">
     <h2 class="fw-bold text-center mb-4">Shop Products</h2>
@@ -95,8 +127,8 @@
                       alt="<%= product.product_name %>"
                     >
                   </a>
+<div class="card-body text-center d-flex flex-column">
 
-                  <div class="card-body text-center">
 
                     <!-- Color Variants -->
                     <div class="d-flex justify-content-center mb-3 flex-wrap">
@@ -157,7 +189,11 @@
     No reviews yet
   </div>
 <% } %> -->
-
+<div class="mt-auto">
+  <a href="/add-to-cart/<%= product._id %>" class="btn add-cart-btn">
+    <i class="fa-solid fa-cart-shopping me-2"></i> Add to Cart
+  </a>
+</div>
 
                   </div>
                 </div>
