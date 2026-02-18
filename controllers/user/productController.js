@@ -17,7 +17,7 @@ const loadProductDetails = async (req, res) => {
       return res.status(404).send('Product not found');
     }
 
-    // 🟢 Find active variant based on query or fallback to first one
+    // Find active variant based on query or fallback to first one
     let activeVariant = product.variants[0];
     if (selectedVariantId) {
       const found = product.variants.find(

@@ -6,11 +6,97 @@
 </head>
 
 <style>
-  .content-main { display: flex; justify-content: center; padding-top: 50px; }
-  .card { width: 100%; max-width: 900px; margin-bottom: 20px; }
-  .preview-img { margin-top: 10px; max-width: 150px; max-height: 150px; border: 1px solid #ddd; border-radius: 6px; display: block; }
-  .image-cropper { display: none; flex-direction: column; align-items: center; justify-content: center; width: 400px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa; }
-  .image-cropper img { max-width: 100%; height: auto; display: block; }
+ .content-main {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px  100px;
+ 
+}
+
+
+  .card {
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    box-shadow: 0px 4px 18px rgba(0,0,0,0.08);
+  }
+  
+  .content-title {
+    font-weight: 800;
+    color: #222;
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .btn {
+    border-radius: 30px !important;
+    font-weight: 600;
+  }
+
+  .preview-img {
+    margin-top: 10px;
+    max-width: 150px;
+    max-height: 150px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    display: block;
+    padding: 4px;
+    background: #fff;
+  }
+.preview-img:empty {
+  display: none;
+}
+  .image-cropper {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 420px;
+    margin: 20px auto;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: #f8f9fa;
+    padding: 12px;
+  }
+
+  .image-cropper img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+  }
+
+  /* Buttons container */
+  [id^="actionBtns"] {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* Variant card */
+  #variantContainer .card {
+    border-radius: 14px;
+    border: 1px solid #eee;
+    box-shadow: none;
+  }
+
+  #variantContainer h5 {
+    font-weight: 700;
+  }
+
+  /* Image section */
+  #variantContainer .card-header {
+    background: #f6f7fb;
+    border-radius: 12px 12px 0 0;
+    font-weight: 700;
+  }
 </style>
 
 <section class="content-main">
@@ -20,6 +106,7 @@
         <h2 class="content-title mb-4 text-center">Add New Product</h2>
 
         <form id="productForm" action="/admin/products" method="POST" enctype="multipart/form-data">
+          
           <!-- Product Info -->
           <div class="mb-3">
             <label for="name" class="form-label">Product Name</label>
@@ -45,16 +132,17 @@
           </div>
 
           <hr>
-          <h4 class="mb-3">Variants</h4>
+          <h4 class="mb-3 fw-bold">Variants</h4>
           <div id="variantContainer"></div>
 
           <div class="text-center mt-3">
-            <button type="button" class="btn btn-primary" onclick="addVariant()">+ Add Variant</button>
+            <button type="button" class="btn btn-primary px-4" onclick="addVariant()">+ Add Variant</button>
           </div>
 
           <div class="text-center mt-4">
-            <button class="btn btn-success" type="submit">Publish</button>
+            <button class="btn btn-success px-5" type="submit">Publish</button>
           </div>
+
         </form>
       </div>
     </div>
@@ -65,44 +153,128 @@
 
 <script>
 let variantIndex = 0;
-const croppedImagesData = {};
+const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const croppedImagesData = {};      
+const selectedImageData = {};      
+const cropperInstances = {};       
 
-// Function to remove a variant
+// Remove variant
 function removeVariant(index) {
   const variant = document.getElementById(`variant${index}`);
   if (variant) variant.remove();
 }
 
-// Function to add a variant
+// Delete Image
+function deleteImage(indexKey) {
+  const [variant, imgNo] = indexKey.split("-");
+
+  const previewEl = document.getElementById(`imgView${imgNo}-${variant}`);
+  const inputEl = document.getElementById(`input${imgNo}-${variant}`);
+  const cropperContainer = document.getElementById(`cropperContainer${imgNo}-${variant}`);
+  const actionBtnsDiv = document.getElementById(`actionBtns${imgNo}-${variant}`);
+previewEl.src = "";
+previewEl.style.display = "none";
+
+ 
+  inputEl.value = "";
+  inputEl.style.display = "block";
+
+  cropperContainer.style.display = "none";
+  actionBtnsDiv.style.display = "none";
+
+  delete croppedImagesData[indexKey];
+  delete selectedImageData[indexKey];
+
+  if (cropperInstances[indexKey]) {
+    cropperInstances[indexKey].destroy();
+    delete cropperInstances[indexKey];
+  }
+
+  Swal.fire({
+    icon: "success",
+    title: "Deleted",
+    text: "Image removed successfully!",
+    timer: 1200,
+    showConfirmButton: false
+  });
+}
+
+// Edit Image
+function editImage(indexKey) {
+  const [variant, imgNo] = indexKey.split("-");
+
+  const cropperContainer = document.getElementById(`cropperContainer${imgNo}-${variant}`);
+  const cropperImg = document.getElementById(`croppedImg${imgNo}-${variant}`);
+
+  // ✅ FIX: actionBtnsDiv defined (red error fixed)
+  const actionBtnsDiv = document.getElementById(`actionBtns${imgNo}-${variant}`);
+
+  if (!selectedImageData[indexKey]) {
+    Swal.fire({
+      icon: "warning",
+      title: "No Image",
+      text: "Please upload an image first!"
+    });
+    return;
+  }
+
+  cropperImg.src = selectedImageData[indexKey];
+  cropperContainer.style.display = "flex";
+  actionBtnsDiv.style.display = "none";
+
+  cropperImg.onload = () => {
+    if (cropperInstances[indexKey]) cropperInstances[indexKey].destroy();
+
+    cropperInstances[indexKey] = new Cropper(cropperImg, {
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 1,
+      movable: true,
+      scalable: true,
+      zoomable: true,
+      rotatable: true,
+      dragMode: "crop",
+      responsive: true
+    });
+  };
+}
+
+// Add variant
 function addVariant() {
   const container = document.getElementById('variantContainer');
   const isDefault = variantIndex === 0;
+
   const variantHTML = `
   <div class="card mt-3 p-3" id="variant${variantIndex}">
     <div class="d-flex justify-content-between align-items-center">
       <h5>Variant ${variantIndex + 1}</h5>
       ${!isDefault ? `<button type="button" class="btn btn-danger btn-sm" onclick="removeVariant(${variantIndex})">Close</button>` : ''}
     </div>
+
     <div class="mb-3">
       <label class="form-label">Color</label>
       <input type="text" class="form-control" id="color${variantIndex}" name="variants[${variantIndex}][color]">
       <div class="text-danger small mt-1" id="colorError${variantIndex}"></div>
     </div>
+
     <div class="mb-3">
       <label class="form-label">Price</label>
       <input type="number" class="form-control" id="price${variantIndex}" name="variants[${variantIndex}][price]" min="0">
       <div class="text-danger small mt-1" id="priceError${variantIndex}"></div>
     </div>
+
     <div class="mb-3">
       <label class="form-label">Discount Price</label>
       <input type="number" class="form-control" id="discountPrice${variantIndex}" name="variants[${variantIndex}][discountPrice]" min="0">
       <div class="text-danger small mt-1" id="discountPriceError${variantIndex}"></div>
     </div>
+
     <div class="mb-3">
       <label class="form-label">Size (6-10)</label>
       <input type="text" class="form-control" id="size${variantIndex}" name="variants[${variantIndex}][size]">
       <div class="text-danger small mt-1" id="sizeError${variantIndex}"></div>
     </div>
+
     <div class="mb-3">
       <label class="form-label">Stock</label>
       <input type="text" class="form-control" id="stock${variantIndex}" name="variants[${variantIndex}][stock]" min="0">
@@ -110,20 +282,29 @@ function addVariant() {
     </div>
 
     <div class="card mb-2">
-      <div class="card-header"><h6>Choose Images (Max 4)</h6></div>
+      <div class="card-header"><h6 class="m-0 fw-bold">Choose Images</h6></div>
       <div class="card-body">
         ${[1,2,3,4].map(i => `
           <div class="mb-3">
-            <input class="form-control" type="file" id="input${i}-${variantIndex}" accept="image/*">
+            <input class="form-control" type="file" id="input${i}-${variantIndex}" accept="image/png,image/jpeg,image/jpg,image/webp">
             <img id="imgView${i}-${variantIndex}" class="preview-img" alt="">
+
+            <div class="mt-2" id="actionBtns${i}-${variantIndex}" style="display:none">
+              <button type="button" class="btn btn-sm btn-warning" onclick="editImage('${variantIndex}-${i}')">Edit</button>
+              <button type="button" class="btn btn-sm btn-danger" onclick="deleteImage('${variantIndex}-${i}')">Delete</button>
+            </div>
           </div>
+
           <div id="cropperContainer${i}-${variantIndex}" class="image-cropper">
             <img src="" id="croppedImg${i}-${variantIndex}" alt="">
-            <button type="button" id="saveButton${i}-${variantIndex}" class="btn btn-sm btn-primary mt-2">Save Crop</button>
+            <button type="button" id="saveButton${i}-${variantIndex}" class="btn btn-sm btn-primary mt-2">
+              Save Crop
+            </button>
           </div>
         `).join('')}
       </div>
     </div>
+
     <div class="text-danger small mt-1" id="imageError${variantIndex}"></div>
   </div>`;
 
@@ -136,7 +317,8 @@ function addVariant() {
       `croppedImg${i}-${variantIndex}`,
       `saveButton${i}-${variantIndex}`,
       `cropperContainer${i}-${variantIndex}`,
-      `${variantIndex}-${i}`
+      `${variantIndex}-${i}`,
+      `actionBtns${i}-${variantIndex}`
     );
   }
 
@@ -144,24 +326,42 @@ function addVariant() {
 }
 
 // Cropper setup
-function setupCropper(inputId, previewId, cropperImgId, saveBtnId, cropperContainerId, indexKey) {
+function setupCropper(inputId, previewId, cropperImgId, saveBtnId, cropperContainerId, indexKey, actionBtnsId) {
   let cropper;
+
   const inputEl = document.getElementById(inputId);
   const cropperImg = document.getElementById(cropperImgId);
   const saveBtn = document.getElementById(saveBtnId);
   const cropperContainer = document.getElementById(cropperContainerId);
   const previewEl = document.getElementById(previewId);
+  const actionBtnsDiv = document.getElementById(actionBtnsId);
+
+  actionBtnsDiv.style.display = "none";
 
   inputEl.addEventListener("change", function(event) {
     const file = event.target.files[0];
     if (!file) return;
+
+    const variantNo = indexKey.split("-")[0];
+
+    if (!allowedTypes.includes(file.type)) {
+      document.getElementById(`imageError${variantNo}`).textContent =
+        "Only image files (JPG, JPEG, PNG, WEBP) are allowed. PDF not allowed.";
+      inputEl.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
+      selectedImageData[indexKey] = e.target.result;
+
       cropperImg.src = e.target.result;
       cropperContainer.style.display = "flex";
+
       cropperImg.onload = () => {
         if (cropper) cropper.destroy();
-        cropper = new Cropper(cropperImg, {  
+
+        cropper = new Cropper(cropperImg, {
           aspectRatio: 1,
           viewMode: 1,
           autoCropArea: 1,
@@ -172,18 +372,29 @@ function setupCropper(inputId, previewId, cropperImgId, saveBtnId, cropperContai
           dragMode: 'crop',
           responsive: true
         });
+
+        cropperInstances[indexKey] = cropper;
       };
     };
+
     reader.readAsDataURL(file);
   });
 
   saveBtn.addEventListener("click", function() {
-    if (!cropper) return;
-    const canvas = cropper.getCroppedCanvas({ width: 500, height: 500 });
-    canvas.toBlob(function(blob){
+    if (!cropperInstances[indexKey]) return;
+
+    const canvas = cropperInstances[indexKey].getCroppedCanvas({ width: 500, height: 500 });
+
+    canvas.toBlob(function(blob) {
       const previewUrl = URL.createObjectURL(blob);
-      previewEl.src = previewUrl;
+    previewEl.src = previewUrl;
+previewEl.style.display = "block";
+
       cropperContainer.style.display = "none";
+      inputEl.style.display = "none";
+
+      actionBtnsDiv.style.display = "flex";
+
       croppedImagesData[indexKey] = blob;
     }, "image/jpeg", 0.9);
   });
@@ -195,10 +406,12 @@ document.getElementById('productForm').addEventListener('submit', async(e) => {
     e.preventDefault();
     return;
   }
+
   e.preventDefault();
   const form = e.target;
   const formData = new FormData(form);
 
+  // Append original images
   for (let v = 0; v < variantIndex; v++) {
     for (let i = 1; i <= 4; i++) {
       const fileInput = document.getElementById(`input${i}-${v}`);
@@ -208,8 +421,9 @@ document.getElementById('productForm').addEventListener('submit', async(e) => {
     }
   }
 
-  Object.keys(croppedImagesData).forEach((key,index)=> {
-    formData.append('croppedImagesData',croppedImagesData[key],`image_${index}.jpg`);
+  // Append cropped images
+  Object.keys(croppedImagesData).forEach((key, index) => {
+    formData.append('croppedImagesData', croppedImagesData[key], `image_${index}.jpg`);
   });
 
   try {
@@ -228,13 +442,15 @@ document.getElementById('productForm').addEventListener('submit', async(e) => {
         window.location.href = "/admin/products";
       });
     } else {
+      const data = await response.json();
       Swal.fire({
         icon: 'error',
         title: 'Oops!',
-        text: 'Failed to add product. Please check again.',
+        text: data.message || "Failed to add product",
         confirmButtonColor: '#d33'
       });
     }
+
   } catch (error) {
     console.error(error);
     Swal.fire({
@@ -249,7 +465,7 @@ document.getElementById('productForm').addEventListener('submit', async(e) => {
 // Validation
 function validateForm() {
   let valid = true;
-  
+
   const name = document.getElementById('name').value.trim();
   const description = document.getElementById('description').value.trim();
   const category = document.getElementById('category').value.trim();
@@ -258,87 +474,96 @@ function validateForm() {
   document.getElementById('descriptionError').textContent = '';
   document.getElementById('categoryError').textContent = '';
 
-if (!name) {
-  document.getElementById('nameError').textContent = 'Product name is required';
-  valid = false;
-} 
-else if (!/^[A-Za-z][A-Za-z0-9\s,'\/-]*$/.test(name.trim())) {
-  document.getElementById('nameError').textContent = 
-    'Name must start with a letter and can contain only letters, numbers, spaces, "-", ",", or "/"';
-  valid = false;
-} 
-else if ((name.match(/[A-Za-z]/g) || []).length < 3) {
-  document.getElementById('nameError').textContent = 
-    'Name must contain at least 3 letters';
-  valid = false;
-}
-
-
-  if(!description){
-     document.getElementById('descriptionError').textContent = 'Description is required';
-      valid=false;
-  }
-  else if(description.length<10){
-     document.getElementById('descriptionError').textContent='Description must be at least 10 characters'; 
-     valid=false; 
+  if (!name) {
+    document.getElementById('nameError').textContent = 'Product name is required';
+    valid = false;
+  } 
+  else if (!/^[A-Za-z][A-Za-z0-9\s,'\/-]*$/.test(name.trim())) {
+    document.getElementById('nameError').textContent =
+      'Name must start with a letter and can contain only letters, numbers, spaces, "-", ",", or "/"';
+    valid = false;
+  } 
+  else if ((name.match(/[A-Za-z]/g) || []).length < 3) {
+    document.getElementById('nameError').textContent =
+      'Name must contain at least 3 letters';
+    valid = false;
   }
 
-  if (!category) { 
-    document.getElementById('categoryError').textContent = "Please select a category"; 
-    valid = false; 
+  if (!description) {
+    document.getElementById('descriptionError').textContent = 'Description is required';
+    valid = false;
+  }
+  else if (description.length < 10) {
+    document.getElementById('descriptionError').textContent = 'Description must be at least 10 characters';
+    valid = false;
+  }
+
+  if (!category) {
+    document.getElementById('categoryError').textContent = "Please select a category";
+    valid = false;
   }
 
   // Variant validation
-  for(let i=0;i<variantIndex;i++){
-    const price = document.getElementById(`price${i}`).value.trim();
-    const discountPrice = document.getElementById(`discountPrice${i}`).value.trim();
-    const stock = document.getElementById(`stock${i}`).value.trim();
-    const color = document.getElementById(`color${i}`).value.trim();
-    const size = document.getElementById(`size${i}`).value.trim();
+  for (let i = 0; i < variantIndex; i++) {
+    const price = document.getElementById(`price${i}`)?.value.trim();
+    const discountPrice = document.getElementById(`discountPrice${i}`)?.value.trim();
+    const stock = document.getElementById(`stock${i}`)?.value.trim();
+    const color = document.getElementById(`color${i}`)?.value.trim();
+    const size = document.getElementById(`size${i}`)?.value.trim();
 
-    ['sizeError','priceError','discountPriceError','stockError','colorError','imageError'].forEach(id => document.getElementById(id+i).textContent='');
+    ['sizeError','priceError','discountPriceError','stockError','colorError','imageError']
+      .forEach(id => {
+        const el = document.getElementById(id + i);
+        if (el) el.textContent = '';
+      });
 
-    if (!price || Number(price)<=0){ 
-      document.getElementById(`priceError${i}`).textContent="Price must be greater than 0";
-       valid=false;
+    if (!price || Number(price) <= 0) {
+      document.getElementById(`priceError${i}`).textContent = "Price must be greater than 0";
+      valid = false;
     }
-    if (discountPrice && (Number(discountPrice) > Number(price) || Number(discountPrice)<0)){ 
-      document.getElementById(`discountPriceError${i}`).textContent="Invalid discount price";
-       valid=false;
+
+    if (discountPrice && (Number(discountPrice) > Number(price) || Number(discountPrice) < 0)) {
+      document.getElementById(`discountPriceError${i}`).textContent = "Invalid discount price";
+      valid = false;
     }
-    if (!stock || Number(stock)<0||Number(stock)>100){
-       document.getElementById(`stockError${i}`).textContent="'Stock must be between 0 and 100'"; 
-       valid=false; 
+
+    if (!stock || Number(stock) < 0 || Number(stock) > 100) {
+      document.getElementById(`stockError${i}`).textContent = "Stock must be between 0 and 100";
+      valid = false;
     }
-    if (!color || !/^[A-Za-z\s]+$/.test(color)){ 
-      document.getElementById(`colorError${i}`).textContent="Invalid color"; 
-      valid=false;
+
+    if (!color || !/^[A-Za-z\s]+$/.test(color)) {
+      document.getElementById(`colorError${i}`).textContent = "Invalid color";
+      valid = false;
     }
-    if (!size || isNaN(size) || Number(size)<6 || Number(size)>10){
-       document.getElementById(`sizeError${i}`).textContent="Size must be 6-10"; 
-       valid=false; 
+
+    if (!size || isNaN(size) || Number(size) < 6 || Number(size) > 10) {
+      document.getElementById(`sizeError${i}`).textContent = "Size must be 6-10";
+      valid = false;
     }
 
     let imageCount = 0;
     for (let j = 1; j <= 4; j++) {
       const img = document.getElementById(`imgView${j}-${i}`);
-      if (img && img.src) imageCount++;
+      if (img && img.src && img.src.includes("blob:")) {
+        imageCount++;
+      }
     }
-    if (imageCount !== 4) { 
-      document.getElementById(`imageError${i}`).textContent="Please upload exactly 4 images"; 
-      valid=false; 
+
+    if (imageCount !== 4) {
+      document.getElementById(`imageError${i}`).textContent =
+        "Please upload exactly 4 images and crop them";
+      valid = false;
     }
   }
 
   return valid;
 }
 
-// Add default variant on load
+// Add default variant
 addVariant();
 
 // SweetAlert flash messages from backend
-
-
 document.addEventListener("DOMContentLoaded", function () {
   const successMessages = <%- JSON.stringify(success || []) %>;
   successMessages.forEach(msg => {
@@ -360,10 +585,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
-
-
-
-
 </script>
 
 <%- include("../../views/partials/admin/footer") %>

@@ -20,144 +20,6 @@ const getAddProduct = async (req, res) => {
 };
 
 
-// const postAddProduct = async (req, res) => {
-//   try {
-
-//        const errors = [];
-//     const { name, description, category } = req.body;
-
-//       if (!name || name.trim().length < 3)
-//       errors.push('Invalid product name (min 3 characters, letters & numbers only)');
-//     if (!description || description.trim().length < 10)
-//       errors.push('Description must be at least 10 characters');
-//     if (!category)
-//       errors.push('Category is required');
-
-//     let variants = [];
-//     if (req.body.variants) {
-//       variants = Object.values(req.body.variants);
-//     }
-
-//     if (!variants.length) {
-//       errors.push('At least one variant is required.');
-//     } else {
-//       variants.forEach((v, i) => {
-//         if (!v.color || v.color.trim().length < 3) {
-//           errors.push(`Variant ${i + 1}: Color is required (min 3 chars).`);
-//         }
-//         if (!v.price || isNaN(v.price) || Number(v.price) <= 0) {
-//           errors.push(`Variant ${i + 1}: Price must be a positive number.`);
-//         }
-//         if (v.discountPrice && Number(v.discountPrice) >= Number(v.price)) {
-//           errors.push(`Variant ${i + 1}: Discount must be less than price.`);
-//         }
-//         if (!v.size || isNaN(v.size) || Number(v.size) <= 0) {
-//           errors.push(`Variant ${i + 1}: Invalid size.`);
-//         }
-//         if (!v.stock || isNaN(v.stock) || Number(v.stock) < 0) {
-//           errors.push(`Variant ${i + 1}: Stock must be 0 or more.`);
-//         }
-//       });
-//     }
-
-//     // Stop if validation errors found
-//     if (errors.length > 0) {
-//       req.flash('error', errors.join(' | '));
-//       return res.redirect('/admin/products/add');
-//     }
-    
-//     const originalImages = req.files['originalImages'] || [];
-//     const croppedImages = req.files['croppedImagesData'] || [];
-
-//     // Upload all images to Cloudinary
-//     const uploadToCloudinary = async (file) => {
-//       const uploaded = await cloudinary.uploader.upload(file.path, {
-//         folder: 'FootChic/Products',
-//       });
-//       fs.unlinkSync(file.path);
-//       return uploaded.secure_url;
-//     };
-
-//     // Upload originals and cropped
-//     const originalUrls = await Promise.all(originalImages.map(uploadToCloudinary));
-//     const croppedUrls = await Promise.all(croppedImages.map(uploadToCloudinary));
-
-//     // Group cropped images into 4 per variant
-//     const finalVariants = variants.map((variant, index) => {
-//       const start = index * 4;
-//       const end = start + 4;
-//       const images = croppedUrls.slice(start, end);
-
-//       const sizeObj = {
-//         size: Number(variant.size),
-//         stock: Number(variant.stock),
-//         isListed: true,
-//       };
-
-//       return {
-//         color: variant.color.trim(),
-//         price: Number(variant.price),
-//         discount_price: Number(variant.discountPrice),
-//         images, // Only cropped images stored in DB
-//         sizes: [sizeObj],
-//       };
-//     });
-
-//     // Check if product already exists
-//     let existingProduct = await Product.findOne({
-//       product_name: name.trim(),
-//       category_id: category,
-//     });
-// if (existingProduct) {
-//   for (const newVariant of finalVariants) {
-//     // find existing color
-//     let existingVariant = existingProduct.variants.find(
-//       (v) => v.color.toLowerCase() === newVariant.color.toLowerCase()
-//     );
-
-//     if (existingVariant) {
-//       // Merge or update size
-//       for (const newSize of newVariant.sizes) {
-//         const existingSize = existingVariant.sizes.find(
-//           (s) => s.size === newSize.size
-//         );
-
-//         if (existingSize) {
-//           // increase stock
-//           existingSize.stock += newSize.stock;
-//         } else {
-//           // add new size object
-//           existingVariant.sizes.push({
-//             size: newSize.size,
-//             stock: newSize.stock,
-//             isListed: true,
-//             isDeleted: false,
-//           });
-//         }
-//       }
-//     }
-//   }
-//       await existingProduct.save();
-//       req.flash('success', 'Product variants updated successfully!');
-//     } else {
-//       // Create new product
-//       const newProduct = new Product({
-//         category_id: category,
-//         product_name: name.trim(),
-//         product_description: description.trim(),
-//         variants: finalVariants,
-//       });
-//       await newProduct.save();
-//       req.flash('success', 'New product created successfully!');
-//     }
-
-//     res.redirect('/admin/products');
-//   } catch (err) {
-//     console.error('Error while adding product:', err);
-//     req.flash('error', 'Something went wrong while adding the product.');
-//     res.redirect('/admin/products/add');
-//   }
-// };
 const postAddProduct = async (req, res) => {
   try {
     const errors = [];
@@ -206,8 +68,11 @@ if (
     }
 
     if (errors.length > 0) {
-      req.flash('error', errors.join(' | '));
-      return res.redirect('/admin/products/add');
+      return res.status(400).json({
+  success: false,
+  message: errors.join(" | ")
+});
+
     }
 
     const originalImages = req.files['originalImages'] || [];

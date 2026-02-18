@@ -120,18 +120,20 @@ if (req.files && Object.keys(req.files).length > 0) {
 
     // --- Handle images ---
     const croppedImages = [];
-  const replacedIndexes = req.body.croppedIndex ? [].concat(req.body.croppedIndex) : [];
-
+ 
+const replacedIndexes = req.body.croppedIndex 
+  ? [].concat(req.body.croppedIndex).map(Number) 
+  : [];
 
     // Upload cropped images
     if (req.files && req.files['croppedImagesData']) {
-      let i = 0;
+     
       for (let file of req.files['croppedImagesData']) {
         const uploaded = await cloudinary.uploader.upload(file.path, { folder: 'products/cropped' });
         croppedImages.push(uploaded.secure_url);
-        replacedIndexes.push(i); // keep track of which indexes are replaced (0,1,2,3)
+
         if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        i++;
+      
       }
     }
 
@@ -140,11 +142,9 @@ if (req.files && Object.keys(req.files).length > 0) {
       const existingImages = variant.images || [];
       croppedImages.forEach((img, idx) => {
         const indexToReplace = replacedIndexes[idx];
-        if (existingImages[indexToReplace]) {
+     
           existingImages[indexToReplace] = img;
-        } else {
-          existingImages.push(img);
-        }
+      
       });
       variant.images = existingImages;
     }
@@ -159,6 +159,32 @@ if (req.files && Object.keys(req.files).length > 0) {
   }
 };
 
+const deleteVariantImage = async (req, res) => {
+  try {
+    const { productId, variantId, index } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+
+    const variant = product.variants.id(variantId);
+    if (!variant) return res.status(404).json({ success: false, message: "Variant not found" });
+
+    if (!variant.images || !variant.images[index]) {
+      return res.status(404).json({ success: false, message: "Image not found" });
+    }
+
+  variant.images[index] = "";
+
+
+    await product.save();
+
+    return res.json({ success: true, message: "Image deleted successfully" });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ success: false, message: "Server error while deleting image" });
+  }
+};
 
 
 
@@ -169,4 +195,4 @@ if (req.files && Object.keys(req.files).length > 0) {
 
 
 
-module.exports={getEditProduct,updateProduct}
+module.exports={getEditProduct,updateProduct,deleteVariantImage}

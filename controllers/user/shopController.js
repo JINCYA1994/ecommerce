@@ -19,9 +19,7 @@ const loadShop = async (req, res) => {
     //  Build dynamic query
      let query = {};
    
-// if (category) {
-//   query.category_id = category;
-// }
+
   
     if (category) {
       const selectedCategory = await Category.findOne({ _id: category, isListed: true });
@@ -69,7 +67,7 @@ const loadShop = async (req, res) => {
     const totalPages = Math.ceil(totalProducts / limit);
     const skip = (page - 1) * limit;
 
-    // 🧾 Fetch filtered products
+    //  Fetch filtered products
     const products = await Product.find(query)
       .populate("category_id")
       .sort(sortOption)
@@ -77,7 +75,7 @@ const loadShop = async (req, res) => {
       .limit(limit)
       .lean();
 
-    // 🪄 Pick a variant to display
+    //  Pick a variant to display
     products.forEach((p) => {
       if (p.variants && p.variants.length > 0) {
         p.randomVariant = p.variants.reduce((min, v) =>

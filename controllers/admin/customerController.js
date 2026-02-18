@@ -27,7 +27,7 @@ const blockUser = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit =2;
+    let limit =5;
     let skip = (page - 1) * limit;
     let search = req.query.search || "";
 

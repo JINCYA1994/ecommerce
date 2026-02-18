@@ -23,21 +23,7 @@ const nodemailer = require("nodemailer");
 
 
 
-//  const user=req.session.user
-//  if(user){
 
-//   const userData=await User.findOne({_id:user._id})
-// res.render('home',{newArrivals,userData})
-//  }
-// else{
-//  return  res.render('home',{newArrivals})
-// }
-      
-//     } catch (error) {
-//        console.log('Home page not found',error.message)
-//        res.status(500).send('Server error') 
-//     }
-// }
 
 const loadHomepage = async (req, res) => {
   try {

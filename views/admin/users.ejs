@@ -1,94 +1,217 @@
-<%-include("../../views/partials/admin/header")%>
+<%- include("../../views/partials/admin/header") %>
 
-<div class="container mt-5 pt-5">
-  <!-- Heading + Search + Clear -->
+<style>
+  .page-title {
+    font-weight: 800;
+    color: #222;
+  }
+
+  .custom-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #eee;
+    box-shadow: 0px 3px 12px rgba(0,0,0,0.05);
+    padding: 20px;
+  }
+
+  .custom-table th {
+    background: #f6f7fb;
+    color: #222;
+    font-weight: 700;
+    border: none;
+    padding: 14px;
+  }
+
+  .custom-table td {
+    padding: 14px;
+    border-top: 1px solid #f1f1f1;
+    vertical-align: middle;
+    color: #222;
+  }
+
+  .btn-round {
+    border-radius: 30px;
+    padding: 6px 18px;
+    font-weight: 600;
+  }
+
+  .search-box input {
+    border-radius: 30px;
+    padding: 10px 18px;
+  }
+
+  .badge-status {
+    border-radius: 30px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .pagination .page-link {
+    border-radius: 10px !important;
+    margin: 0 4px;
+    padding: 8px 14px;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    color: #333;
+  }
+
+  .pagination .page-link:hover {
+    background: #f1f1f1;
+  }
+
+  .pagination .active .page-link {
+    background: #2d7f3a !important;
+    border-color: #2d7f3a !important;
+    color: white !important;
+  }
+
+  .action-btns .btn {
+    min-width: 100px;
+  }
+</style>
+
+
+<div class="container mt-5 pt-4">
+
+  <!-- Heading -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Customer List</h3>
-    
-    <!-- Search Form -->
-    <form class="d-flex" method="GET" action="/admin/users">
+    <div>
+      <h3 class="page-title mb-0">Customer Management</h3>
+    </div>
+  </div>
+
+  <!-- Search Card -->
+  <div class="d-flex justify-content-end mb-3">
+    <form action="/admin/users" method="GET" class="d-flex gap-2 align-items-center">
+
       <input 
         type="text" 
         name="search" 
-        class="form-control me-2" 
-        placeholder="Search..." 
+        class="form-control"
+        placeholder="Search customer..."
         value="<%= typeof search !== 'undefined' ? search : '' %>"
-      />
-      <button type="submit" class="btn btn-primary me-2">Search</button>
-      <a href="/admin/users" class="btn btn-secondary">Clear</a>
+        style="width: 280px;"
+      >
+
+      <button class="btn btn-dark px-3" type="submit">
+        <i class="fa fa-search"></i>
+      </button>
+
+      <a href="/admin/users" class="btn btn-secondary px-3">
+        Clear
+      </a>
+
     </form>
   </div>
+
+  <!-- Table Card -->
+  <div class="custom-card">
+
+    <div class="table-responsive">
+      <table class="table custom-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Status</th>
+            <th style="width: 220px;">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% if(users.length > 0) { %>
+            <% users.forEach(function(user){ %>
+              <tr>
+                <td class="fw-bold"><%= user.username %></td>
+                <td class="text-muted"><%= user.email %></td>
+                <td class="text-muted"><%= user.phonenumber %></td>
+
+                <td>
+                  <% if(user.isBlocked) { %>
+                    <span class="badge bg-danger badge-status">Blocked</span>
+                  <% } else { %>
+                    <span class="badge bg-success badge-status">Active</span>
+                  <% } %>
+                </td>
+
+                <td>
+                  <div class="d-flex gap-2 flex-wrap action-btns">
+
+                    <% if(user.isBlocked) { %>
+                      <button 
+                        class="btn btn-success btn-sm btn-round"
+                        onclick="confirmUnblock('<%= user._id %>')"
+                      >
+                        Unblock
+                      </button>
+                    <% } else { %>
+                      <button 
+                        class="btn btn-danger btn-sm btn-round"
+                        onclick="confirmBlock('<%= user._id %>')"
+                      >
+                        Block
+                      </button>
+                    <% } %>
+
+                  </div>
+                </td>
+
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">
+                <i class="fa-solid fa-user-slash fs-4 mb-2"></i>
+                <p class="m-0 fw-bold">No users found</p>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Pagination -->
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+
+      <% if(currentPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link"
+            href="/admin/users?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>">
+            Previous
+          </a>
+        </li>
+      <% } %>
+
+      <% for(let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link"
+            href="/admin/users?page=<%= i %><%= search ? '&search=' + search : '' %>">
+            <%= i %>
+          </a>
+        </li>
+      <% } %>
+
+      <% if(currentPage < totalPages) { %>
+        <li class="page-item">
+          <a class="page-link"
+            href="/admin/users?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>">
+            Next
+          </a>
+        </li>
+      <% } %>
+
+    </ul>
+  </nav>
+
 </div>
 
-<!-- Table -->
-<table class="table table-hover">
-  <thead>
-    <tr>
-      <!-- <th>User ID</th> -->
-      <th>Username</th>
-      <th>Email</th>
-      <th>Phone Number</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% if(users.length > 0) { %>
-      <% users.forEach(function(user){ %>
-        <tr>
-          <!-- <td><%= user._id %></td> -->
-          <td><%= user.username %></td>
-          <td><%= user.email %></td>
-          <td><%= user.phonenumber %></td>
-          <td>
-           <% if(user.isBlocked) { %>
-  <button 
-    class="btn btn-success"
-    onclick="confirmUnblock('<%= user._id %>')"
-  >
-    Unblock
-  </button>
-<% } else { %>
-  <button 
-    class="btn btn-danger"
-    onclick="confirmBlock('<%= user._id %>')"
-  >
-    Block
-  </button>
-<% } %>
 
-          </td>
-        </tr>
-      <% }) %>
-    <% } else { %>
-      <tr>
-        <td colspan="5" class="text-center">No users found</td>
-      </tr>
-    <% } %>
-  </tbody>
-</table>
-
-<!-- Pagination -->
-<nav aria-label="Page navigation">
-  <ul class="pagination justify-content-center">
-    <% if(currentPage > 1) { %>
-      <li class="page-item">
-        <a class="page-link" href="/admin/users?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>">Previous</a>
-      </li>
-    <% } %>
-
-    <% for(let i = 1; i <= totalPages; i++) { %>
-      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-        <a class="page-link" href="/admin/users?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
-      </li>
-    <% } %>
-
-    <% if(currentPage < totalPages) { %>
-      <li class="page-item">
-        <a class="page-link" href="/admin/users?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>">Next</a>
-      </li>
-    <% } %>
-  </ul>
-</nav>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -126,9 +249,4 @@
 </script>
 
 
-
-
-
-
-
-<%-include("../../views/partials/admin/footer")%>
+<%- include("../../views/partials/admin/footer") %>

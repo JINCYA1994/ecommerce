@@ -35,11 +35,24 @@ router.post('/category/delete/:id',adminAuth,categoryController.deleteCategory)
     
 //  add product
 router.get('/products/add',adminAuth,addproductController. getAddProduct)
-router.post('/products',adminAuth,upload.fields([
-  { name: 'originalImages', maxCount: 100 },
-  { name: 'croppedImagesData', maxCount: 100 }
-]), addproductController.  postAddProduct);
 
+
+router.post(
+  "/products",
+  adminAuth,
+  (req, res, next) => {
+    upload.fields([
+      { name: "originalImages", maxCount: 100 },
+      { name: "croppedImagesData", maxCount: 100 }
+    ])(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ success: false, message: err.message });
+      }
+      next();
+    });
+  },
+  addproductController.postAddProduct
+);
 
 //product management
 router.get('/products',adminAuth,productController.getProducts)
@@ -48,6 +61,7 @@ router.get('/products/:productId/variant/:variantId/size/:sizeId/list',adminAuth
 router.get('/products/:productId/variant/:variantId/size/:sizeId/unlist',adminAuth,productController.unlistProduct)
 
 // edit product
+router.delete("/products/:productId/variant/:variantId/image/:index",editproductController.deleteVariantImage);
 
 
 

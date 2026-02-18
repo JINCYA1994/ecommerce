@@ -9,7 +9,11 @@ const userAuth = async (req, res, next) => {
         req.session.user = userData;
         next();
       } else {
-        req.session.destroy(() => {
+        req.session.user = null;
+        req.session.save((err) => {
+          if (err) {
+            console.log("Session save error after blocking user:", err);
+          }
           res.redirect('/login');
         });
       }
