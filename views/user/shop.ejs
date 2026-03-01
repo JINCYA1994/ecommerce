@@ -189,11 +189,22 @@
     No reviews yet
   </div>
 <% } %> -->
-<div class="mt-auto">
-  <a href="/add-to-cart/<%= product._id %>" class="btn add-cart-btn">
+<!-- <div class="mt-auto">
+  <a href="/cart/<%= product._id %>" class="btn add-cart-btn">
     <i class="fa-solid fa-cart-shopping me-2"></i> Add to Cart
   </a>
-</div>
+</div> -->
+<form action="/cart" method="POST">
+  <input type="hidden" name="productId" value="<%= product._id %>">
+  <input type="hidden" name="variantId" value="<%= product.randomVariant._id %>">
+  <input type="hidden" name="size" value="<%= product.randomVariant.sizes[0].size %>">
+  
+   <button type="submit" class="btn add-cart-btn">
+    <i class="fa-solid fa-cart-shopping me-2"></i>
+    Add to Cart
+  </button> 
+
+</form>
 
                   </div>
                 </div>
@@ -277,7 +288,7 @@ function setPriceRange(min, max) {
   const form = document.getElementById("filterForm");
   const minInput = form.querySelector("input[name='minPrice']");
   const maxInput = form.querySelector("input[name='maxPrice']");
-   document.querySelectorAll(".price-button").forEach(btn => btn.classList.remove("active"));
+  document.querySelectorAll(".price-button").forEach(btn => btn.classList.remove("active"));
   event.target.classList.add("active");
 
   // Update hidden inputs

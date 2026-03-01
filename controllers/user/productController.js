@@ -3,6 +3,11 @@ const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
 const Review = require('../../models/reviewSchema');
 const session=require('express-session')
+
+
+
+
+
 //  Load Product Details Page
 const loadProductDetails = async (req, res) => {
   try {
@@ -12,13 +17,16 @@ const loadProductDetails = async (req, res) => {
     const product = await Product.findById(productId)
       .populate('category_id')
       .lean();
+ 
 
     if (!product) {
       return res.status(404).send('Product not found');
     }
 
+
     // Find active variant based on query or fallback to first one
     let activeVariant = product.variants[0];
+  
     if (selectedVariantId) {
       const found = product.variants.find(
         (v) => v._id.toString() === selectedVariantId
@@ -29,9 +37,14 @@ const loadProductDetails = async (req, res) => {
     const related = await Product.find({
       category_id: product.category_id,
       _id: { $ne: productId },
+    
     })
       .limit(4)
       .lean();
+
+
+
+
 
     const reviews = await Review.find({ product: productId })
       .populate('user', 'username')

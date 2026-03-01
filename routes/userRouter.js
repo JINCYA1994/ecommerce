@@ -5,9 +5,14 @@ const shopController=require('../controllers/user/shopController')
 const passport = require('../config/passport');
 const productController=require('../controllers/user/productController')
 const profileController=require('../controllers/user/profileController')
+const addressController=require('../controllers/user/addressController')
+const cartController=require('../controllers/user/cartController')
+const orderController=require('../controllers/user/orderController')
  const{userAuth}=require('../middlewares/auth')
-
+const upload = require('../config/multer'); 
 const preventLogin = require('../middlewares/preventLogin');
+const checkoutController = require('../controllers/user/checkoutController');
+
 
 router.get('/login', preventLogin, userController.loadlogin);
 
@@ -28,32 +33,15 @@ router.get(
 )
 
 
-router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signup'}),(req,res)=>{
-      console.log("Google login successful. User:", req.user);
-
-
-    req.session.user = req.user;
-     res.redirect('/home')
-})
 
 router.get(
   '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/signup' }),
+  passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-
-    req.session.regenerate(err => {
-      if (err) {
-        console.log(err);
-        return res.redirect('/login');
-      }
-
-      req.session.user =req.user
-
-      res.redirect('/home');
-    });
+    req.session.user = req.user;
+    res.redirect('/home');
   }
 );
-
 
 router.get('/logout',userController.logout)
 
@@ -69,6 +57,41 @@ router.post('/resend-otp', profileController.resendOtp);
 
 router.get('/reset-password-page', profileController.getResetPasswordPage);
 router.post('/reset-password', profileController.resetPassword);
+
+router.get('/profile',userAuth,profileController.userProfile)
+router.get('/edit-profile',userAuth,profileController.editProfile)
+router.get('/edit-name',userAuth,profileController.editName)
+router.patch('/edit-name',userAuth,profileController.updateName)
+router.get('/edit-email',userAuth,profileController.editEmail)
+router.patch('/edit-email',userAuth,profileController.updateEmail)
+router.post('/verify-email-otp', profileController.verifyEmailOtp);
+router.post('/email-resend-otp', profileController.updateEmailresend);
+router.get('/change-password', userAuth, profileController.getChangePasswordPage);
+router.patch('/change-password', userAuth, profileController.postChangePassword);
+router.post('/update-profileimage', upload.single('profileImage'), profileController.updateProfileImage);
+router.get('/verify-email-otp', profileController.getVerifyEmailOtpPage);
+
+
+//address
+
+router.get('/address',userAuth,addressController.getaddresspage)
+router.post('/address',userAuth,addressController.saveAddress)
+router.delete("/address/:id",userAuth, addressController.deleteAddress);
+
+// cart
+router.get('/cart',userAuth,cartController.getcartpage)
+router.post('/cart',userAuth,cartController.addToCart)
+router.delete('/remove-cart/:id',userAuth,cartController.removeCartItem )
+ 
+// order
+router.get('/order-success/:id', userAuth, orderController.getOrderSuccessPage)
+
+
+
+
+//checkout
+router.get('/checkout',userAuth,checkoutController.viewcheckoutPage)
+router.post('/place-order',userAuth,orderController.placeOrderpage)
 
 //shop
 router.get('/shop',shopController.loadShop)

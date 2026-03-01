@@ -11,16 +11,6 @@ const nodemailer = require("nodemailer");
 
 
 
-// const loadHomepage=async (req,res)=>{
-//     try {
-
-
-//  const newArrivals = await Product.find()
-//       .sort({ createdAt: -1 })
-//       .limit(4)
-//       .lean();
-
-
 
 
 
@@ -122,7 +112,7 @@ async function sendOtpEmail(email, otp) {
     ciphers: "SSLv3",
     rejectUnauthorized: false
   }
-  // connectionTimeout: 10000 
+ 
 });
 
 const info = await transporter.sendMail({
@@ -237,7 +227,7 @@ const otp = otpArray.join('');
     req.session.tempUser = null;
     req.session.user = newUser;
 
-req.flash("success_msg", "Signup successful. Please login.");
+req.flash("success_msg", "Signup successful.");
    return res.redirect("/home")
   } catch (error) {
     console.error('OTP verification error:', error);

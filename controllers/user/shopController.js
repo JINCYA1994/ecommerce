@@ -2,93 +2,140 @@
 
 const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
+const Cart=require('../../models/cartSchema')
 
 const loadShop = async (req, res) => {
   try {
     const category = req.query.category || "";
     const minPrice = parseInt(req.query.minPrice) || 0;
-    const maxPrice = parseInt(req.query.maxPrice) || 1000000;
+    const maxPrice = parseInt(req.query.maxPrice) || 10000;
     const search = req.query.search || "";
     const sort = req.query.sort || "";
     const page = parseInt(req.query.page) || 1;
-    const limit = 9; // products per page 
+    const limit = 9;
 
-    //  Fetch all active categories
+    // Fetch listed categories
     const categories = await Category.find({ isListed: true });
 
-    //  Build dynamic query
-     let query = {};
-   
+    let query = {};
 
-  
+    // Category filter
     if (category) {
-      const selectedCategory = await Category.findOne({ _id: category, isListed: true });
+      const selectedCategory = await Category.findOne({
+        _id: category,
+        isListed: true
+      });
+
       if (selectedCategory) {
         query.category_id = selectedCategory._id;
       } else {
-        // If category is unlisted, show empty result
         query.category_id = null;
       }
     } else {
-      // No category filter → show only products from listed categories
       const listedCategoryIds = categories.map(cat => cat._id);
       query.category_id = { $in: listedCategoryIds };
     }
+
     // Search filter
-    if (search) query.product_name = { $regex: search, $options: "i" };
-
-    // 💰 Price filter — handles both price & discount_price
-    query.$or = [
-      { "variants.discount_price": { $gte: minPrice, $lte: maxPrice } },
-      {
-        $and: [
-          { "variants.discount_price": { $exists: false } },
-          { "variants.price": { $gte: minPrice, $lte: maxPrice } },
-        ],
-      },
-    ];
-
-    // Sorting logic
-    let sortOption = {};
-    if (sort === "lowToHigh") {
-      sortOption["variants.discount_price"] = 1;
-      sortOption["variants.price"] = 1;
-    } else if (sort === "highToLow") {
-      sortOption["variants.discount_price"] = -1;
-      sortOption["variants.price"] = -1;
-    } else if (sort === "aToZ") {
-      sortOption["product_name"] = 1;
-    } else if (sort === "zToA") {
-      sortOption["product_name"] = -1;
+    if (search) {
+      query.product_name = { $regex: search, $options: "i" };
     }
 
-    //  Pagination setup
-    const totalProducts = await Product.countDocuments(query);
-    const totalPages = Math.ceil(totalProducts / limit);
-    const skip = (page - 1) * limit;
-
-    //  Fetch filtered products
-    const products = await Product.find(query)
+    // Fetch products (NO price filter here)
+    let products = await Product.find(query)
       .populate("category_id")
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit)
       .lean();
 
-    //  Pick a variant to display
+    // Find lowest effective price variant
     products.forEach((p) => {
       if (p.variants && p.variants.length > 0) {
-        p.randomVariant = p.variants.reduce((min, v) =>
-          (v.discount_price || v.price) < (min.discount_price || min.price)
-            ? v
-            : min
-        );
+        p.randomVariant = p.variants.reduce((min, v) => {
+
+          const currentPrice =
+            v.discount_price && v.discount_price > 0
+              ? v.discount_price
+              : v.price;
+
+          const minVariantPrice =
+            min.discount_price && min.discount_price > 0
+              ? min.discount_price
+              : min.price;
+
+          return currentPrice < minVariantPrice ? v : min;
+        });
       }
     });
- const userData = req.session.user || null;
-    // Render EJS
+
+    // ✅ Price filtering AFTER calculating effective price
+    let filteredProducts = products.filter((p) => {
+      if (!p.randomVariant) return false;
+
+      const effectivePrice =
+        p.randomVariant.discount_price && p.randomVariant.discount_price > 0
+          ? p.randomVariant.discount_price
+          : p.randomVariant.price;
+
+      return effectivePrice >= minPrice && effectivePrice <= maxPrice;
+    });
+
+    // Sorting
+    if (sort === "aToZ") {
+      filteredProducts.sort((a, b) =>
+        a.product_name.localeCompare(b.product_name)
+      );
+    }
+
+    if (sort === "zToA") {
+      filteredProducts.sort((a, b) =>
+        b.product_name.localeCompare(a.product_name)
+      );
+    }
+
+    if (sort === "lowToHigh") {
+      filteredProducts.sort((a, b) => {
+        const priceA =
+          a.randomVariant.discount_price && a.randomVariant.discount_price > 0
+            ? a.randomVariant.discount_price
+            : a.randomVariant.price;
+
+        const priceB =
+          b.randomVariant.discount_price && b.randomVariant.discount_price > 0
+            ? b.randomVariant.discount_price
+            : b.randomVariant.price;
+
+        return priceA - priceB;
+      });
+    }
+
+    if (sort === "highToLow") {
+      filteredProducts.sort((a, b) => {
+        const priceA =
+          a.randomVariant.discount_price && a.randomVariant.discount_price > 0
+            ? a.randomVariant.discount_price
+            : a.randomVariant.price;
+
+        const priceB =
+          b.randomVariant.discount_price && b.randomVariant.discount_price > 0
+            ? b.randomVariant.discount_price
+            : b.randomVariant.price;
+
+        return priceB - priceA;
+      });
+    }
+
+    // Pagination
+    const totalProducts = filteredProducts.length;
+    const totalPages = Math.ceil(totalProducts / limit);
+    const startIndex = (page - 1) * limit;
+    const paginatedProducts = filteredProducts.slice(
+      startIndex,
+      startIndex + limit
+    );
+
+    const userData = req.session.user || null;
+
     res.render("shop", {
-      products,
+      products: paginatedProducts,
       categories,
       category,
       search,
@@ -99,6 +146,7 @@ const loadShop = async (req, res) => {
       maxPrice,
       userData
     });
+
   } catch (error) {
     console.log("Error in loadShop:", error);
     res.redirect("/pageNotFound");

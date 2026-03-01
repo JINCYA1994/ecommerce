@@ -1,0 +1,201 @@
+<%- include('../../views/partials/user/header') %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Profile | FootChic</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      background-color: #f5f5f5;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .breadcrumb {
+      background-color: transparent;
+      margin-top: 50px;
+      margin-left: 80px;
+    }
+
+    .profile-container {
+      display: flex;
+      gap: 40px;
+      max-width: 1200px;
+      margin: 30px auto;
+    }
+
+    .profile-sidebar {
+      width: 260px;
+      background-color: #000;
+      color: #fff;
+      border-radius: 15px;
+      padding: 30px 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      background-color: #fff;
+      color: #000;
+      border-radius: 50%;
+      font-size: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .profile-sidebar a {
+      color: #fff;
+      text-decoration: none;
+      display: block;
+      margin: 12px 0;
+      font-size: 15px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .profile-sidebar a:hover, .profile-sidebar a.active {
+      background-color: #fff;
+      color: #000;
+    }
+
+    .profile-content {
+      flex: 1;
+    }
+
+    .card-custom {
+      background-color: #fff;
+      border-radius: 15px;
+      padding: 30px 40px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    }
+
+    .card-custom h5 {
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+      font-weight: 700;
+    }
+
+    .form-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #000;
+      width: 150px;
+    }
+
+    .form-group input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
+
+    .btn-edit {
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 6px 15px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .btn-edit:hover {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">Home</a></li>
+      <li class="breadcrumb-item active">Edit Profile</li>
+    </ol>
+  </nav>
+
+  <div class="profile-container">
+    <!-- Sidebar -->
+    <div class="profile-sidebar">
+      <div class="avatar">
+            <% if (userData && userData.profileImage) { %>
+  <img src="<%= userData.profileImage %>" alt="Profile Image">
+<% } else { %>
+  <span><%= userData && userData.username ? userData.username.charAt(0).toUpperCase() : 'U' %></span>
+<% } %>
+      </div>
+      <h5 class="text-center"><%= userData.username %></h5>
+      <hr>
+      <a href="/profile"><i class="fa fa-user me-2"></i> My Profile</a>
+      <a href="/orders"><i class="fa fa-shopping-bag me-2"></i> My Orders</a>
+      <a href="/wishlist"><i class="fa fa-heart me-2"></i> Wishlist</a>
+      <a href="/addresses"><i class="fa fa-map-marker-alt me-2"></i> Addresses</a>
+      <a href="/logout"><i class="fa fa-sign-out-alt me-2"></i> Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="profile-content">
+      <div class="card-custom">
+        <h5>Edit Profile</h5>
+        <form action="/update-profileimage" method="POST" enctype="multipart/form-data">
+          
+      <div class="form-group">
+  <label>Name:</label>
+  <input type="text" name="username" value="<%= userData.username %>" readonly>
+  <a href="/edit-name" class="btn-edit">Edit</a>
+</div>
+
+<div class="form-group">
+  <label>Email:</label>
+  <input type="email" name="email" value="<%= userData.email %>" readonly>
+  <a href="/edit-email" class="btn-edit">Edit</a>
+</div>
+
+<div class="form-group">
+  <label>Phone Number:</label>
+  <input type="text" name="phonenumber" value="<%= userData.phonenumber || '' %>" readonly>
+  <a href="/edit-phone" class="btn-edit">Add</a>
+</div>
+
+<div class="form-group">
+  <label>Password:</label>
+  <input type="password" value="********" readonly>
+  <a href="/change-password" class="btn-edit">Change</a>
+</div>
+
+<div class="form-group">
+  <label>Profile Image:</label>
+  <input type="file" name="profileImage">
+  <button type="submit" class="btn-edit">Upload</button>
+</div>
+
+           
+
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+<%- include('../../views/partials/user/footer') %>

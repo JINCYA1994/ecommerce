@@ -55,7 +55,7 @@ const exists = await Category.findOne({ name :{ $regex: `^${name}$`, $options: '
     if (exists) {
       console.log("Category already exists:",name);
       req.flash('error', 'Category already exists!');
-     return res.redirect("/admin/category?error=exists"); 
+     return res.redirect("/admin/category"); 
     } 
     
    //create category collection 
@@ -80,12 +80,24 @@ const updateCategory=async(req,res)=>{
    try{
     
     const {id}=req.params
-    const{name,description}=req.body
+   const name = req.body.name.trim();
+    const description = req.body.description.trim();
+
+
 
    if (!name || !description) {
       req.flash('error', 'All fields are required!');
       return res.redirect('/admin/category');
     }
+
+
+const categoryExist=await Category.findOne({name :{ $regex: `^${name}$`, $options: "i" }  , _id: { $ne: id } })
+if(categoryExist){
+  req.flash('error', 'Category already exists!');
+     return res.redirect("/admin/category")
+}
+
+
 
     
 await Category.updateOne(

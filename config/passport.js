@@ -14,19 +14,22 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        //Find existing user
-        let user = await User.findOne({ googleId: profile.id });
+        
+ const email = profile.emails[0].value;
 
-        if (!user) {
-          // Create new user
-          user = new User({
-            googleId: profile.id,
-            username: profile.displayName,
-            email: profile.emails[0].value,
-          });
-          await user.save();
-        }
+    let user = await User.findOne({ email });
 
+    if (user) {
+      return done(null, user);   // already exists -> login
+    }
+
+    // create new user
+    user = await User.create({
+      username: profile.displayName,
+      email: email,
+      googleId: profile.id,
+      isGoogleUser: true
+    });
         return done(null, user); // Must pass user, not newUser or undefined
       } catch (err) {
         return done(err, null);

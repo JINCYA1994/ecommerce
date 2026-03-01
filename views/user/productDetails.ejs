@@ -120,11 +120,12 @@
 
         <!-- Buttons -->
         <div class="mt-4 d-flex gap-3 align-items-center">
-          <form action="/cart/add" method="POST" class="d-inline">
+          <form action="/cart" method="POST" class="d-inline">
             <!-- Example hidden fields to send product and selected variant to server -->
             <input type="hidden" name="productId" value="<%= product._id %>">
             <input type="hidden" name="variantId" value="<%= (activeVariant && activeVariant._id) || product.variants[0]._id %>" id="formVariantId">
             <input type="hidden" name="quantity" id="formQuantity" value="1">
+              <input type="hidden" name="size" id="formSize">
             <button type="submit" class="btn btn-dark px-4">Add To Cart</button>
           </form>
 
@@ -364,7 +365,8 @@
         stockInfo.classList.remove("text-success");
         stockInfo.classList.add("text-danger");
       }
-
+ const formSize = document.getElementById("formSize");
+  if (formSize) formSize.value = size;
       // Reset quantity to 1 when changing size
       const qtyInput = document.getElementById("quantity");
       qtyInput.value = 1;

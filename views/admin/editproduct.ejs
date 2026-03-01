@@ -7,48 +7,85 @@
 
 <style>
   .content-main {
-    display: flex;
-    justify-content: center;
-    padding-top: 50px;
-  }
-
-  .card {
-    width: 100%;
-    max-width: 900px;
-    margin-bottom: 20px;
-  }
-
-  .preview-img {
-    margin-top: 10px;
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    display: block;
-  }
-
-  .image-cropper {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .image-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-  }
-  .image-box {
-  border: 1px solid #e1e1e1;
-  padding: 10px;
-  border-radius: 10px;
-  width: 100%;
-  max-width: 400px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 100px;
 }
 
+.card {
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 20px;
+  border-radius: 14px;
+  box-shadow: 0px 4px 18px rgba(0,0,0,0.08);
+}
+
+.content-title {
+  font-weight: 800;
+  color: #222;
+}
+
+.form-control,
+.form-select {
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.btn {
+  border-radius: 30px !important;
+  font-weight: 600;
+}
+
+.preview-img {
+  margin-top: 10px;
+  max-width: 150px;
+  max-height: 150px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  display: block;
+  padding: 4px;
+  background: #fff;
+  object-fit: cover;
+}
+
+.image-cropper {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 420px;
+  margin: 20px auto;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #f8f9fa;
+  padding: 12px;
+}
+
+.image-cropper img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+}
+
+.image-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.image-box {
+  border: 1px solid #eee;
+  padding: 15px;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 450px;
+  background: #fff;
+  box-shadow: 0px 2px 10px rgba(0,0,0,0.05);
+}
 
 
 
@@ -153,7 +190,7 @@
                 <div class="image-box">
 
                   <input type="file" class="form-control"  style="display:none"
-                    id="input<%= i %>"  name="images"
+                    id="input<%= i %>"  name="croppedImagesData"
                     accept="image/png,image/jpeg,image/jpg,image/webp" >
 
                   <img id="imgView<%= i %>" class="preview-img"
@@ -459,7 +496,7 @@ editBtn.style.display='none'
 
     const form = e.target;
     const formData = new FormData(form);
-
+    formData.delete("croppedImagesData")
     // send cropped images only
     Object.values(croppedImagesData).forEach((item) => {
       formData.append('croppedImagesData', item.blob, `image_${item.index}.jpg`);

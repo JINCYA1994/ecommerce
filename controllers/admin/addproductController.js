@@ -149,7 +149,7 @@ if (
             }
           }
         } else {
-          // 🔹 Add new color variant entirely
+          //  Add new color variant entirely
           existingProduct.variants.push(newVariant);
         }
       }

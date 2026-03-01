@@ -1,0 +1,36 @@
+<div class="profile-sidebar">
+  <div class="avatar">
+    <% if (userData && userData.profileImage) { %>
+      <img src="<%= userData.profileImage %>" alt="Profile Image">
+    <% } else { %>
+      <span>
+        <%= userData && userData.username 
+              ? userData.username.charAt(0).toUpperCase() 
+              : 'U' %>
+      </span>
+    <% } %>
+  </div>
+
+  <h5><%= userData.username %></h5>
+  <hr>
+
+  <a href="/profile" class="<%= activePage === 'profile' ? 'active' : '' %>">
+    <i class="fa fa-user me-2"></i> My Profile
+  </a>
+
+  <a href="/orders" class="<%= activePage === 'orders' ? 'active' : '' %>">
+    <i class="fa fa-shopping-bag me-2"></i> My Orders
+  </a>
+
+  <a href="/wishlist" class="<%= activePage === 'wishlist' ? 'active' : '' %>">
+    <i class="fa fa-heart me-2"></i> Wishlist
+  </a>
+
+  <a href="/address" class="<%= activePage === 'address' ? 'active' : '' %>">
+    <i class="fa fa-map-marker-alt me-2"></i> Addresses
+  </a>
+
+  <a href="/logout">
+    <i class="fa fa-sign-out-alt me-2"></i> Logout
+  </a>
+</div>

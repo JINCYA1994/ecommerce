@@ -1,0 +1,239 @@
+<%- include("../partials/user/header") %>
+
+<div class="container py-5">
+  <div class="row">
+
+    <!-- LEFT SIDE - ADDRESS SECTION -->
+    <div class="col-md-7 mb-4">
+
+      <div class="card shadow-sm p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold">Shipping Address</h5>
+          <a href="/address" class="btn btn-sm btn-dark">
+            ADD NEW ADDRESS
+          </a>
+        </div>
+
+        <% addresses.forEach(address => { %>
+
+          <div class="border rounded p-3 mb-3">
+
+            <div class="form-check">
+              <input class="form-check-input"
+                     type="radio"
+                     name="selectedAddress"
+                     value="<%= address._id %>"
+                     <%= address.is_default ? "checked" : "" %> >
+            </div>
+
+            <h6 class="fw-bold mt-2">
+              <%= address.name %>
+            </h6>
+
+            <p class="mb-1">
+              <%= address.house_name %>, <%= address.locality%>
+            </p>
+
+            <p class="mb-1">
+              <%= address.city %>, <%= address.state %>
+            </p>
+
+            <p class="mb-1">
+              Pin: <%= address.pincode %>
+            </p>
+
+            <p>
+              Ph: <%= address.mobilenumber %>
+            </p>
+
+            <a href="/address"
+               class="text-decoration-none text-dark fw-semibold">
+              Edit
+            </a>
+
+          </div>
+
+        <% }) %>
+
+      </div>
+
+    </div>
+
+
+    <!-- RIGHT SIDE - ORDER SUMMARY -->
+    <div class="col-md-5">
+
+      <div class="card shadow-sm p-4">
+
+        <h5 class="fw-bold mb-4">Your Order</h5>
+
+        <!-- PRODUCT LIST -->
+       <% cart.items.forEach(item => { 
+
+  const variant = item.product_id.variants.find(v =>
+    v._id.toString() === item.var_id.toString()
+  );
+
+  const originalPrice = Number(variant?.price || 0);
+  const discountPrice = Number(variant?.discount_price || 0);
+
+  const sellingPrice =
+    discountPrice && discountPrice < originalPrice
+      ? discountPrice
+      : originalPrice;
+
+  const image = variant?.images?.[0] || "/images/default.png";
+%>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+  <div class="d-flex align-items-center">
+    <img src="<%= image %>" width="60" class="me-3 rounded">
+
+    <div>
+      <h6 class="mb-1">
+        <%= item.product_id.product_name %>
+      </h6>
+      <small>Size: <%= item.size %></small><br>
+      <small>Qty: <%= item.quantity %></small>
+
+      <% if (discountPrice > 0 && discountPrice < originalPrice) { %>
+        <div>
+          <small class="text-muted text-decoration-line-through">
+            ₹<%= originalPrice %>
+          </small>
+          <small class="text-danger fw-bold ms-2">
+            ₹<%= sellingPrice %>
+          </small>
+        </div>
+      <% } else { %>
+        <div>
+          ₹<%= originalPrice %>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+
+  <strong>
+    ₹<%= sellingPrice * item.quantity %>
+  </strong>
+
+</div>
+
+<% }) %>
+
+        <hr>
+
+        <!-- COUPON -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Apply Coupon</label>
+          <div class="input-group">
+            <input type="text"
+                   class="form-control"
+                   placeholder="Enter coupon code"
+                   name="couponCode">
+            <button class="btn btn-outline-dark">
+              APPLY
+            </button>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- PRICE SUMMARY -->
+        <div class="d-flex justify-content-between mb-2">
+          <span>Subtotal</span>
+          <span>₹<%= subtotal %></span>
+        </div>
+
+        <div class="d-flex justify-content-between mb-2 text-success">
+          <span>Coupon Discount</span>
+          <span>- ₹<%= discount %></span>
+        </div>
+
+        <div class="d-flex justify-content-between mb-2">
+          <span>Shipping</span>
+          <span>₹<%= shipping %></span>
+        </div>
+
+        <hr>
+
+        <div class="d-flex justify-content-between fw-bold fs-5">
+          <span>Total</span>
+          <span>₹<%= finalAmount %></span>
+        </div>
+
+        <hr>
+
+        <!-- PAYMENT METHODS -->
+        <form action="/place-order" method="POST">
+
+          <input type="hidden" name="selectedAddress" id="selectedAddressInput">
+
+          <h6 class="fw-bold mb-3">Payment Method</h6>
+
+          <div class="form-check mb-2">
+            <input class="form-check-input"
+                   type="radio"
+                   name="paymentMethod"
+                   value="Online">
+            <label class="form-check-label">
+              Online Payment
+            </label>
+          </div>
+
+          <div class="form-check mb-2">
+            <input class="form-check-input"
+                   type="radio"
+                   name="paymentMethod"
+                   value="Wallet">
+            <label class="form-check-label">
+              Wallet Payment
+            </label>
+          </div>
+
+          <div class="form-check mb-4">
+            <input class="form-check-input"
+                   type="radio"
+                   name="paymentMethod"
+                   value="COD"
+                   checked>
+            <label class="form-check-label">
+              Cash on Delivery
+            </label>
+          </div>
+
+          <button type="submit"
+                  class="btn btn-warning w-100 fw-bold py-2">
+            PLACE ORDER
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+  // Automatically set selected address into hidden input
+  const radios = document.querySelectorAll("input[name='selectedAddress']");
+  const hiddenInput = document.getElementById("selectedAddressInput");
+
+  radios.forEach(radio => {
+    radio.addEventListener("change", function () {
+      hiddenInput.value = this.value;
+    });
+
+    if (radio.checked) {
+      hiddenInput.value = radio.value;
+    }
+  });
+</script>
+
+<%- include("../partials/user/footer") %>

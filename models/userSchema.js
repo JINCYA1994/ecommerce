@@ -36,16 +36,17 @@ email:{
   unique:true,
    sparse: true 
 },
-phonenumber: {
-      type: String,
-      trim:true,
-    default:"Not given",
-    },
+
     role:{
       type:String,
       enum:['admin','user'], 
       default:'user'
     }, 
+
+     profileImage: {
+    type: String,
+   
+  },
     isBlocked: {
       type: Boolean,
       default: false,

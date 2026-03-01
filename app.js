@@ -9,13 +9,17 @@ const session=require('express-session')
 const MongoStore = require('connect-mongo'); 
 const passport=require('./config/passport')
 const flash = require("connect-flash");
-
+const methodOverride = require('method-override');
+const cartCount = require('./middlewares/cartCount');
 
 
 connectDB()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
+
+app.use(methodOverride('_method'));
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -34,8 +38,10 @@ app.use(
     },
   })
 );
+app.use(cartCount);
 app.use(passport.initialize())
 app.use(passport.session())
+
 
 app.use((req, res, next) => {
   res.set(
