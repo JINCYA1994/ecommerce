@@ -1,0 +1,334 @@
+<%- include('../../views/partials/user/header') %>
+
+<style>
+  body {
+    background-color: #f5f5f5;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .breadcrumb {
+    background: transparent;
+    font-size: 15px;
+    margin-top: 50px;
+    margin-left: 80px;
+  }
+
+  .card-custom {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+  }
+
+  .card-custom h5 {
+    font-weight: 700;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .order-box {
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+  }
+
+  .btn-dark,
+  .btn-secondary {
+    border-radius: 25px;
+  }
+</style>
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="/" class="text-decoration-none text-dark">Home</a>
+    </li>
+    <li class="breadcrumb-item active">My Orders</li>
+  </ol>
+</nav>
+
+<div class="profile-container">
+
+  <!-- Sidebar -->
+  <%- include('../../views/partials/user/profileSidebar', { 
+        userData: userData, 
+        activePage: 'orders' 
+      }) %>
+
+  <!-- Orders Content -->
+  <div class="profile-content">
+
+    <div class="card-custom">
+      <h5>My Orders</h5>
+
+      <!-- Search -->
+      <form method="GET" action="/orders" class="d-flex mb-4">
+        <input type="text"
+               name="search"
+               value="<%= search %>"
+               placeholder="Search by Order ID"
+               class="form-control me-2">
+
+        <button type="submit" class="btn btn-dark me-2">Search</button>
+        <a href="/orders" class="btn btn-secondary">Clear</a>
+      </form>
+
+      <% if(orders.length === 0){ %>
+        <div class="alert alert-dark">
+          No Orders Found
+        </div>
+      <% } %>
+
+      <% orders.forEach(order => { %>
+
+       <div class="order-box">
+  <div class="row align-items-center">
+
+    <div class="col-md-3">
+      <strong>Order ID</strong>
+      <p><%= order.orderId %></p>
+    </div>
+
+    <div class="col-md-2">
+      <strong>Date</strong>
+      <p><%= order.createdAt.toDateString() %></p>
+    </div>
+
+    <div class="col-md-2">
+      <strong>Total</strong>
+      <p>₹<%= order.total_price %></p>
+    </div>
+
+    <div class="col-md-2">
+      <strong>Status</strong><br>
+      <span class="badge 
+        <%= order.status === 'cancelled' ? 'bg-danger' : 
+            order.status === 'delivered' ? 'bg-success' : 
+            'bg-warning text-dark' %> 
+        status-badge">
+        <%= order.status %>
+      </span>
+    </div>
+
+    <div class="col-md-3 text-end">
+      <a href="/orders/<%= order.orderId %>" class="btn btn-sm btn-outline-dark mb-2">
+        View Details
+      </a>
+  <% if(order.status === "Processing"){ %>
+    <button type="button"
+            class="btn btn-sm btn-danger cancel-btn mb-2"
+            data-bs-toggle="modal"
+            data-bs-target="#cancelModal"
+            data-id="<%= order._id %>">
+      Cancel Order
+    </button>
+  <% } else if(order.status === "Cancelled") { %>
+    <span class="badge bg-danger">ORDER CANCELLED</span>
+  <% } %>
+
+    </div>
+
+  </div>
+
+  <!-- Products List -->
+  <hr>
+  <% order.products.forEach(product => { %>
+    <div class="row align-items-center mb-2">
+      <div class="col-md-1">
+        <img src="<%= product.image %>" alt="<%= product.name %>" class="img-fluid" />
+      </div>
+      <div class="col-md-5">
+        <strong><%= product.name %></strong><br>
+        Qty: <%= product.quantity %> | Price: ₹<%= product.price %>
+      </div>
+      <div class="col-md-3">
+     <!-- <% if(order.status === "Processing"){ %>
+<button type="button"
+        class="btn btn-sm btn-danger cancel-product-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#cancelProductModal"
+        data-orderid="<%= order._id %>"
+        data-orderitemid="<%= product._id %>">
+  Cancel Product
+</button>
+<% } else if (order.status === "Cancelled") { %>
+  <span class="badge bg-danger">PRODUCT CANCELLED</span>
+<% } %> -->
+
+<%
+const isCancelled = order.cancelledProducts?.some(
+  p => p.orderItem_id.toString() === product._id.toString()
+);
+%>
+
+<% if(isCancelled){ %>
+
+<span class="badge bg-danger">PRODUCT CANCELLED</span>
+
+<% } else if(order.status === "Processing"){ %>
+
+<button type="button"
+        class="btn btn-sm btn-danger cancel-product-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#cancelProductModal"
+        data-orderid="<%= order._id %>"
+        data-orderitemid="<%= product._id %>">
+  Cancel Product
+</button>
+
+<% } %>
+      </div>
+    </div>
+    <hr>
+  <% }) %>
+
+</div>
+
+      <% }) %>
+
+      <!-- Pagination -->
+      <nav>
+        <ul class="pagination justify-content-center mt-4">
+          <% for(let i=1; i<=totalPages; i++){ %>
+            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+              <a class="page-link"
+                 href="/orders?page=<%= i %>&search=<%= search %>">
+                <%= i %>
+              </a>
+            </li>
+          <% } %>
+        </ul>
+      </nav>
+
+    </div>
+
+  </div>
+</div>
+<!-- PRODUCT CANCEL MODAL -->
+<div class="modal fade" id="cancelProductModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content p-4">
+
+      <h5 class="text-center mb-3">Cancel Product</h5>
+
+      <form method="POST" action="/cancel-product">
+        <input type="hidden" name="orderId" id="modalProductOrderId">
+        <input type="hidden" name="productId" id="modalProductId">
+
+        <div class="mb-3">
+          <select name="reason" class="form-select" required>
+            <option value="">Select Reason</option>
+            <option>Ordered by mistake</option>
+            <option>Found better price</option>
+            <option>Delivery too late</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <textarea name="description" class="form-control" placeholder="Additional details (optional)"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- SINGLE REUSABLE CANCEL MODAL -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content p-4">
+
+      <h5 class="text-center mb-3">Cancel Order</h5>
+
+      <form method="POST" action="/cancel-order">
+        <input type="hidden" name="orderId" id="modalOrderId">
+
+        <div class="mb-3">
+          <select name="reason" class="form-select" required>
+            <option value="">Select Reason</option>
+            <option>Ordered by mistake</option>
+            <option>Found better price</option>
+            <option>Delivery too late</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <textarea name="description"
+                    class="form-control"
+                    placeholder="Additional details (optional)"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-danger">
+            Confirm Cancel
+          </button>
+
+          <button type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal">
+            Close
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+ document.addEventListener('DOMContentLoaded', () => {
+  const cancelButtons = document.querySelectorAll('.cancel-btn');
+  const modalOrderId = document.getElementById('modalOrderId');
+
+  cancelButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      modalOrderId.value = this.dataset.id;
+    });
+  });
+});
+const cancelProductButtons = document.querySelectorAll('.cancel-product-btn');
+const modalProductOrderId = document.getElementById('modalProductOrderId');
+const modalProductId = document.getElementById('modalProductId');
+
+cancelProductButtons.forEach(btn => {
+  btn.addEventListener('click', function() {
+    modalProductOrderId.value = this.dataset.orderid;
+    modalProductId.value = this.dataset.orderitemid;
+  });
+});
+</script>
+<% if (typeof success !== 'undefined' && success) { %>
+<script>
+Swal.fire({
+  icon: "success",
+  title: "<%= success %>",
+  confirmButtonColor: "#000"
+});
+</script>
+<% } %>
+
+
+
+
+
+
+
+<%- include('../../views/partials/user/footer') %>

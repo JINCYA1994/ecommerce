@@ -12,7 +12,7 @@ const orderController=require('../controllers/user/orderController')
 const upload = require('../config/multer'); 
 const preventLogin = require('../middlewares/preventLogin');
 const checkoutController = require('../controllers/user/checkoutController');
-
+const orderdetailsController=require('../controllers/user/orderdetailsController')
 
 router.get('/login', preventLogin, userController.loadlogin);
 
@@ -82,19 +82,23 @@ router.delete("/address/:id",userAuth, addressController.deleteAddress);
 router.get('/cart',userAuth,cartController.getcartpage)
 router.post('/cart',userAuth,cartController.addToCart)
 router.delete('/remove-cart/:id',userAuth,cartController.removeCartItem )
- 
+ router.post('/cart/update-quantity',userAuth ,cartController.updateQuantity);
+
 // order
 router.get('/order-success/:id', userAuth, orderController.getOrderSuccessPage)
-
-
-
-
+router.get('/orders', userAuth, orderdetailsController.listorderDetails);
+router.get('/orders/:orderID', userAuth,orderdetailsController.orderDetails);
+router.get('/invoice/:id',userAuth,orderdetailsController.invoicePage)
+router.post('/cancel-order',userAuth,orderdetailsController. cancelOrder);
+router.post('/cancel-product',userAuth,orderdetailsController.cancelProduct)
 //checkout
 router.get('/checkout',userAuth,checkoutController.viewcheckoutPage)
 router.post('/place-order',userAuth,orderController.placeOrderpage)
 
 //shop
 router.get('/shop',shopController.loadShop)
+router.get("/getVariantSizes/:variantId", shopController.getVariantSizes);
+
 
 //productdetails
 router.get('/productDetails/:id',productController.loadProductDetails)

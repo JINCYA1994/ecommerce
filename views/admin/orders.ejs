@@ -1,0 +1,178 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container mt-5 pt-4">
+
+  <h3 class="fw-bold mb-4">Order Management</h3>
+
+  <!-- Search -->
+  <div class="d-flex justify-content-end mb-3">
+    <form action="/admin/orders" method="GET" class="d-flex gap-2">
+      <input 
+        type="text" 
+        name="search" 
+        class="form-control"
+        placeholder="Search Order ID..."
+        value="<%= search || '' %>"
+        style="width: 250px;"
+      >
+      <button class="btn btn-dark">Search</button>
+      <a href="/admin/orders" class="btn btn-secondary">Clear</a>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="card shadow-sm p-3">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Order ID</th>
+            <th>User</th>
+            <th>Email</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% if(orders.length > 0) { %>
+
+            <% orders.forEach(order => { %>
+              <tr>
+
+                <td><strong><%= order.orderId %></strong></td>
+
+                <td>
+                  <%= order.user_id.firstname || order.user_id.username %>
+                </td>
+
+                <td><%= order.user_id.email %></td>
+
+                <td>
+                  <%= new Date(order.ordered_at).toLocaleDateString() %>
+                </td>
+
+                <td>₹<%= order.total_price %></td>
+
+<td>
+  <form action="/admin/orders/update-status/<%= order.orderId %>" method="POST">
+
+    <!-- <select name="status"
+            class="form-select form-select-sm"
+            onchange="this.form.submit()">
+
+      <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>
+        Processing
+      </option>
+
+      <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>
+        Shipped
+      </option>
+
+      <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>
+        Delivered
+      </option>
+
+      <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>
+        Cancelled
+      </option>
+
+      <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>
+        Returned
+      </option>
+
+    </select> -->
+
+<%
+  const statusOptions = ["Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
+  const currentStatus = order.status;
+%>
+
+<select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+  <% statusOptions.forEach(option => { %>
+    <option 
+      value="<%= option %>" 
+      <%= currentStatus === option ? "selected" : "" %>
+      <%= 
+        (currentStatus === "Shipped" && option === "Processing") ||
+        (currentStatus === "Delivered" && (option === "Processing" || option === "Shipped")) ||
+        (currentStatus === "Cancelled" && option !== "Cancelled") ||
+        (currentStatus === "Returned" && option !== "Returned")
+        ? "disabled" : "" 
+      %>
+    >
+      <%= option %>
+    </option>
+  <% }) %>
+</select>
+
+  </form>
+</td>
+
+
+
+
+
+
+                <td>
+                  <a href="/admin/orders/<%= order.orderId %>" 
+                     class="btn btn-sm btn-primary">
+                     View
+                  </a>
+                </td>
+
+              </tr>
+            <% }) %>
+
+          <% } else { %>
+            <tr>
+              <td colspan="7" class="text-center text-muted">
+                No orders found
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+
+      <% if(currentPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link"
+             href="/admin/orders?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>">
+             Previous
+          </a>
+        </li>
+      <% } %>
+
+      <% for(let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link"
+             href="/admin/orders?page=<%= i %><%= search ? '&search=' + search : '' %>">
+             <%= i %>
+          </a>
+        </li>
+      <% } %>
+
+      <% if(currentPage < totalPages) { %>
+        <li class="page-item">
+          <a class="page-link"
+             href="/admin/orders?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>">
+             Next
+          </a>
+        </li>
+      <% } %>
+
+    </ul>
+  </nav>
+
+</div>
+
+<%- include("../../views/partials/admin/footer") %>

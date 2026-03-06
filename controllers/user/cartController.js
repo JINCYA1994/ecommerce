@@ -6,6 +6,8 @@ const Cart = require('../../models/cartSchema');
 const getcartpage = async (req, res) => {
   try {
     const userId = req.session.user;
+
+    const userData = req.session.user || null;
     if (!userId) return res.redirect('/login');
 
     const cart = await Cart.findOne({ user_id: userId }).populate('items.product_id');
@@ -41,12 +43,13 @@ const getcartpage = async (req, res) => {
           size: item.size,
           price,
           quantity: item.quantity,
-          total
+          total,
+      
         };
       })
       .filter(Boolean);
 
-    res.render('cart', { cart: { items: updatedItems, total: grandTotal } });
+    res.render('cart', { cart: { items: updatedItems, total: grandTotal } ,userData});
 
   } catch (error) {
     console.log("Get cart error:", error);
@@ -54,12 +57,11 @@ const getcartpage = async (req, res) => {
   }
 };
 
-
 const addToCart = async (req, res) => {
   try {
     const userId = req.session.user;
     const { productId, variantId, size } = req.body;
-
+console.log(req.body)
     if (!userId) return res.redirect('/login');
 
     const product = await Product.findById(productId);
@@ -71,35 +73,54 @@ const addToCart = async (req, res) => {
     const selectedSize = variant.sizes.find(
       s => s.size == size && !s.isDeleted && s.isListed
     );
-    if (!selectedSize || selectedSize.stock <= 0) return res.redirect('/shop');
 
-    let cart = await Cart.findOne({ user_id: userId });
-    if (!cart) {
-      cart = new Cart({ user_id: userId, items: [] });
+    if (!selectedSize || selectedSize.stock <= 0) {
+      return res.redirect('/shop');
     }
 
-    const existingItem = cart.items.find(
-      item =>
-        item.product_id.toString() === productId &&
-        item.var_id.toString() === variantId &&
-        item.size === size
-    );
+    let cart = await Cart.findOne({ user_id: userId });
+
+    if (!cart) {
+      cart = new Cart({
+        user_id: userId,
+        items: []
+      });
+    }
+console.log("Incoming:", productId, variantId, size);
+cart.items.forEach(i => {
+  console.log("Cart Item:", i.product_id.toString(), i.var_id.toString(), i.size);
+});
+
+
+const existingItem = cart.items.find(item =>
+  item.product_id.equals(productId) &&
+  item.var_id.equals(variantId) &&
+  item.size == size
+);
+
 
     if (existingItem) {
+
       if (existingItem.quantity + 1 > selectedSize.stock) {
         return res.redirect('/shop');
       }
+
       existingItem.quantity += 1;
+
     } else {
+
       cart.items.push({
         product_id: productId,
         var_id: variantId,
         size,
         quantity: 1
       });
+
     }
 
     await cart.save();
+
+req.session.cartMessage = "Product added to cart successfully!";
     res.redirect('/shop');
 
   } catch (error) {
@@ -107,6 +128,63 @@ const addToCart = async (req, res) => {
     res.redirect('/shop');
   }
 };
+
+
+
+
+
+// const addToCart = async (req, res) => {
+//   try {
+//     const userId = req.session.user;
+//     const { productId, variantId, size } = req.body;
+
+//     if (!userId) return res.redirect('/login');
+
+//     const product = await Product.findById(productId);
+//     if (!product) return res.redirect('/shop');
+
+//     const variant = product.variants.id(variantId);
+//     if (!variant) return res.redirect('/shop');
+
+//     const selectedSize = variant.sizes.find(
+//       s => s.size == size && !s.isDeleted && s.isListed
+//     );
+//     if (!selectedSize || selectedSize.stock <= 0) return res.redirect('/shop');
+
+//     let cart = await Cart.findOne({ user_id: userId });
+//     if (!cart) {
+//       cart = new Cart({ user_id: userId, items: [] });
+//     }
+
+//     const existingItem = cart.items.find(
+//       item =>
+//         item.product_id.toString() === productId &&
+//         item.var_id.toString() === variantId &&
+//          item.size === size
+//     );
+
+//     if (existingItem) {
+//       if (existingItem.quantity + 1 > selectedSize.stock) {
+//         return res.redirect('/shop');
+//       }
+//       existingItem.quantity += 1;
+//     } else {
+//       cart.items.push({
+//         product_id: productId,
+//         var_id: variantId,
+//         size,
+//         quantity: 1
+//       });
+//     }
+
+//     await cart.save();
+//     res.redirect('/shop');
+
+//   } catch (error) {
+//     console.log("Add to cart error:", error);
+//     res.redirect('/shop');
+//   }
+// };
 
 
 
@@ -152,11 +230,56 @@ const removeCartItem = async (req, res) => {
 
 
 
+const updateQuantity = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const { itemId, action } = req.body;
+
+    const cart = await Cart.findOne({ user_id: userId });
+    if (!cart) return res.json({ success: false, message: 'Cart not found' });
+
+    const item = cart.items.id(itemId);
+    if (!item) return res.json({ success: false, message: 'Item not found' });
+
+    const product = await Product.findById(item.product_id);
+    const variant = product.variants.id(item.var_id);
+    const selectedSize = variant.sizes.find(s => s.size == item.size);
+
+    if (action === 'increment') {
+      if (item.quantity >= selectedSize.stock) return res.json({ success: false, message: 'Stock limit reached' });
+      item.quantity += 1;
+    } else if (action === 'decrement') {
+      if (item.quantity > 1) item.quantity -= 1;
+    }
+
+    await cart.save();
+
+    // Recalculate cart total
+    let grandTotal = 0;
+    cart.items.forEach(i => {
+      const prod = i.product_id.equals(product._id) ? product : null;
+      const varnt = prod ? prod.variants.id(i.var_id) : null;
+      const selSize = varnt ? varnt.sizes.find(s => s.size == i.size) : null;
+      if (prod && varnt && selSize) {
+        const price = varnt.discount_price || varnt.price;
+        grandTotal += price * i.quantity;
+      }
+    });
+
+    res.json({ success: true, quantity: item.quantity, cartTotal: grandTotal });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: 'Server error' });
+  }
+};
+
+
 
 
 
 module.exports = {
   getcartpage,
   addToCart,
-  removeCartItem
+  removeCartItem,updateQuantity
 };

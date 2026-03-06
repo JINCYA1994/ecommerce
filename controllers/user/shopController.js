@@ -13,7 +13,8 @@ const loadShop = async (req, res) => {
     const sort = req.query.sort || "";
     const page = parseInt(req.query.page) || 1;
     const limit = 9;
-
+    const cartMessage = req.session.cartMessage;
+     req.session.cartMessage = null;
     // Fetch listed categories
     const categories = await Category.find({ isListed: true });
 
@@ -66,7 +67,7 @@ const loadShop = async (req, res) => {
       }
     });
 
-    // ✅ Price filtering AFTER calculating effective price
+    //  Price filtering AFTER calculating effective price
     let filteredProducts = products.filter((p) => {
       if (!p.randomVariant) return false;
 
@@ -144,7 +145,8 @@ const loadShop = async (req, res) => {
       totalPages,
       minPrice,
       maxPrice,
-      userData
+      userData,
+      cartMessage
     });
 
   } catch (error) {
@@ -153,4 +155,40 @@ const loadShop = async (req, res) => {
   }
 };
 
-module.exports = { loadShop };
+
+
+const getVariantSizes = async (req, res) => {
+  try {
+
+    const { variantId } = req.params;
+
+    const product = await Product.findOne({
+      "variants._id": variantId
+    });
+
+    if (!product) {
+      return res.status(404).json([]);
+    }
+
+    const variant = product.variants.id(variantId);
+
+    if (!variant) {
+      return res.status(404).json([]);
+    }
+
+    res.json(variant.sizes);
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json([]);
+  }
+};
+
+
+
+
+
+
+
+
+module.exports = { loadShop, getVariantSizes };

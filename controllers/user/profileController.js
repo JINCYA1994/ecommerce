@@ -258,9 +258,16 @@ const userProfile=async (req,res) => {
   try {
     const userId=req.session.user
     const userData=await User.findById(userId)
-      const addresses = await Address.find({ userId });
-res.render('profile',{userData,addresses})
+         const defaultAddress = await Address.findOne({
+      userId: userId,
+      is_default: true
+    })
 
+
+res.render("profile",{
+    userData,
+    defaultAddress
+})
 
   } catch (error) {
     console.error('Error for retrive profile data',error)
@@ -442,28 +449,37 @@ const getChangePasswordPage = async (req, res) => {
   }
 };
 
+
+
+
+
 const postChangePassword = async (req, res) => {
   try {
     const userId = req.session.user;
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
+    // Check that the form fields are provided
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      req.flash('error_msg', 'Please fill all password fields');
+      return res.redirect('/change-password');
+    }
+
     const user = await User.findById(userId);
 
-    if (!user) {
-      req.flash('error', 'User not found');
+    if (!user || !user.password) { // ensure user and password exist
+      req.flash('error_msg', 'User not found or password not set');
       return res.redirect('/change-password');
     }
 
     // verify current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
-      req.flash('error', 'Current password is incorrect');
+      req.flash('error_msg', 'Current password is incorrect');
       return res.redirect('/change-password');
     }
 
-    // check new passwords match
     if (newPassword !== confirmPassword) {
-      req.flash('error', 'New passwords do not match');
+      req.flash('error_msg', 'New passwords do not match');
       return res.redirect('/change-password');
     }
 
@@ -472,15 +488,15 @@ const postChangePassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    req.flash('success', 'Password changed successfully!');
+    req.flash('success_msg', 'Password changed successfully!');
     return res.redirect('/profile');
+
   } catch (error) {
     console.error("Error changing password:", error);
-    req.flash('error', 'Something went wrong');
+    req.flash('error_msg', 'Something went wrong');
     res.redirect('/change-password');
   }
 };
-
 const uploadToCloudinary = async (file) => {
   const uploaded = await cloudinary.uploader.upload(file.path, {
     folder: 'FootChic/ProfileImages',

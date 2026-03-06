@@ -46,10 +46,12 @@ const placeOrderpage = async (req, res) => {
 
       totalAmount += price * item.quantity;
     });
-
-
+const generateOrderID = () => {
+  return "ORD" + Math.floor(100000 + Math.random() * 900000);
+};
     const newOrder = await Order.create({
       user_id: userId,
+      orderId:generateOrderID(),
       addresses_id: address._id,
       total_price: totalAmount,
       delivery_address: {
@@ -72,9 +74,7 @@ const placeOrderpage = async (req, res) => {
     return res.redirect('/cart');
   }
  const variant = product.variants.id(item.var_id);
-      // const variant = item.product_id.variants.find(v =>
-      //   v._id.toString() === item.var_id.toString()
-      // );
+    
 
       const price = variant.discount_price && variant.discount_price < variant.price
         ? variant.discount_price
@@ -99,25 +99,29 @@ const placeOrderpage = async (req, res) => {
 
 console.log(product)
       await OrderItem.create({
-        order_id: newOrder._id,
+      order_id: newOrder._id,
         var_id: item.var_id,
         quantity: item.quantity,
-        price: price
+        price: price,
+        size:item.size
       });
     }
 
-    // Clear cart
+  
     cart.items = [];
     await cart.save();
 
-    //  Redirect to success page
-    res.redirect(`/order-success/${newOrder._id}`);
+  
+    res.redirect(`/order-success/${newOrder.orderId}`);
 
   } catch (error) {
     console.log("Place Order Error:", error);
     res.redirect('/checkout');
   }
 };
+
+
+
 
 const getOrderSuccessPage = async (req, res) => {
   try {
@@ -126,7 +130,7 @@ const getOrderSuccessPage = async (req, res) => {
     const orderId = req.params.id;
 
     const order = await Order.findOne({
-      _id: orderId,
+    orderId: orderId,
       user_id: userId
     });
 
@@ -135,7 +139,7 @@ const getOrderSuccessPage = async (req, res) => {
     }
 
     res.render("orderSuccess", {
-      orderId: order._id
+      orderId: order.orderId 
     });
 
   } catch (error) {

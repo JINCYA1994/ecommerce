@@ -11,8 +11,11 @@ const orderItemSchema = new Schema({
 
   var_id: {
     type: Schema.Types.ObjectId,
+  
     required: true
   },
+
+size:{type:Number,required:true},
 
   quantity: {
     type: Number,

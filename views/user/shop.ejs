@@ -134,12 +134,20 @@
                     <div class="d-flex justify-content-center mb-3 flex-wrap">
                       <% product.variants.forEach(variant => { %>
                         <% if (variant.images && variant.images[0]) { %>
-                          <img 
+                          <!-- <img 
                             src="<%= variant.images[0] %>" 
                             alt="<%= variant.color %>" 
                             class="color-thumb"
                             data-main-image="<%= variant.images[0] %>"
-                          >
+                          > -->
+                          <img 
+  src="<%= variant.images[0] %>" 
+  alt="<%= variant.color %>" 
+  class="color-thumb"
+  data-main-image="<%= variant.images[0] %>"
+  data-variant-id="<%= variant._id %>"
+  data-color="<%= variant.color %>"
+>
                         <% } %>
                       <% }) %>
                     </div>
@@ -189,24 +197,23 @@
     No reviews yet
   </div>
 <% } %> -->
-<!-- <div class="mt-auto">
-  <a href="/cart/<%= product._id %>" class="btn add-cart-btn">
-    <i class="fa-solid fa-cart-shopping me-2"></i> Add to Cart
-  </a>
-</div> -->
-<form action="/cart" method="POST">
-  <input type="hidden" name="productId" value="<%= product._id %>">
-  <input type="hidden" name="variantId" value="<%= product.randomVariant._id %>">
-  <input type="hidden" name="size" value="<%= product.randomVariant.sizes[0].size %>">
-  
-   <button type="submit" class="btn add-cart-btn">
-    <i class="fa-solid fa-cart-shopping me-2"></i>
-    Add to Cart
-  </button> 
+<div class="mt-auto">
+<button 
+  type="button"
+  class="btn add-cart-btn openCartModal"
+  data-product-id="<%= product._id %>"
+  data-variant-id="<%= product.randomVariant?._id %>"
+  data-product-name="<%= product.product_name %>"
+  data-product-image="<%= product.randomVariant?.images[0] %>"
+  data-color="<%= product.randomVariant?.color %>">
+  <i class="fa-solid fa-cart-shopping me-2"></i>
+  Add to Cart
+</button>
+ 
+</div>
 
-</form>
 
-                  </div>
+                </div>
                 </div>
               </div>
             <% }) %>
@@ -250,20 +257,84 @@
 
 </section>
 
+<!-- Add To Cart Modal -->
+<div class="modal fade" id="cartModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Add to Cart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img id="modalImage" width="80">
+          <div>
+            <h6 id="modalName" class="mb-1"></h6>
+            <small class="text-muted">
+              Color: <span id="modalColor"></span>
+            </small>
+          </div>
+        </div>
+
+        <form method="POST" action="/cart">
+          <input type="hidden" name="productId" id="modalProductId">
+          <input type="hidden" name="variantId" id="modalVariantId">
+          <input type="hidden" name="size" id="selectedSize">
+
+          <div class="mb-3">
+            <label class="fw-semibold mb-2">Select Size:</label>
+            <div id="sizeOptions" class="d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <button type="submit" class="btn btn-warning w-100">
+            Add to Cart
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 <!-- JS for Auto Filter + Image Preview + Wishlist -->
 <script>
   function applyFilter() {
     document.getElementById('filterForm').submit();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    // Change main image when variant clicked
-    document.querySelectorAll(".color-thumb").forEach(thumb => {
-      thumb.addEventListener("click", () => {
-        const mainImage = thumb.closest(".card").querySelector(".main-image");
-        mainImage.src = thumb.dataset.mainImage;
-      });
-    });
+  // document.addEventListener("DOMContentLoaded", () => {
+  //   // Change main image when variant clicked
+  //   document.querySelectorAll(".color-thumb").forEach(thumb => {
+  //     thumb.addEventListener("click", () => {
+  //       const mainImage = thumb.closest(".card").querySelector(".main-image");
+  //       mainImage.src = thumb.dataset.mainImage;
+  //     });
+  //   });
+
+document.querySelectorAll(".color-thumb").forEach(thumb => {
+
+  thumb.addEventListener("click", function() {
+
+    const card = this.closest(".card");
+
+    // change main image
+    const mainImage = card.querySelector(".main-image");
+    mainImage.src = this.dataset.mainImage;
+
+    // update add to cart button
+    const addBtn = card.querySelector(".openCartModal");
+
+    addBtn.dataset.variantId = this.dataset.variantId;
+    addBtn.dataset.productImage = this.dataset.mainImage;
+    addBtn.dataset.color = this.dataset.color;
+
+  });
+
 
     // ❤️ Wishlist Toggle
     document.querySelectorAll(".wishlist-icon i").forEach(icon => {
@@ -313,9 +384,81 @@ function setPriceRange(min, max) {
   // Submit the form automatically
   form.submit();
 }
+document.addEventListener("DOMContentLoaded", () => {
 
+  const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
+
+  document.querySelectorAll(".openCartModal").forEach(button => {
+
+    button.addEventListener("click", async () => {
+
+      const productId = button.dataset.productId;
+      const variantId = button.dataset.variantId;
+      const productName = button.dataset.productName;
+      const image = button.dataset.productImage;
+      const color = button.dataset.color;
+
+      // Set basic info
+      document.getElementById("modalProductId").value = productId;
+      document.getElementById("modalVariantId").value = variantId;
+      document.getElementById("modalName").innerText = productName;
+      document.getElementById("modalImage").src = image;
+      document.getElementById("modalColor").innerText = color;
+
+      // Fetch only that variant sizes
+      const response = await fetch(`/getVariantSizes/${variantId}`);
+      const sizes = await response.json();
+
+      const sizeContainer = document.getElementById("sizeOptions");
+      sizeContainer.innerHTML = "";
+
+      sizes.forEach(size => {
+
+        if (size.stock > 0 && !size.isDeleted && size.isListed) {
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn btn-outline-dark";
+          btn.innerText = size.size;
+
+          btn.onclick = () => {
+            document.getElementById("selectedSize").value = size.size;
+
+            document.querySelectorAll("#sizeOptions button")
+              .forEach(b => b.classList.remove("active"));
+
+            btn.classList.add("active");
+          };
+
+          sizeContainer.appendChild(btn);
+        }
+
+      });
+
+      cartModal.show();
+
+    });
+
+  });
+
+});
 
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<% if (cartMessage) { %>
+<script>
+  Swal.fire({
+    icon: 'success',
+    title: 'Added to Cart!',
+    text: '<%= cartMessage %>',
+    confirmButtonColor: '#28a745',
+    confirmButtonText: 'OK'
+  });
+</script>
+<% } %>
+
+
 
 <style>
 aside {

@@ -6,6 +6,7 @@ const categoryController=require('../controllers/admin/categoryController')
  const addproductController=require('../controllers/admin/addproductController')
  const productController=require('../controllers/admin/productController')
  const editproductController=require('../controllers/admin/editproductController')
+  const ordersController=require('../controllers/admin/ordersController')
  const{userAuth,adminAuth}=require('../middlewares/auth')
 const upload = require('../config/multer'); 
 const preventAdminLogin = require('../middlewares/preventAdminLogin');
@@ -76,6 +77,18 @@ router.post('/products/:productId/variant/:variantId/size/:sizeId/edit',adminAut
   { name: 'originalImages', maxCount: 100 },
   { name: 'croppedImagesData', maxCount: 100 }
 ]),editproductController.updateProduct)
+
+
+
+
+
+
+// ordermanagement
+
+router.get('/orders',adminAuth,ordersController.getordersPage)
+router.post('/orders/update-status/:orderId', ordersController.updateOrderStatus);
+router.get('/orders/:orderId', ordersController.viewOrderDetails);
+
 
 
 

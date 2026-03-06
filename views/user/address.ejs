@@ -1,4 +1,3 @@
-
 <%- include('../../views/partials/user/header') %>
 
 <!DOCTYPE html>
@@ -25,7 +24,6 @@
       margin-left: 80px;
     }
 
-   
     .card-custom {
       background: #fff;
       border-radius: 15px;
@@ -40,66 +38,62 @@
       padding-bottom: 10px;
       margin-bottom: 20px;
     }
-.address-wrapper { max-width: 1200px;
-  
-     margin: 80px auto;
-     display: flex;
-     gap: 30px;
-     } 
+
+.address-wrapper { 
+  max-width: 1200px;
+  margin: 80px auto;
+  display: flex;
+  gap: 30px;
+} 
 
 .address-card { 
   background: #fff;
-   border-radius: 15px; 
-   padding: 25px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.08); 
-    flex: 1; 
+  border-radius: 15px; 
+  padding: 25px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08); 
+  flex: 1; 
+}
+
+.saved-box {
+  border: 1px solid #000;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.form-control {
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.btn-save {
+  background-color: #1e7e34;
+  color: #fff;
+  border-radius: 25px;
+  padding: 10px 25px;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-save:hover {
+  background-color: #155d27;
+}
+
+@media (max-width: 992px) {
+  .profile-container {
+    flex-direction: column;
+    align-items: center;
   }
-     .address-card h4 { 
-      font-weight: 700; 
-      margin-bottom: 20px; 
-      border-bottom: 2px solid #000;
-       padding-bottom: 10px; 
-      }
-    .saved-box {
-      border: 1px solid #000;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
 
-    .form-control {
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
+  .profile-sidebar {
+    width: 90%;
+  }
 
-    .btn-save {
-      background-color: #1e7e34;
-      color: #fff;
-      border-radius: 25px;
-      padding: 10px 25px;
-      border: none;
-      font-weight: 600;
-    }
-
-    .btn-save:hover {
-      background-color: #155d27;
-    }
-
-    @media (max-width: 992px) {
-      .profile-container {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .profile-sidebar {
-        width: 90%;
-      }
-
-      .profile-content {
-        width: 90%;
-        flex-direction: column;
-      }
-    }
+  .profile-content {
+    width: 90%;
+    flex-direction: column;
+  }
+}
 
 .select-wrapper {
   position: relative;
@@ -113,7 +107,7 @@
 }
 
 .select-wrapper::after {
-  content: "\f078"; /* Font Awesome down arrow */
+  content: "\f078";
   font-family: "Font Awesome 6 Free";
   font-weight: 900;
   position: absolute;
@@ -136,243 +130,316 @@
 </nav>
 
 <div class="profile-container">
-  <%- include('../../views/partials/user/profileSidebar', { 
-        userData: userData, 
-        activePage: 'profile' 
-      }) %>
 
+<%- include('../../views/partials/user/profileSidebar', { 
+      userData: userData, 
+      activePage: 'profile' 
+}) %>
 
-  <!-- Address Content -->
-  <div class="profile-content">
+<div class="profile-content">
 
-    <!-- Saved Addresses -->
-    <div class="card-custom">
-      <h5>Saved Addresses</h5>
+<!-- Saved Addresses -->
+<div class="card-custom">
 
-      <% if (addresses && addresses.length > 0) { %>
-        <% addresses.forEach(addr => { %>
-          <div class="saved-box">
-            <p><strong><%= addr.name %></strong></p>
-            <p><%= addr.house_name %>, <%= addr.locality %></p>
-            <p><%= addr.city %>, <%= addr.state %> - <%= addr.pincode %></p>
-            <p> <%= addr.mobilenumber %></p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h5 class="mb-0">Saved Addresses</h5>
+
+<button class="btn btn-dark" id="addAddressBtn">
+Add Address
+</button>
+
+</div>
+
+<% if (addresses && addresses.length > 0) { %>
+  <% addresses.forEach(addr => { %>
+
+  <div class="saved-box">
+
+<div class="d-flex justify-content-between align-items-center">
+
+<p class="mb-1"><strong><%= addr.name %></strong></p>
 
 <% if(addr.is_default) { %>
-      <span class="badge bg-success">Default</span>
-    <% } %>
+<span class="badge bg-success">Default</span>
+<% } %>
 
+</div>
 
-     <div>
+<p><%= addr.house_name %>, <%= addr.locality %></p>
+<p><%= addr.city %>, <%= addr.state %> - <%= addr.pincode %></p>
+<p><%= addr.mobilenumber %></p>
+
+<div>
 
 <button type="button"
-        class="btn btn-sm btn-primary mb-2 edit-btn"
-        data-id="<%= addr._id %>"
-        data-name="<%= addr.name %>"
-        data-house="<%= addr.house_name %>"
-        data-locality="<%= addr.locality %>"
-        data-city="<%= addr.city %>"
-        data-state="<%= addr.state %>"
-        data-pincode="<%= addr.pincode %>"
-        data-mobilenumber="<%= addr.mobilenumber %>">
-  Edit
+class="btn btn-sm btn-primary mb-2 edit-btn"
+data-id="<%= addr._id %>"
+data-name="<%= addr.name %>"
+data-house="<%= addr.house_name %>"
+data-locality="<%= addr.locality %>"
+data-city="<%= addr.city %>"
+data-state="<%= addr.state %>"
+data-pincode="<%= addr.pincode %>"
+data-mobilenumber="<%= addr.mobilenumber %>">
+Edit
 </button>
+
 <button type="button"
-        class="btn btn-sm btn-danger mb-2 delete-btn"
-        data-id="<%= addr._id %>">
-  Delete
+class="btn btn-sm btn-danger mb-2 delete-btn"
+data-id="<%= addr._id %>">
+Delete
 </button>
 
+</div>
+
+</div>
+
+<% }) %>
+
+<% } else { %>
+
+<div class="alert alert-dark">
+No addresses found. Please add an address.
+</div>
+
+<% } %>
+
+</div>
 
 
+<!-- Add Address Form -->
+<div class="card-custom" id="addressFormBox" style="display:none;">
+<h5>Add Address</h5>
 
-  </div>
-          </div>
-        <% }) %>
-      <% } else { %>
-        <div class="alert alert-dark">
-          No addresses found. Please add an address.
-        </div>
-      <% } %>
-    </div>
+<form action="/address" id="addressform" method="POST">
 
-    <!-- Add Address -->
-    <div class="card-custom">
-      <h5>Add Address</h5>
+<input type="hidden" name="addressId" id="addressId">
 
-      <form action="/address"   id="addressform"  method="POST">
-        <input type="hidden" name="addressId" id="addressId">
-        <input type="text" name="name"  id="name" class="form-control" placeholder="Full Name" >
-        <div class="text-danger small mt-1" id="nameError"></div>
-        <input type="text" name="house_name"   id="house_name" class="form-control" placeholder="House Name" >
-        <div class="text-danger small mt-1" id="house_nameError"></div>
-        <input type="text" name="locality"  id="locality"   class="form-control" placeholder="Locality">
-        <div class="text-danger small mt-1" id="localityError"></div>
-        <input type="text" name="city"  id="city"    class="form-control" placeholder="City" >
-        <div class="text-danger small mt-1" id="cityError"></div>
+<input type="text" name="name" id="name" class="form-control" placeholder="Full Name">
+<div class="text-danger small mt-1" id="nameError"></div>
+
+<input type="text" name="house_name" id="house_name" class="form-control" placeholder="House Name">
+<div class="text-danger small mt-1" id="house_nameError"></div>
+
+<input type="text" name="locality" id="locality" class="form-control" placeholder="Locality">
+<div class="text-danger small mt-1" id="localityError"></div>
+
+<input type="text" name="city" id="city" class="form-control" placeholder="City">
+<div class="text-danger small mt-1" id="cityError"></div>
+
 <div class="select-wrapper">
-  <select name="state" class="form-control"  id="state" >
-  <option value="">Select State</option>
-  <% states.forEach(state => { %>
-    <option value="<%= state %>"><%= state %></option>
-  <% }) %>
+
+<select name="state" class="form-control" id="state">
+
+<option value="">Select State</option>
+
+<% states.forEach(state => { %>
+<option value="<%= state %>"><%= state %></option>
+<% }) %>
+
 </select>
- <div class="text-danger small mt-1" id="stateError"></div>
-</div>
-        <input type="number" name="pincode"  id="pincode" class="form-control" placeholder="Pincode">
-        <div class="text-danger small mt-1" id="pincodeError"></div>
-        <input type="text" name="mobilenumber" id="mobilenumber"  class="form-control" placeholder="Mobile Number">
-        <div class="text-danger small mt-1" id="mobilenumberError"></div>
-        <button type="submit" class="btn-save mt-3" id="save_btn"  >SAVE ADDRESS</button>
-      </form>
-    </div>
 
-  </div>
+<div class="text-danger small mt-1" id="stateError"></div>
 
 </div>
+
+<input type="number" name="pincode" id="pincode" class="form-control" placeholder="Pincode">
+<div class="text-danger small mt-1" id="pincodeError"></div>
+
+<input type="text" name="mobilenumber" id="mobilenumber" class="form-control" placeholder="Mobile Number">
+<div class="text-danger small mt-1" id="mobilenumberError"></div>
+
+<button type="submit" class="btn-save mt-3" id="save_btn">SAVE ADDRESS</button>
+
+</form>
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- Include SweetAlert before using it -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<% if(messageAdded){ %>
 <script>
+  Swal.fire({
+    icon: "success",
+    title: "Address Added!",
+    text: "Your new address has been saved successfully",
+    timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
+
+<% if(messageUpdated){ %>
+<script>
+  Swal.fire({
+    icon: "success",
+    title: "Address Updated!",
+    text: "Your address has been updated successfully",
+    timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
+<script>
+
+const addBtn = document.getElementById("addAddressBtn");
+const formBox = document.getElementById("addressFormBox");
+
+addBtn.addEventListener("click", () => {
+
+if(formBox.style.display === "none"){
+  formBox.style.display = "block";
+}else{
+  formBox.style.display = "none";
+}
+
+});
 
 const form = document.getElementById("addressform");
 
- form.addEventListener("submit", function (e){
-
+form.addEventListener("submit", function (e){
 
 let isValid=true
 
-   const name= document.getElementById('name').value.trim()
-   const house_name=document.getElementById('house_name').value.trim()
-   const locality=document.getElementById('locality').value.trim()
-   const city=document.getElementById('city').value.trim()
-   const state=document.getElementById('state').value.trim()
-   const pincode=document.getElementById('pincode').value.trim()
-   const mobilenumber=document.getElementById('mobilenumber').value.trim()
+const name= document.getElementById('name').value.trim()
+const house_name=document.getElementById('house_name').value.trim()
+const locality=document.getElementById('locality').value.trim()
+const city=document.getElementById('city').value.trim()
+const state=document.getElementById('state').value.trim()
+const pincode=document.getElementById('pincode').value.trim()
+const mobilenumber=document.getElementById('mobilenumber').value.trim()
 
+document.getElementById("nameError").innerText = "";
+document.getElementById("house_nameError").innerText = "";
+document.getElementById("localityError").innerText = "";
+document.getElementById("cityError").innerText = "";
+document.getElementById("stateError").innerText = "";
+document.getElementById("pincodeError").innerText = "";
+document.getElementById("mobilenumberError").innerText = "";
 
-    document.getElementById("nameError").innerText = "";
-    document.getElementById("house_nameError").innerText = "";
-    document.getElementById("localityError").innerText = "";
-    document.getElementById("cityError").innerText = "";
-    document.getElementById("stateError").innerText = "";
-    document.getElementById("pincodeError").innerText = "";
-    document.getElementById("mobilenumberError").innerText = "";
-                 
 if(!name||!/^[a-zA-Z\s]+$/.test(name)){
-  document.getElementById('nameError').innerText="Full name must be at least 3 characters"
-  isValid=false
+document.getElementById('nameError').innerText="Full name must be at least 3 characters"
+isValid=false
 }
+
 if(!house_name||house_name.length < 3){
-  document.getElementById('house_nameError').innerText='House name must be at least 3 characters'
-  isValid=false
+document.getElementById('house_nameError').innerText='House name must be at least 3 characters'
+isValid=false
 }
 
 if(!locality||locality.length<3){
-  document.getElementById('localityError').innerText='Locality must be at least 3 characters'
-  isValid=false
+document.getElementById('localityError').innerText='Locality must be at least 3 characters'
+isValid=false
 }
 
-  if(!state){
-  document.getElementById('stateError').innerText='Please select a State'
-  isValid=false
-}
-   if(!city||city.length<2){
-  document.getElementById('cityError').innerText='City must be at least 2 characters'
-  isValid=false
-}
-   if(!/^[0-9]{6}$/.test(pincode)){
-  document.getElementById('pincodeError').innerText='Pincode must be exactly 6 digits'
-  isValid=false
-}
-   if(!/^[0-9]{10}$/.test(mobilenumber)){
-  document.getElementById('mobilenumberError').innerText='Please enter a valid 10-digit mobile number'
-  isValid=false
+if(!state){
+document.getElementById('stateError').innerText='Please select a State'
+isValid=false
 }
 
- if (!isValid) {
-      e.preventDefault(); 
-    }
+if(!city||city.length<2){
+document.getElementById('cityError').innerText='City must be at least 2 characters'
+isValid=false
+}
 
+if(!/^[0-9]{6}$/.test(pincode)){
+document.getElementById('pincodeError').innerText='Pincode must be exactly 6 digits'
+isValid=false
+}
+
+if(!/^[0-9]{10}$/.test(mobilenumber)){
+document.getElementById('mobilenumberError').innerText='Please enter a valid 10-digit mobile number'
+isValid=false
+}
+
+if (!isValid) {
+e.preventDefault(); 
+}
 
 })
- 
+
 const editButtons = document.querySelectorAll(".edit-btn");
 
 editButtons.forEach(button => {
-  button.addEventListener("click", function () {
 
-    document.getElementById('name').value = this.dataset.name;
-   document.getElementById ('house_name').value = this.dataset.house;
-  document.getElementById('locality').value = this.dataset.locality;
- document.getElementById('city').value = this.dataset.city;
-   document.getElementById('state') .value = this.dataset.state;
- document.getElementById('pincode').value = this.dataset.pincode;
-   document.getElementById('mobilenumber').value = this.dataset.mobilenumber;
+button.addEventListener("click", function () {
 
-    const addressId=document.getElementById("addressId")
-    addressId.value= this.dataset.id;
-   
-  document.getElementById("save_btn").textContent = "Update Address";
+document.getElementById('name').value = this.dataset.name;
+document.getElementById('house_name').value = this.dataset.house;
+document.getElementById('locality').value = this.dataset.locality;
+document.getElementById('city').value = this.dataset.city;
+document.getElementById('state').value = this.dataset.state;
+document.getElementById('pincode').value = this.dataset.pincode;
+document.getElementById('mobilenumber').value = this.dataset.mobilenumber;
 
-  });
+const addressId=document.getElementById("addressId")
+addressId.value= this.dataset.id;
+
+document.getElementById("save_btn").textContent = "Update Address";
+
+formBox.style.display="block"
+
 });
 
+});
 
 const deleteButtons = document.querySelectorAll(".delete-btn");
 
 deleteButtons.forEach(deleteBtn => {
 
-  deleteBtn.addEventListener("click", async () => {
+deleteBtn.addEventListener("click", async () => {
 
-    const addressId = deleteBtn.dataset.id;
+const addressId = deleteBtn.dataset.id;
 
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "This address will be permanently deleted!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Yes, delete it!"
-    });
+const result = await Swal.fire({
+title: "Are you sure?",
+text: "This address will be permanently deleted!",
+icon: "warning",
+showCancelButton: true,
+confirmButtonColor: "#d33",
+cancelButtonColor: "#6c757d",
+confirmButtonText: "Yes, delete it!"
+});
 
-    if (!result.isConfirmed) return;
+if (!result.isConfirmed) return;
 
-    try {
-      const response = await fetch(`/address/${addressId}`, {
-        method: "DELETE"
-      });
+try {
 
-      const data = await response.json();
+const response = await fetch(`/address/${addressId}`, {
+method: "DELETE"
+});
 
-      if (data.success) {
-        await Swal.fire("Deleted!", "Address deleted successfully.", "success");
-        location.reload();
-      } else {
-        Swal.fire("Error!", "Something went wrong!", "error");
-      }
+const data = await response.json();
 
-    } catch (error) {
-      console.error(error);
-      Swal.fire("Error!", "Server error!", "error");
-    }
+if (data.success) {
+await Swal.fire("Deleted!", "Address deleted successfully.", "success");
+location.reload();
+} else {
+Swal.fire("Error!", "Something went wrong!", "error");
+}
 
-  });
+} catch (error) {
+console.error(error);
+Swal.fire("Error!", "Server error!", "error");
+}
 
 });
 
-
+});
 
 
 
 
 
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
 
 <%- include('../../views/partials/user/footer') %>

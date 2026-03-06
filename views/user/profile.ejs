@@ -3,150 +3,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My Profile | FootChic</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>My Profile | FootChic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS Links -->
-  <link rel="stylesheet" href="/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/profile.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/profile.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <style>
-    body {
-      background-color: #f5f5f5;
-      font-family: 'Poppins', sans-serif;
-    }
+<style>
 
-    /* Breadcrumb
-     - pushed further down */
-    .breadcrumb {
-      background-color: transparent;
-      font-size: 15px;
-      margin-top: 50px; /* increased from 90px */
-      margin-left: 80px; /* slight push right */
-    }
+body{
+  background-color:#f5f5f5;
+  font-family:'Poppins',sans-serif;
+}
 
+.breadcrumb{
+  background-color:transparent;
+  font-size:15px;
+  margin-top:50px;
+  margin-left:80px;
+}
 
-    .card-custom {
-      background-color: #fff;
-      border-radius: 15px;
-      padding: 25px 30px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-      border: 1px solid #ddd;
-    }
+.card-custom{
+  background-color:#fff;
+  border-radius:15px;
+  padding:25px 30px;
+  box-shadow:0 3px 8px rgba(0,0,0,0.08);
+  border:1px solid #ddd;
+}
 
-    .card-custom h5 {
-      font-weight: 700;
-      border-bottom: 2px solid #000;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-      color: #000;
-    }
+.badge{
+  font-size:12px;
+  padding:5px 10px;
+  border-radius:20px;
+}
 
-    .card-custom p {
-      margin-bottom: 8px;
-      font-size: 15px;
-      color: #333;
-    }
+.card-custom h5{
+  font-weight:700;
+  border-bottom:2px solid #000;
+  padding-bottom:10px;
+  margin-bottom:20px;
+}
 
-    /* Buttons */
-    .btn-edit, .btn-add {
-      background-color: #000;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 20px;
-      font-weight: 600;
-      transition: 0.3s;
-    }
+.address-box{
+  border:1px solid #000;
+  background:#fff;
+  border-radius:10px;
+  padding:15px 20px;
+  margin-top:15px;
+}
 
-    .btn-edit:hover, .btn-add:hover {
-      background-color: #333;
-    }
+.btn-edit{
+  background:#000;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:8px 20px;
+  font-weight:600;
+}
 
-    /* Address box - black border & white bg */
-    .address-box {
-      border: 1px solid #000;
-      background-color: #fff;
-      border-radius: 10px;
-      padding: 15px 20px;
-      margin-bottom: 15px;
-    }
+.btn-edit:hover{
+  background:#333;
+}
 
-    .address-box p {
-      margin-bottom: 4px;
-      color: #000;
-    }
-
-    .alert {
-      font-size: 14px;
-    }
-
-    @media (max-width: 992px) {
-      .profile-container {
-        flex-direction: column;
-        align-items: center;
-        padding-left: 0;
-      }
-
-      .profile-sidebar {
-        width: 90%;
-      }
-
-      .profile-content {
-        width: 90%;
-      }
-    }
-  </style>
+</style>
 </head>
 
 <body>
-  <!-- Breadcrumb -->
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Profile</li>
-    </ol>
-  </nav>
 
-  <!-- Profile Layout -->
-  <div class="profile-container">
-    
-  <%- include('../../views/partials/user/profileSidebar', { 
-        userData: userData, 
-        activePage: 'profile' 
-      }) %>
+<nav aria-label="breadcrumb">
+<ol class="breadcrumb">
+<li class="breadcrumb-item"><a href="/" class="text-decoration-none text-dark">Home</a></li>
+<li class="breadcrumb-item active">Profile</li>
+</ol>
+</nav>
 
-    <!-- Profile Content -->
-    <div class="profile-content">
-      <div class="card-custom">
-        <h5>Personal Information</h5>
-        <p><strong> Name:</strong> <%= userData.username%></p>
-         <p><strong>Email:</strong> <%= userData.email %></p>
-      
-        <button class="btn-edit mt-2" onclick="window.location.href='/edit-profile'">Edit Profile</button>
-      </div>
+<div class="profile-container">
 
-      <div class="card-custom">
-        <h5>Saved Addresses</h5>
-        <% if (addresses && addresses.length > 0) { %>
-          <% addresses.forEach(addr => { %>
-            <div class="address-box">
-              <p><strong><%= addr.name %></strong></p>
-              <p><%= addr.house_name %>, <%= addr.locality %> , <%= addr.city %></p>
-              <p><%= addr.state %> - <%= addr.pincode %></p>
-              <p><%= addr.mobilenumber %></p>
-            </div>
-          <% }) %>
-        <% } else { %>
-          <div class="alert alert-dark">No addresses found. Please add an address.</div>
-        <% } %>
+<%- include('../../views/partials/user/profileSidebar',{
+userData:userData,
+activePage:'profile'
+}) %>
 
-        <button class="btn-add mt-2" onclick="window.location.href='/address'">Add New Address</button>
-      </div>
-    </div>
-  </div>
+<div class="profile-content">
+
+<div class="card-custom">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h5 class="mb-0">Personal Information</h5>
+
+<button class="btn-edit" onclick="window.location.href='/edit-profile'">
+Edit Profile
+</button>
+</div>
+
+<p><strong>Name:</strong> <%= userData.username %></p>
+<p><strong>Email:</strong> <%= userData.email %></p>
+
+
+<!-- Default Address -->
+<% if(defaultAddress){ %>
+
+<div class="address-box">
+
+<h6 class="fw-bold mb-2">
+Address
+<span class="badge bg-dark ms-2">Default</span>
+</h6>
+
+<p><strong><%= defaultAddress.name %></strong></p>
+<p><%= defaultAddress.house_name %>, <%= defaultAddress.locality %></p>
+<p><%= defaultAddress.city %>, <%= defaultAddress.state %> - <%= defaultAddress.pincode %></p>
+<p><%= defaultAddress.mobilenumber %></p>
+
+</div>
+
+<% } else { %>
+
+<div class="alert alert-dark mt-3">
+No address found.
+</div>
+
+<% } %>
+
+</div>
+
+</div>
+</div>
 
 </body>
 </html>

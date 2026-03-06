@@ -8,6 +8,12 @@ const orderSchema = new Schema({
     ref: 'User',
     required: true
   },
+    orderId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+
 
   addresses_id: {
     type: Schema.Types.ObjectId,
@@ -37,9 +43,26 @@ const orderSchema = new Schema({
 
   status: {
     type: String,
-    enum: ["pending", "On Delivery", "Delivered", "Cancelled"],
-    default: "pending"
+    enum: ["Processing", "Shipped", "Delivered", "Cancelled","Returned"],
+    default: "Processing"
   },
+  cancel_reason: { type: String },
+  
+cancel_description: { type: String },
+  
+
+cancelledProducts: [
+  {
+    orderItem_id: {
+      type: Schema.Types.ObjectId,
+      ref: "OrderItem"
+    },
+    var_id: Schema.Types.ObjectId,
+    quantity: Number,
+    cancelReason: String,
+    cancelDescription: String
+  }
+],
 
   delivery_address: {
     name: { type: String, required: true },

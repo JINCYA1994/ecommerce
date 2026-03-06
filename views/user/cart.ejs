@@ -134,11 +134,19 @@
                 <td><%= item.product_name %></td>
                 <td>₹<%= item.price %></td>
                 <td>
-                  <div class="qty-box">
-                    <button class="qty-btn">-</button>
-                    <span><%= item.quantity %></span>
-                    <button class="qty-btn">+</button>
-                  </div>
+                <div class="qty-box">
+  <button 
+    class="qty-btn" 
+    data-id="<%= item._id %>" 
+    data-action="decrement">-</button>
+
+  <span class="qty-value"><%= item.quantity %></span>
+
+  <button 
+    class="qty-btn" 
+    data-id="<%= item._id %>" 
+    data-action="increment">+</button>
+</div>
                 </td>
                 <td>₹<%= item.total %></td>
                 <td>
@@ -193,18 +201,15 @@ removeButtons.forEach(button => {
         const data = await res.json();
 
         if(data.success){
-          // Remove row from table
           button.closest('tr').remove();
 
-          // Update cart total
           const totalBox = document.querySelector('.cart-total-box h5');
           if(totalBox) totalBox.innerText = `Cart Total: ₹${data.cartTotal}`;
 
-          // Update header cart count
-          const cartCount = document.getElementById('cart-count'); // header span id
+      
+          const cartCount = document.getElementById('cart-count'); 
           if(cartCount) cartCount.innerText = data.totalItems;
 
-          // If cart is empty, show empty message
           if(data.cartTotal === 0){
             document.querySelector('.cart-wrapper').innerHTML = `
               <div class="text-center">
@@ -223,6 +228,50 @@ removeButtons.forEach(button => {
     }
   });
 });
+
+
+const qtyButtons = document.querySelectorAll('.qty-btn');
+
+qtyButtons.forEach(button => {
+  button.addEventListener('click', async () => {
+    const itemId = button.getAttribute('data-id');
+    const action = button.getAttribute('data-action');
+    const row = button.closest('tr');
+
+    try {
+      const res = await fetch('/cart/update-quantity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, action })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+      
+        row.querySelector('.qty-value').innerText = data.quantity;
+
+      
+        const price = parseInt(row.querySelector('td:nth-child(3)').innerText.replace('₹',''));
+        row.querySelector('td:nth-child(5)').innerText = `₹${price * data.quantity}`;
+
+        
+        document.querySelector('.cart-total-box h5').innerText =
+          `Cart Total: ₹${data.cartTotal}`;
+      } else {
+        Swal.fire('Oops!', data.message, 'warning');
+      }
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error!', 'Something went wrong.', 'error');
+    }
+  });
+});
+
+
+
+
 </script>
 
 </body>

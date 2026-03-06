@@ -1,0 +1,73 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container mt-5 pt-4">
+
+  <h3 class="fw-bold mb-4">Order Details</h3>
+
+  <!-- Order Info -->
+  <div class="card p-4 mb-4 shadow-sm">
+    <h5>Order ID: <strong><%= order.orderId %></strong></h5>
+    <p>Date: <%= new Date(order.ordered_at).toLocaleDateString() %></p>
+    <p>Status: <span class="badge bg-primary"><%= order.status %></span></p>
+    <p>Total: ₹<%= order.total_price %></p>
+  </div>
+
+  <!-- Customer Info -->
+  <div class="card p-4 mb-4 shadow-sm">
+    <h5>Customer Details</h5>
+    <p>Name: <%= order.user_id.firstname || order.user_id.username %></p>
+    <p>Email: <%= order.user_id.email %></p>
+  </div>
+
+  <!-- Delivery Address -->
+  <div class="card p-4 mb-4 shadow-sm">
+    <h5>Delivery Address</h5>
+    <p><%= order.delivery_address.name %></p>
+    <p><%= order.delivery_address.house_name %></p>
+    <p><%= order.delivery_address.locality %></p>
+    <p><%= order.delivery_address.city %>, <%= order.delivery_address.state %></p>
+    <p>Pincode: <%= order.delivery_address.pincode %></p>
+    <p>Mobile: <%= order.delivery_address.mobilenumber %></p>
+  </div>
+
+  <!-- Products -->
+  <div class="card p-4 shadow-sm">
+    <h5>Ordered Products</h5>
+
+    <table class="table mt-3">
+      <thead>
+        <tr>
+          <th>productname</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+   
+
+      <tbody>
+  <% orderItems.forEach(item => { %>
+    <tr>
+      
+      <td>
+        <strong><%= item.product_name %></strong><br>
+       
+      </td>
+
+      <td><%= item.quantity %></td>
+      <td>₹<%= item.price %></td>
+      <td>₹<%= item.quantity * item.price %></td>
+    </tr>
+  <% }) %>
+</tbody>
+    </table>
+
+  </div>
+<div class="mt-3  text-center">
+  <a href="/admin/orders" class="btn btn-secondary">
+    ← Go Back
+  </a>
+  </div> 
+</div>
+
+<%- include("../../views/partials/admin/footer") %>

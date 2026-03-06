@@ -16,12 +16,18 @@ const getaddresspage=async (req,res) => {
       "Delhi","Jammu and Kashmir","Ladakh",
       "Lakshadweep","Puducherry"
     ];
+const messageAdded = req.session.addressAdded;
+const messageUpdated = req.session.addressUpdated;
 
-    const userId = req.session.user;
+
+req.session.addressAdded = null;
+req.session.addressUpdated = null;   
+
+const userId = req.session.user;
     const userData=await User.findById(userId)
     const addresses = await Address.find({ userId });
 
-    res.render("address", {addresses,userData,states});
+    res.render("address", {addresses,userData,states,messageAdded,messageUpdated});
     } catch (error) {
        console.log(error);
     res.redirect('/pageNotFound');
@@ -59,7 +65,7 @@ if (addressId) {
           mobilenumber
         }
       )
-
+     req.session.addressUpdated = true;
       console.log("Address Updated Successfully");
 
     }else{
@@ -77,6 +83,8 @@ const newAddress=new Address({
       is_default:addressCount===0
 })
 await newAddress.save()
+
+ req.session.addressAdded=true
  console.log("New Address Added Successfully");
 
     }
