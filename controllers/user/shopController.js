@@ -46,6 +46,11 @@ const loadShop = async (req, res) => {
     let products = await Product.find(query)
       .populate("category_id")
       .lean();
+      products.forEach(p => {
+  p.variants = p.variants.filter(v =>
+    v.sizes.some(s => s.stock > 0 && s.isListed && !s.isDeleted)
+  );
+});
 
     // Find lowest effective price variant
     products.forEach((p) => {
@@ -175,8 +180,10 @@ const getVariantSizes = async (req, res) => {
     if (!variant) {
       return res.status(404).json([]);
     }
-
-    res.json(variant.sizes);
+const sizes = variant.sizes.filter(
+  s => s.stock > 0 && s.isListed && !s.isDeleted
+);
+    res.json(sizes);
 
   } catch (error) {
     console.log(error);

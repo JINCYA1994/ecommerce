@@ -91,6 +91,7 @@ router.get('/orders/:orderID', userAuth,orderdetailsController.orderDetails);
 router.get('/invoice/:id',userAuth,orderdetailsController.invoicePage)
 router.post('/cancel-order',userAuth,orderdetailsController. cancelOrder);
 router.post('/cancel-product',userAuth,orderdetailsController.cancelProduct)
+router.post('/return-product',userAuth,orderdetailsController.returnProduct)
 //checkout
 router.get('/checkout',userAuth,checkoutController.viewcheckoutPage)
 router.post('/place-order',userAuth,orderController.placeOrderpage)

@@ -299,15 +299,26 @@ body {
             <input type="text" id="email" name="email" placeholder="Email">
           </div>
 
-          <div class="input-box">
+          <!-- <div class="input-box">
             <i class="fa-solid fa-lock"></i>
             <input type="password" id="password" name="password" placeholder="Password">
-          </div>
+          </div> -->
 
-          <div class="input-box">
+    <div class="input-box">
+  <i class="fa-solid fa-lock"></i>
+  <input type="password" id="password" name="password" placeholder="Enter your password">
+  <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
+</div>
+
+        <div class="input-box">
+  <i class="fa-solid fa-lock"></i>
+  <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password">
+  <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
+</div>      
+          <!-- <div class="input-box">
             <i class="fa-solid fa-lock"></i>
             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password">
-          </div>
+          </div> -->
 
           <button type="submit" class="btn-signup">Signup</button>
         </form>
@@ -370,6 +381,22 @@ swal("Password must have at least:\n- 1 uppercase letter\n- 1 lowercase letter\n
   return true;
    
   }
+  
+const togglePassword = document.getElementById("togglePassword");
+const password = document.getElementById("password");
+
+togglePassword.addEventListener("click", function () {
+
+  const type = password.getAttribute("type") === "password" ? "text" : "password";
+  password.setAttribute("type", type);
+
+  this.classList.toggle("fa-eye");
+  this.classList.toggle("fa-eye-slash");
+
+});
+
+
+
 
 </script>
 

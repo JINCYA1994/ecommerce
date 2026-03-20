@@ -135,7 +135,7 @@
 </div>
 
 
-<script>
+<!-- <script>
 document.addEventListener('DOMContentLoaded', function () {
     const message = document.getElementById('message').value;
     if (message)  swal(message);
@@ -200,6 +200,111 @@ document.getElementById("resendLink").addEventListener("click", async (e) => {
     swal("Error", "Something went wrong!", "error");
   }
 });
+</script> -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const message = document.getElementById('message').value;
+  if (message) swal(message);
+
+  //  get stored timer (for refresh / wrong OTP)
+  let endTime = localStorage.getItem("otpEndTime");
+
+  if (!endTime || Date.now() > endTime) {
+    endTime = Date.now() + 60 * 1000;
+    localStorage.setItem("otpEndTime", endTime);
+  }
+
+  startTimer();
+
+});
+
+function startTimer() {
+  let timer = document.getElementById("timer");
+  let resendLink = document.getElementById("resendLink");
+
+  resendLink.classList.remove("active");
+
+  let countdown = setInterval(() => {
+
+    let endTime = localStorage.getItem("otpEndTime");
+    let remaining = Math.floor((endTime - Date.now()) / 1000);
+
+    if (remaining <= 0) {
+      clearInterval(countdown);
+      timer.textContent = "";
+      resendLink.classList.add("active");
+      localStorage.removeItem("otpEndTime");
+    } else {
+      timer.textContent = `Please wait ${remaining}s to resend OTP`;
+    }
+
+  }, 1000);
+}
+
+
+//  OTP auto focus + backspace
+document.querySelectorAll(".otp-inputs input").forEach((input, idx, inputs) => {
+
+  input.addEventListener("input", () => {
+    if (input.value && idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+    }
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && !input.value && idx > 0) {
+      inputs[idx - 1].focus();
+    }
+  });
+
+});
+
+
+// RESEND OTP
+document.getElementById("resendLink").addEventListener("click", async (e) => {
+  e.preventDefault();
+
+  const resendLink = document.getElementById("resendLink");
+
+  if (!resendLink.classList.contains("active")) return;
+
+  resendLink.classList.remove("active");
+
+  const email = document.getElementById("email").value;
+  const purpose = document.getElementById("purpose").value;
+
+  try {
+    const response = await fetch("/resend-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, purpose })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      swal("Success", "New OTP sent!", "success");
+
+      //  reset timer properly
+      localStorage.removeItem("otpEndTime");
+      localStorage.setItem("otpEndTime", Date.now() + 60 * 1000);
+
+      startTimer();
+
+    } else {
+      swal("Error", data.message || "Failed to resend OTP", "error");
+    }
+
+  } catch (err) {
+    swal("Error", "Something went wrong!", "error");
+  }
+});
 </script>
+
+
+
+
 
 <%- include("../../views/partials/user/footer") %>

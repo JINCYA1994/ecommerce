@@ -14,7 +14,11 @@ const orderItemSchema = new Schema({
   
     required: true
   },
-
+  status: {
+    type: String,
+    enum: ["Processing", "Shipped", "Delivered", "Cancelled","Returned"],
+    default: "Processing"
+  },
 size:{type:Number,required:true},
 
   quantity: {

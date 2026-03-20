@@ -38,7 +38,7 @@ const userId = req.session.user;
 const saveAddress=async(req,res)=>{
 try {
   
-   const {name,house_name,locality,city,state,pincode,mobilenumber,addressId} =req.body
+   const {name,house_name,locality,city,state,pincode,mobilenumber,addressId,redirectTo} =req.body
  if (!name || !house_name || !locality || !city || !state || !pincode || !mobilenumber) {
         return res.status(400).json({ message: "All fields are required" })
  
@@ -88,7 +88,7 @@ await newAddress.save()
  console.log("New Address Added Successfully");
 
     }
-res.redirect('/address')
+res.redirect(redirectTo ||'/address')
 
 } catch (error) {
    console.log(error);

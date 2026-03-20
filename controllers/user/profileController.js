@@ -36,8 +36,8 @@ const forgotEmailValid = async (req, res) => {
 
     const findUser = await User.findOne({ email });
     if (!findUser) {
-      req.flash('error', 'Email not found');
-      return res.redirect('/forgot-password');
+    
+      return res.json({success:false,message:'Email not Found'});
     }
 
     const otp = generateOTP();
@@ -61,19 +61,17 @@ const forgotEmailValid = async (req, res) => {
       req.session.forgotEmail = email;
       req.session.forgotPurpose = "forgot_password";
 
-      return res.redirect('/forgot-verify-otp');
+      return res.json({success:true})
     } else {
-      req.flash('error', 'Failed to send OTP. Try again.');
-      return res.redirect('/forgot-password');
-    }
+    
+      return res.json({success:false,message:'Failed to send OTP'})
 
-  } catch (error) {
+  }} catch (error) {
     console.error("Error in forgotEmailValid:", error);
-    req.flash('error', 'Something went wrong');
-    return res.redirect('/forgot-password');
-  }
+   
+    return res.json({success:false,message:'Something went wrong'})
 };
-
+}
 // OTP Email Sending Function
 async function sendOtpEmail(email, otp) {
   try {
@@ -257,16 +255,20 @@ const resendOtp = async (req, res) => {
 const userProfile=async (req,res) => {
   try {
     const userId=req.session.user
+const profileMessage=req.session.profileMessage
+req.session.profileMessage=null
+
     const userData=await User.findById(userId)
          const defaultAddress = await Address.findOne({
       userId: userId,
-      is_default: true
+      is_default: true,
+      profileMessage
     })
 
 
 res.render("profile",{
     userData,
-    defaultAddress
+    defaultAddress,profileMessage
 })
 
   } catch (error) {
@@ -310,6 +312,7 @@ console.log("New username:", username)
       { _id: userId },
       { $set: { username: username } }
     );
+    req.session.profileMessage='Name Updated Successfully'
 res.redirect('/profile')
 } catch (error) {
   console.error('Error in editname',error)
@@ -336,7 +339,8 @@ const updateEmail=async (req,res) => {
   const{email}=req.body
      const existingUser = await User.findOne({ email });
     if (existingUser) {
-      req.flash("error", "Email already in use");
+      req.session.profileMessage='Email already in use'
+     
       console.log('email already exist')
       return res.redirect("/edit-email");
     }
@@ -392,8 +396,8 @@ const verifyEmailOtp = async (req, res) => {
   
     delete req.session.tempEmail;
     delete req.session.tempUserId;
-
-    req.flash("success", "Email updated successfully!");
+req.session.profileMessage='Email updated successfully!'
+ 
     return res.redirect('/profile');
   } catch (error) {
     console.error("Error verifying email OTP:", error);
@@ -487,8 +491,8 @@ const postChangePassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
-
-    req.flash('success_msg', 'Password changed successfully!');
+req.session.profileMessage='Password changed successfully!'
+    // req.flash('success_msg', 'Password changed successfully!');
     return res.redirect('/profile');
 
   } catch (error) {
@@ -521,7 +525,7 @@ const updateProfileImage = async (req, res) => {
 
     // Update in DB
     await User.findByIdAndUpdate(userId, { profileImage: imageUrl });
-
+req.session.profileMessage='Image Added Successfully'
     res.redirect('/profile');
   } catch (error) {
     console.error('Error updating profile image:', error);

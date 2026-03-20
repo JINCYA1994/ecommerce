@@ -128,7 +128,7 @@ const getOrderSuccessPage = async (req, res) => {
 
     const userId = req.session.user;
     const orderId = req.params.id;
-
+ const userData = req.session.user || null;
     const order = await Order.findOne({
     orderId: orderId,
       user_id: userId
@@ -139,7 +139,7 @@ const getOrderSuccessPage = async (req, res) => {
     }
 
     res.render("orderSuccess", {
-      orderId: order.orderId 
+      orderId: order.orderId ,userData
     });
 
   } catch (error) {

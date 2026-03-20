@@ -241,11 +241,18 @@
                 <% } else { %>
                   <p class="fw-bold text-success mb-1">₹<%= variant?.price %></p>
                 <% } %>
-<a href="/addToCart/<%= product._id %>?variant=<%= defaultVariant?._id %>" 
-class="btn btn-outline-dark mt-2 px-4 py-2 add-cart-btn"
->
+<button 
+  type="button"
+  class="btn add-cart-btn openCartModal"
+  data-product-id="<%= product._id %>"
+  data-variant-id="<%= defaultVariant?._id %>"
+  data-product-name="<%= product.product_name %>"
+  data-product-image="<%= defaultImage %>"
+  data-color="<%= defaultVariant?.color %>"
+   data-return-url="/">
+  <i class="fa-solid fa-cart-shopping me-2"></i>
   Add to Cart
-</a>
+</button>
 
               </div>
             </div>
@@ -259,7 +266,50 @@ class="btn btn-outline-dark mt-2 px-4 py-2 add-cart-btn"
   </div>
 </section>
 
+<!-- Add To Cart Modal -->
+<div class="modal fade" id="cartModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <h5 class="modal-title">Add to Cart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img id="modalImage" width="80">
+          <div>
+         
+            <h6 id="modalName" class="mb-1"></h6>
+            <small class="text-muted">
+              Color: <span id="modalColor"></span>
+            </small>
+          </div>
+        </div>
+
+        <form method="POST" action="/cart">
+             <input type="hidden" name="returnUrl" id="returnUrl">
+          <input type="hidden" name="productId" id="modalProductId">
+          <input type="hidden" name="variantId" id="modalVariantId">
+          <input type="hidden" name="size" id="selectedSize">
+
+          <div class="mb-3">
+            <label class="fw-semibold mb-2">Select Size:</label>
+            <div id="sizeOptions" class="d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <button type="submit" class="btn btn-warning w-100">
+            Add to Cart
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <style>
 .product-card {
@@ -324,8 +374,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+document.addEventListener("DOMContentLoaded", () => {
+
+  const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
+
+  document.querySelectorAll(".openCartModal").forEach(button => {
+
+    button.addEventListener("click", async () => {
+
+      const productId = button.dataset.productId;
+      const variantId = button.dataset.variantId;
+      const productName = button.dataset.productName;
+      const image = button.dataset.productImage;
+      const color = button.dataset.color;
+document.getElementById("returnUrl").value = button.dataset.returnUrl;
+      document.getElementById("modalProductId").value = productId;
+      document.getElementById("modalVariantId").value = variantId;
+      document.getElementById("modalName").innerText = productName;
+      document.getElementById("modalImage").src = image;
+      document.getElementById("modalColor").innerText = color;
+const returnUrl = button.dataset.returnUrl;
+document.getElementById("returnUrl").value = returnUrl; 
+      const response = await fetch(`/getVariantSizes/${variantId}`);
+      const sizes = await response.json();
+
+      const sizeContainer = document.getElementById("sizeOptions");
+      sizeContainer.innerHTML = "";
+
+      sizes.forEach(size => {
+
+        if (size.stock > 0 && !size.isDeleted && size.isListed) {
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn btn-outline-dark";
+          btn.innerText = size.size;
+
+          btn.onclick = () => {
+            document.getElementById("selectedSize").value = size.size;
+
+            document.querySelectorAll("#sizeOptions button")
+              .forEach(b => b.classList.remove("active"));
+
+            btn.classList.add("active");
+          };
+
+          sizeContainer.appendChild(btn);
+        }
+
+      });
+
+      cartModal.show();
+
+    });
+
+  });
+
+});
+
+
+
+
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<% if (homeMessage) { %>
+<script>
+  Swal.fire({
+    icon: 'success',
+    title: 'Added to Cart!',
+    text: '<%= homeMessage %>',
+     timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
 
 
 

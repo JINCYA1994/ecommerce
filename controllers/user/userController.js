@@ -28,13 +28,14 @@ const loadHomepage = async (req, res) => {
       .lean();
 
     const user = req.session.user;
-
+ const homeMessage=req.session.cartMessage
+req.session.cartMessage=null
     if (user) {
       const userData = await User.findOne({ _id: user._id });
 
-      return res.render("home", { newArrivals, userData, categories });
+      return res.render("home", { newArrivals, userData, categories ,homeMessage});
     } else {
-      return res.render("home", { newArrivals, categories });
+      return res.render("home", { newArrivals, categories,homeMessage });
     }
 
   } catch (error) {
@@ -59,29 +60,35 @@ const loginpost= async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.render('login', { message: 'Email and password are required.' });
+        return res.json({success:false,  message: 'Email and password are required.' });
     }
 
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.render('login', { message: 'User Not Found.' });
+            return res.json( { success:false,message: 'User Not Found.' });
         }
+        if (!user.password) {
+  return res.json({
+    success:false,
+    message:"Please login using Google"
+  });
+}
 if (user.isBlocked) {
-      return res.render('login', { message: 'Your account has been blocked by admin' });
+      return res.json({success:false, message: 'Your account has been blocked by admin' });
     }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.render('login', { message: 'Incorrect Password.' });
+            return res.json( {success:false, message: 'Incorrect Password.' });
         }
 
    
         req.session.user = user;
-        res.redirect('/home');
+        return res.json({success:true})
 
     } catch (error) {
         console.error(error);
-        res.status(500).render('login', { message: 'Server error during login.' });
+        res.json( {success:false, message: 'Server error during login.' });
     }}
 
 
@@ -205,7 +212,7 @@ const otp = otpArray.join('');
   console.log("Purpose received:", purpose);
    console.log("Entered OTP:", otp);
 
-    const record = await Otp.findOne({ email, otp, purpose: 'signup' });
+    const record = await Otp.findOne({ email, otp, purpose});
      console.log("OTP found in DB:", record);
     if (!record) {
       return res.render('verifyOtp',{ email,purpose: "signup", message: 'Invalid OTP or expired' });

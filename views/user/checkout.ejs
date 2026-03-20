@@ -10,9 +10,9 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold">Shipping Address</h5>
-          <a href="/address" class="btn btn-sm btn-dark">
-            ADD NEW ADDRESS
-          </a>
+        <button class="btn btn-sm btn-dark" id="addAddressBtn">
+ADD NEW ADDRESS
+</button>
         </div>
 
         <% addresses.forEach(address => { %>
@@ -47,10 +47,18 @@
               Ph: <%= address.mobilenumber %>
             </p>
 
-            <a href="/address"
-               class="text-decoration-none text-dark fw-semibold">
-              Edit
-            </a>
+          <button class="btn btn-sm btn-dark editAddressBtn"
+data-id="<%= address._id %>"
+data-name="<%= address.name %>"
+data-house="<%= address.house_name %>"
+data-locality="<%= address.locality %>"
+data-city="<%= address.city %>"
+data-state="<%= address.state %>"
+data-pincode="<%= address.pincode %>"
+data-mobile="<%= address.mobilenumber %>">
+
+Edit
+</button>
 
           </div>
 
@@ -169,6 +177,7 @@
 
         <!-- PAYMENT METHODS -->
         <form action="/place-order" method="POST">
+          <input type="hidden" name="redirectTo" value="/checkout">
 
           <input type="hidden" name="selectedAddress" id="selectedAddressInput">
 
@@ -235,5 +244,307 @@
     }
   });
 </script>
+<!-- ADD ADDRESS MODAL -->
+
+<div class="modal fade" id="addAddressModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title">Add New Address</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+<form action="/address" method="POST" id="addressform">
+<input type="hidden" name="redirectTo" value="/checkout">
+<input type="text" name="name"    id="name" class="form-control mb-2" placeholder="Full Name" >
+<div class="text-danger small mt-1" id="nameError"></div>
+<input type="text" name="house_name"   id="house_name" class="form-control mb-2" placeholder="House Name">
+<div class="text-danger small mt-1" id="house_nameError"></div>
+<input type="text" name="locality"id="locality"  class="form-control mb-2" placeholder="Locality" >
+<div class="text-danger small mt-1" id="localityError"></div>
+<input type="text" name="city" id="city"    class="form-control mb-2" placeholder="City">
+<div class="text-danger small mt-1" id="cityError"></div>
+<div class="select-wrapper">
+
+<select name="state" class="form-control" id="state">
+
+<option value="">Select State</option>
+
+<% states.forEach(state => { %>
+<option value="<%= state %>"><%= state %></option>
+<% }) %>
+
+</select>
+
+<div class="text-danger small mt-1" id="stateError"></div>
+
+</div>
+
+<input type="text" id="pincode"    name="pincode" class="form-control mb-2" placeholder="Pincode">
+<div class="text-danger small mt-1" id="pincodeError"></div>
+<input type="text"   id="mobilenumber"    name="mobilenumber" class="form-control mb-2" placeholder="Mobile Number" >
+<div class="text-danger small mt-1" id="mobilenumberError"></div>
+<button class="btn btn-warning w-100 fw-bold">
+SAVE ADDRESS
+</button>
+
+</form>
+
+</div>
+
+</div>
+</div>
+</div>
+<!-- ADDRESS MODAL -->
+
+<div class="modal fade" id="addressModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="modal-title">Edit Address</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+<form action="/address" method="POST" id="editaddressform">
+  <input type="hidden" name="redirectTo" value="/checkout">
+<input type="hidden" name="addressId" id="editAddressId">
+
+<input type="text" id="edit_name" name="name" class="form-control mb-2" placeholder="Full Name">
+<div class="text-danger small mt-1" id="edit_nameError"></div>
+
+<input type="text" id="edithouse_name" name="house_name" class="form-control mb-2" placeholder="House Name">
+<div class="text-danger small mt-1" id="edithouse_nameError"></div>
+
+<input type="text" id="editlocality" name="locality" class="form-control mb-2" placeholder="Locality">
+<div class="text-danger small mt-1" id="editlocalityError"></div>
+
+<input type="text" id="editcity" name="city" class="form-control mb-2" placeholder="City">
+<div class="text-danger small mt-1" id="editcityError"></div>
+
+<div class="select-wrapper">
+
+<select name="state" class="form-control" id="editstate">
+
+<option value="">Select State</option>
+
+<% states.forEach(state => { %>
+<option value="<%= state %>"><%= state %></option>
+<% }) %>
+
+</select>
+
+<div class="text-danger small mt-1" id="editstateError"></div>
+
+</div>
+
+<input type="text" id="editpincode" name="pincode" class="form-control mb-2" placeholder="Pincode">
+<div class="text-danger small mt-1" id="editpincodeError"></div>
+
+<input type="text" id="editmobilenumber" name="mobilenumber" class="form-control mb-2" placeholder="Mobile">
+<div class="text-danger small mt-1" id="editmobilenumberError"></div>
+
+<button class="btn btn-dark w-100">
+Update Address
+</button>
+
+</form>
+
+</div>
+
+</div>
+</div>
+</div>
+<script>
+
+
+const editBtns = document.querySelectorAll(".editAddressBtn");
+
+editBtns.forEach(btn => {
+
+btn.addEventListener("click", function(){
+
+document.getElementById("editAddressId").value = this.dataset.id;
+document.getElementById("edit_name").value = this.dataset.name;
+document.getElementById("edithouse_name").value = this.dataset.house;
+document.getElementById("editlocality").value = this.dataset.locality;
+document.getElementById("editcity").value = this.dataset.city;
+document.getElementById("editstate").value = this.dataset.state;
+document.getElementById("editpincode").value = this.dataset.pincode;
+document.getElementById("editmobilenumber").value = this.dataset.mobile;
+
+const modal = new bootstrap.Modal(document.getElementById("addressModal"));
+modal.show();
+
+});
+
+});
+
+const editForm = document.getElementById("editaddressform");
+
+editForm.addEventListener("submit", function(e){
+
+let isValid=true
+
+const name= document.getElementById('edit_name').value.trim()
+const house_name=document.getElementById('edithouse_name').value.trim()
+const locality=document.getElementById('editlocality').value.trim()
+const city=document.getElementById('editcity').value.trim()
+const state=document.getElementById('editstate').value.trim()
+const pincode=document.getElementById('editpincode').value.trim()
+const mobilenumber=document.getElementById('editmobilenumber').value.trim()
+
+document.getElementById("edit_nameError").innerText="";
+document.getElementById("edithouse_nameError").innerText="";
+document.getElementById("editlocalityError").innerText="";
+document.getElementById("editcityError").innerText="";
+document.getElementById("editstateError").innerText="";
+document.getElementById("editpincodeError").innerText="";
+document.getElementById("editmobilenumberError").innerText="";
+
+if(!name||!/^[a-zA-Z\s]+$/.test(name)){
+document.getElementById('edit_nameError').innerText="Enter valid name"
+isValid=false
+}
+
+if(!house_name||house_name.length<3){
+document.getElementById('edithouse_nameError').innerText="House name must be 3 characters"
+isValid=false
+}
+
+if(!locality||locality.length<3){
+document.getElementById('editlocalityError').innerText="Locality must be 3 characters"
+isValid=false
+}
+
+if(!city||city.length<2){
+document.getElementById('editcityError').innerText="City must be 2 characters"
+isValid=false
+}
+
+if(!state||state.length<2){
+document.getElementById('editstateError').innerText="State required"
+isValid=false
+}
+
+if(!/^[0-9]{6}$/.test(pincode)){
+document.getElementById('editpincodeError').innerText="Enter valid pincode"
+isValid=false
+}
+
+if(!/^[0-9]{10}$/.test(mobilenumber)){
+document.getElementById('editmobilenumberError').innerText="Enter valid mobile"
+isValid=false
+}
+
+if(!isValid){
+e.preventDefault()
+}
+
+})
+
+const addAddressBtn = document.getElementById("addAddressBtn");
+
+addAddressBtn.addEventListener("click", function(){
+
+const modal = new bootstrap.Modal(document.getElementById('addAddressModal'));
+modal.show();
+
+});
+const form = document.getElementById("addressform");
+
+form.addEventListener("submit", function (e){
+
+let isValid=true
+
+const name= document.getElementById('name').value.trim()
+const house_name=document.getElementById('house_name').value.trim()
+const locality=document.getElementById('locality').value.trim()
+const city=document.getElementById('city').value.trim()
+const state=document.getElementById('state').value.trim()
+const pincode=document.getElementById('pincode').value.trim()
+const mobilenumber=document.getElementById('mobilenumber').value.trim()
+
+document.getElementById("nameError").innerText = "";
+document.getElementById("house_nameError").innerText = "";
+document.getElementById("localityError").innerText = "";
+document.getElementById("cityError").innerText = "";
+document.getElementById("stateError").innerText = "";
+document.getElementById("pincodeError").innerText = "";
+document.getElementById("mobilenumberError").innerText = "";
+
+if(!name||!/^[a-zA-Z\s]+$/.test(name)){
+document.getElementById('nameError').innerText="Full name must be at least 3 characters"
+isValid=false
+}
+
+if(!house_name||house_name.length < 3){
+document.getElementById('house_nameError').innerText='House name must be at least 3 characters'
+isValid=false
+}
+
+if(!locality||locality.length<3){
+document.getElementById('localityError').innerText='Locality must be at least 3 characters'
+isValid=false
+}
+
+if(!state){
+document.getElementById('stateError').innerText='Please select a State'
+isValid=false
+}
+
+if(!city||city.length<2){
+document.getElementById('cityError').innerText='City must be at least 2 characters'
+isValid=false
+}
+
+if(!/^[0-9]{6}$/.test(pincode)){
+document.getElementById('pincodeError').innerText='Pincode must be exactly 6 digits'
+isValid=false
+}
+
+if(!/^[0-9]{10}$/.test(mobilenumber)){
+document.getElementById('mobilenumberError').innerText='Please enter a valid 10-digit mobile number'
+isValid=false
+}
+
+if (!isValid) {
+e.preventDefault(); 
+}
+
+})
+
+</script>
+<!-- Include SweetAlert before using it -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<% if(messageAdded){ %>
+<script>
+  Swal.fire({
+    icon: "success",
+    title: "Address Added!",
+    text: "Your new address has been saved successfully",
+    timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
+
+<% if(messageUpdated){ %>
+<script>
+  Swal.fire({
+    icon: "success",
+    title: "Address Updated!",
+    text: "Your address has been updated successfully",
+    timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
+
 
 <%- include("../partials/user/footer") %>

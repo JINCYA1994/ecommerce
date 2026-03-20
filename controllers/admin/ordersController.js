@@ -20,7 +20,8 @@
  
    
      const totalorders = await Order.countDocuments(query);
- 
+   const orderMessage = req.session.orderMessage;
+     req.session.orderMessage = null;
   
        const orders = await Order.find(query)
       .populate('user_id')
@@ -37,6 +38,7 @@
        search,
        currentPage: page,
        totalPages,
+       orderMessage,
    success: req.flash('success'),
    error: req.flash('error')
      });
@@ -45,80 +47,111 @@
      res.status(500).send("Server Error");
    }
  };
- 
-//  const updateOrderStatus=async (req,res) => {
-//   try {
-//     const orderId=req.params.orderId
-// await Order.updateOne({orderId:orderId},{$set:{status:req.body.status}})
-//  res.redirect('/admin/orders')
 
-//   } catch (error) {
-//       console.log(error);
-//     res.redirect('/admin/orders');
-//   }
-//  }
-   
 
 const allowedStatusUpdate = {
-  "Processing": ["Shipped", "Delivered", "Cancelled", "Returned"],
-  "Shipped": ["Delivered", "Returned"],
-  "Delivered": ["Returned"],
-  "Cancelled": [],
-  "Returned": []
+  Processing: ["Shipped", "Cancelled"],
+  Shipped: ["Delivered"],
+  Delivered: ["Returned"],
+  Cancelled: [],
+ 
 };
 
-const updateOrderStatus = async (req, res) => {
-  const { orderId } = req.params;
+const updateProductStatus = async (req, res) => {
+  try{
+  const { itemId } = req.params;
   const { status } = req.body;
 
-  const order = await Order.findOne({ orderId });
-  if (!order) return res.redirect("/admin/orders");
-
-  const validStatuses = allowedStatusUpdate[order.status];
+  const orderItem = await OrderItem.findById( itemId );
+  if (!orderItem) return res.redirect("/admin/orders");
+const order = await Order.findById(orderItem.order_id);
+  const validStatuses = allowedStatusUpdate[orderItem.status];
   if (!validStatuses.includes(status)) {
     
-    req.flash("error", "Cannot change status backward!");
-    return res.redirect("/admin/orders");
+   
+    req.session.orderMessage='Cannot change status backward!'
+    return res.redirect(`/admin/orders/${order.orderId}`);
   }
 
-  order.status = status;
-  await order.save();
-  res.redirect("/admin/orders");
+  orderItem.status = status
+    await orderItem.save()
+    await updateOrderStatus(orderItem.order_id)
+
+ if (status === "Cancelled") {
+
+      const product = await Product.findOne({
+        'variants._id': orderItem.var_id
+      })
+
+      if (product) {
+
+        const variant = product.variants.id(orderItem.var_id)
+
+        const size = variant.sizes.find(
+          s => s.size == orderItem.size
+        )
+
+        if (size) {
+          size.stock += orderItem.quantity
+        }
+
+        await product.save()
+
+      }
+
+    }
+
+
+   
+req.session.orderMessage = "Product status updated successfully"
+
+res.redirect(`/admin/orders/${order.orderId}`);
+
+  } catch (error) {
+
+    console.log(error)
+    res.redirect("/admin/orders")
+
+  }
+}
+
+
+const updateOrderStatus = async (orderId) => {
+
+  const items = await OrderItem.find({ order_id: orderId });
+
+  const statuses = items.map(item => item.status);
+
+  let newStatus = "Processing";
+
+  if (statuses.every(s => s === "Delivered")) {
+    newStatus = "Delivered";
+  }
+
+  else if (statuses.every(s => s === "Cancelled")) {
+    newStatus = "Cancelled";
+  }
+
+  else if (statuses.includes("Shipped")) {
+    newStatus = "Shipped";
+  }
+
+  else {
+    newStatus = "Processing";
+  }
+
+  await Order.findByIdAndUpdate(orderId, {
+    status: newStatus
+  });
+
 };
-// const viewOrderDetails = async (req, res) => {
-//   try {
-
-//     const orderId = req.params.orderId;
-
-  
-//     const order = await Order.findOne({ orderId })
-//       .populate('user_id');
-
-//     if (!order) {
-//       return res.redirect('/admin/orders');
-//     }
-
-  
-//     const orderItems = await OrderItem.find({
-//       order_id: order._id
-//     }) 
-
-
-//     res.render('vieworderDetails', {
-//       order,
-//       orderItems
-//     });
-
-//   } catch (error) {
-//     console.log(error);
-//     res.redirect('/admin/orders');
-//   }
-// };
-
 
 
 const viewOrderDetails = async (req, res) => {
   try {
+
+  const orderMessage = req.session.orderMessage
+    req.session.orderMessage = null
 
     const order = await Order.findOne({
       orderId: req.params.orderId
@@ -144,19 +177,21 @@ const viewOrderDetails = async (req, res) => {
         const variant = product.variants.id(item.var_id);
 
         return {
+           _id: item._id,
           product_name: product.product_name,
           color: variant?.color,
           quantity: item.quantity,
           price: item.price,
           total: item.quantity * item.price,
-          image: variant?.images?.[0] || '/images/default-product.png'
+          image: variant?.images?.[0] || '/images/default-product.png',
+          status:item.status
         };
       })
     );
 
     res.render('vieworderDetails', {
       order,
-      orderItems: orderItems.filter(Boolean)
+      orderItems: orderItems.filter(Boolean),orderMessage 
     });
 
   } catch (error) {
@@ -166,6 +201,81 @@ const viewOrderDetails = async (req, res) => {
 };
 
 
+const handleReturn = async (req, res) => {
+  try {
+    const { orderId, productId, action } = req.body;
+
+    if (!orderId || !productId) {
+      return res.status(400).send("Invalid request");
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) return res.redirect('/admin/orders');
+
+    const orderItem = await OrderItem.findById(productId);
+    if (!orderItem) return res.redirect('/admin/orders');
+
+    //  APPROVE RETURN
+    if (action === "approve") {
+
+      // prevent duplicate
+      const alreadyReturned = order.returnedProducts?.some(
+        p => p.orderItem_id.toString() === orderItem._id.toString()
+      );
+
+      if (!alreadyReturned) {
+        order.returnedProducts.push({
+          orderItem_id: orderItem._id,
+          var_id: orderItem.var_id,
+          quantity: orderItem.quantity,
+          reason: "Approved by admin"
+        });
+      }
+
+      // STOCK INCREMENT
+      const product = await Product.findOne({ 'variants._id': orderItem.var_id });
+
+      if (product) {
+        const variant = product.variants.id(orderItem.var_id);
+
+        if (variant.sizes && variant.sizes.length) {
+          const sizeObj = variant.sizes.find(
+            s => s.size === orderItem.size
+          );
+          if (sizeObj) sizeObj.stock += orderItem.quantity;
+        } else {
+          variant.stock = (variant.stock || 0) + orderItem.quantity;
+        }
+
+        await product.save();
+      }
+
+      //  update item status
+      orderItem.status = "Returned";
+      await orderItem.save();
+
+    }
+
+    //  REJECT RETURN
+    else if (action === "reject") {
+      orderItem.status = "Delivered";
+      await orderItem.save();
+    }
+
+    await order.save();
+
+    // IMPORTANT
+    await updateOrderStatus(order._id);
+
+    req.session.orderMessage = "Return handled successfully";
+    res.redirect("back");
+
+  } catch (error) {
+    console.log("Return Error:", error);
+    res.redirect('/admin/orders');
+  }
+};
+
 
  
- module.exports={getordersPage,updateOrderStatus,viewOrderDetails }
+ module.exports={getordersPage,updateProductStatus,viewOrderDetails ,handleReturn }

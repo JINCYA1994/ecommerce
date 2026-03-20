@@ -131,7 +131,18 @@ No address found.
 
 </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<% if (profileMessage) { %>
+<script>
+  Swal.fire({
+    icon: 'success',
+   
+    text: '<%= profileMessage %>',
+    confirmButtonColor: '#28a745',
+    confirmButtonText: 'OK'
+  });
+</script>
+<% } %>
 </body>
 </html>
 

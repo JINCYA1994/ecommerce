@@ -121,13 +121,17 @@
         <input type="text" class="form-control" name="email" id="email" placeholder="Enter Email">
       </div>
 
-      <div class="input-group mb-3">
-        <span class="input-group-text">
-          <i class="fa-solid fa-lock text-muted"></i>
-        </span>
-        <input type="password" class="form-control" name="password" id="password" placeholder="Enter Password">
-      </div>
+  <div class="input-group mb-3">
+  <span class="input-group-text">
+    <i class="fa-solid fa-lock text-muted"></i>
+  </span>
 
+  <input type="password" class="form-control" name="password" id="password" placeholder="Enter Password">
+
+  <span class="input-group-text" style="cursor:pointer;" id="togglePassword">
+    <i class="fa-solid fa-eye"></i>
+  </span>
+</div>
       <button type="submit" class="btn btn-login mt-2">
         Login <i class="fa-solid fa-arrow-right-to-bracket ms-1"></i>
       </button>
@@ -139,6 +143,23 @@
 
 
 <script>
+
+const togglePassword = document.getElementById("togglePassword");
+const password = document.getElementById("password");
+
+togglePassword.addEventListener("click", function () {
+
+  const type = password.type === "password" ? "text" : "password";
+  password.type = type;
+
+  this.querySelector("i").classList.toggle("fa-eye");
+  this.querySelector("i").classList.toggle("fa-eye-slash");
+
+});
+
+
+
+
 document.getElementById('adminloginForm').addEventListener('submit',function(e){
 
   const email=document.getElementById('email').value.trim()

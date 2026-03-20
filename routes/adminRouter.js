@@ -86,9 +86,9 @@ router.post('/products/:productId/variant/:variantId/size/:sizeId/edit',adminAut
 // ordermanagement
 
 router.get('/orders',adminAuth,ordersController.getordersPage)
-router.post('/orders/update-status/:orderId', ordersController.updateOrderStatus);
+router.post('/orders/update-product-status/:itemId', ordersController.updateProductStatus);
 router.get('/orders/:orderId', ordersController.viewOrderDetails);
-
+router.post('/orders/return',ordersController.handleReturn);
 
 
 

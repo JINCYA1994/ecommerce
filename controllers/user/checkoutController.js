@@ -6,7 +6,7 @@ const Address=require('../../models/addressSchema')
 
 const viewcheckoutPage = async (req, res) => {
   try {
-
+ const userData = req.session.user || null;
     const userId = req.session.user._id;
 
     const addresses = await Address.find({ userId });
@@ -18,7 +18,24 @@ const viewcheckoutPage = async (req, res) => {
       return res.redirect("/cart");
     }
 let subtotal = 0;
+   const states = [
+      "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh",
+      "Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand",
+      "Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur",
+      "Meghalaya","Mizoram","Nagaland","Odisha","Punjab",
+      "Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura",
+      "Uttar Pradesh","Uttarakhand","West Bengal",
+      "Andaman and Nicobar Islands","Chandigarh",
+      "Dadra and Nagar Haveli and Daman and Diu",
+      "Delhi","Jammu and Kashmir","Ladakh",
+      "Lakshadweep","Puducherry"
+    ];
 
+const messageAdded = req.session.addressAdded;
+const messageUpdated = req.session.addressUpdated;
+
+req.session.addressAdded = null;
+req.session.addressUpdated = null;
 cart.items.forEach(item => {
 
   const variant = item.product_id.variants.find(v =>
@@ -46,7 +63,7 @@ cart.items.forEach(item => {
       subtotal,
       shipping,
       discount,
-      finalAmount
+      finalAmount,states,messageUpdated,messageAdded,userData
     });
 
   } catch (error) {

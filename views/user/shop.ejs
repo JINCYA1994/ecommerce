@@ -205,7 +205,8 @@
   data-variant-id="<%= product.randomVariant?._id %>"
   data-product-name="<%= product.product_name %>"
   data-product-image="<%= product.randomVariant?.images[0] %>"
-  data-color="<%= product.randomVariant?.color %>">
+  data-color="<%= product.randomVariant?.color %>"
+  data-return-url="/shop">
   <i class="fa-solid fa-cart-shopping me-2"></i>
   Add to Cart
 </button>
@@ -280,6 +281,7 @@
         </div>
 
         <form method="POST" action="/cart">
+           <input type="hidden" name="returnUrl" id="returnUrl">
           <input type="hidden" name="productId" id="modalProductId">
           <input type="hidden" name="variantId" id="modalVariantId">
           <input type="hidden" name="size" id="selectedSize">
@@ -307,14 +309,7 @@
     document.getElementById('filterForm').submit();
   }
 
-  // document.addEventListener("DOMContentLoaded", () => {
-  //   // Change main image when variant clicked
-  //   document.querySelectorAll(".color-thumb").forEach(thumb => {
-  //     thumb.addEventListener("click", () => {
-  //       const mainImage = thumb.closest(".card").querySelector(".main-image");
-  //       mainImage.src = thumb.dataset.mainImage;
-  //     });
-  //   });
+
 
 document.querySelectorAll(".color-thumb").forEach(thumb => {
 
@@ -335,8 +330,7 @@ document.querySelectorAll(".color-thumb").forEach(thumb => {
 
   });
 
-
-    // ❤️ Wishlist Toggle
+// Wishlist Toggle
     document.querySelectorAll(".wishlist-icon i").forEach(icon => {
       icon.addEventListener("click", e => {
         e.stopPropagation();
@@ -404,7 +398,9 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("modalName").innerText = productName;
       document.getElementById("modalImage").src = image;
       document.getElementById("modalColor").innerText = color;
-
+document.getElementById("returnUrl").value = button.dataset.returnUrl;
+const returnUrl = button.dataset.returnUrl;
+document.getElementById("returnUrl").value = returnUrl; 
       // Fetch only that variant sizes
       const response = await fetch(`/getVariantSizes/${variantId}`);
       const sizes = await response.json();
@@ -452,8 +448,8 @@ document.addEventListener("DOMContentLoaded", () => {
     icon: 'success',
     title: 'Added to Cart!',
     text: '<%= cartMessage %>',
-    confirmButtonColor: '#28a745',
-    confirmButtonText: 'OK'
+  timer: 2000,
+    showConfirmButton: false
   });
 </script>
 <% } %>

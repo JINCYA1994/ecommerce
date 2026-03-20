@@ -84,6 +84,7 @@ const listorderDetails  = async (req, res) => {
         return {
           _id: item._id,
           name: product.product_name,
+          size:item.size,
           color: variant.color,
           price: item.price,
           quantity: item.quantity,
@@ -117,6 +118,7 @@ req.session.success=null
 
 const orderDetails = async (req, res) => {
   try {
+     const userData = req.session.user || null;
     const orderID = req.params.orderID;
     const order = await Order.findOne({ orderId: orderID });
     if (!order) return res.redirect('/orders');
@@ -141,7 +143,7 @@ const orderDetails = async (req, res) => {
       };
     }));
 
-    res.render('orderDetails', { order, orderItems: orderItems.filter(Boolean) });
+    res.render('orderDetails', { order, userData,orderItems: orderItems.filter(Boolean) });
 
   } catch (error) {
     console.log("Order Details Error:", error);
@@ -193,46 +195,48 @@ req.session.success = "Order Cancelled";
   }
 };
 
-// const cancelProduct = async (req, res) => {
-//   try {
+const returnProduct = async (req, res) => {
+  try {
+    const { orderId, productId, reason, description } = req.body;
 
-//     const { orderId, productId } = req.body;
+    if (!orderId || !productId) {
+      return res.status(400).send("Invalid request");
+    }
 
-//     const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId);
+    if (!order) return res.redirect('/orders');
 
-//     const item = order.items.find(
-//       i => i.productId.toString() === productId
-//     );
+    const orderItem = await OrderItem.findById(productId);
+    if (!orderItem) return res.redirect('/orders');
 
-//     if (!item) {
-//       return res.json({ success: false });
-//     }
+    //  prevent duplicate return
+    const alreadyReturned = order.returnedProducts.some(
+      p => p.orderItem_id.toString() === productId
+    );
 
-    
-//     item.status = "Cancelled";
+    if (alreadyReturned) {
+      return res.redirect('/orders');
+    }
 
-  
-//     const product = await Product.findById(item.productId);
+    //  PUSH RETURN
+    order.returnedProducts.push({
+      orderItem_id: orderItem._id,
+      var_id: orderItem.var_id,
+      quantity: orderItem.quantity,
+      returnReason: reason || "Not specified",
+      returnDescription: description || ""
+    });
 
-//     const variant = product.variants.id(item.variantId);
+    await order.save();
 
-//     const size = variant.sizes.find(s => s.size === item.size);
+    req.session.success = "Return Requested";
+    res.redirect('/orders');
 
-//     if (size) {
-//       size.stock += item.quantity;
-//     }
-
-//     await product.save();
-//     await order.save();
-
-//     res.json({ success: true });
-
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-
+  } catch (error) {
+    console.log("Return Product Error:", error);
+    res.redirect('/orders');
+  }
+};
 
 
 
@@ -244,8 +248,9 @@ const cancelProduct = async (req, res) => {
     if (!orderId || !productId) {
       return res.status(400).send("Invalid request");
     }
+    
 
-    // Find the order and the order item
+ 
     const order = await Order.findById(orderId);
     if (!order) return res.redirect('/orders');
 
@@ -373,4 +378,4 @@ const invoicePage = async (req, res) => {
 
 
 
-module.exports={listorderDetails ,orderDetails,invoicePage,cancelOrder,cancelProduct}
+module.exports={listorderDetails ,orderDetails,invoicePage,cancelOrder,cancelProduct,returnProduct}

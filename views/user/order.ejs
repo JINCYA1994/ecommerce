@@ -83,15 +83,9 @@
         <a href="/orders" class="btn btn-secondary">Clear</a>
       </form>
 
-      <% if(orders.length === 0){ %>
-        <div class="alert alert-dark">
-          No Orders Found
-        </div>
-      <% } %>
+    <% orders.forEach(order => { %>
 
-      <% orders.forEach(order => { %>
-
-       <div class="order-box">
+<div class="order-box">
   <div class="row align-items-center">
 
     <div class="col-md-3">
@@ -112,10 +106,9 @@
     <div class="col-md-2">
       <strong>Status</strong><br>
       <span class="badge 
-        <%= order.status === 'cancelled' ? 'bg-danger' : 
-            order.status === 'delivered' ? 'bg-success' : 
-            'bg-warning text-dark' %> 
-        status-badge">
+        <%= order.status === 'Cancelled' ? 'bg-danger' : 
+            order.status === 'Delivered' ? 'bg-success' : 
+            'bg-warning text-dark' %>">
         <%= order.status %>
       </span>
     </div>
@@ -124,78 +117,90 @@
       <a href="/orders/<%= order.orderId %>" class="btn btn-sm btn-outline-dark mb-2">
         View Details
       </a>
-  <% if(order.status === "Processing"){ %>
-    <button type="button"
-            class="btn btn-sm btn-danger cancel-btn mb-2"
-            data-bs-toggle="modal"
-            data-bs-target="#cancelModal"
-            data-id="<%= order._id %>">
-      Cancel Order
-    </button>
-  <% } else if(order.status === "Cancelled") { %>
-    <span class="badge bg-danger">ORDER CANCELLED</span>
-  <% } %>
 
+      <% if(order.status === "Processing"){ %>
+        <button class="btn btn-danger cancel-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#cancelModal"
+                data-id="<%= order._id %>">
+          Cancel Order
+        </button>
+      <% } else if(order.status === "Cancelled") { %>
+        <span class="badge bg-danger">ORDER CANCELLED</span>
+      <% } %>
     </div>
 
   </div>
 
-  <!-- Products List -->
   <hr>
+
+  <!-- PRODUCT LOOP -->
   <% order.products.forEach(product => { %>
+
     <div class="row align-items-center mb-2">
+
       <div class="col-md-1">
-        <img src="<%= product.image %>" alt="<%= product.name %>" class="img-fluid" />
+        <img src="<%= product.image %>" class="img-fluid">
       </div>
+
       <div class="col-md-5">
         <strong><%= product.name %></strong><br>
-        Qty: <%= product.quantity %> | Price: ₹<%= product.price %>
+        Qty: <%= product.quantity %> | Price: ₹<%= product.price %> | Size: <%= product.size %>
       </div>
+
       <div class="col-md-3">
-     <!-- <% if(order.status === "Processing"){ %>
-<button type="button"
-        class="btn btn-sm btn-danger cancel-product-btn"
-        data-bs-toggle="modal"
-        data-bs-target="#cancelProductModal"
-        data-orderid="<%= order._id %>"
-        data-orderitemid="<%= product._id %>">
-  Cancel Product
-</button>
-<% } else if (order.status === "Cancelled") { %>
-  <span class="badge bg-danger">PRODUCT CANCELLED</span>
-<% } %> -->
 
-<%
-const isCancelled = order.cancelledProducts?.some(
-  p => p.orderItem_id.toString() === product._id.toString()
-);
-%>
+        <%
+        const isCancelled = order.cancelledProducts?.some(
+          p => p.orderItem_id.toString() === product._id.toString()
+        );
 
-<% if(isCancelled){ %>
+        const isReturned = order.returnedProducts?.some(
+          p => p.orderItem_id.toString() === product._id.toString()
+        );
+        %>
 
-<span class="badge bg-danger">PRODUCT CANCELLED</span>
+        <% if(isCancelled){ %>
 
-<% } else if(order.status === "Processing"){ %>
+          <span class="badge bg-danger">PRODUCT CANCELLED</span>
 
-<button type="button"
-        class="btn btn-sm btn-danger cancel-product-btn"
-        data-bs-toggle="modal"
-        data-bs-target="#cancelProductModal"
-        data-orderid="<%= order._id %>"
-        data-orderitemid="<%= product._id %>">
-  Cancel Product
-</button>
+        <% } else if(isReturned){ %>
 
-<% } %>
+          <span class="badge bg-warning text-dark">RETURN REQUESTED</span>
+
+        <% } else if(order.status === "Processing"){ %>
+
+          <button class="btn btn-danger cancel-product-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#cancelProductModal"
+                  data-orderid="<%= order._id %>"
+                  data-orderitemid="<%= product._id %>">
+            Cancel Product
+          </button>
+
+        <% } else if(order.status === "Delivered"){ %>
+
+          <button class="btn btn-warning return-product-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#returnProductModal"
+                  data-orderid="<%= order._id %>"
+                  data-productid="<%= product._id %>">
+            Return Product
+          </button>
+
+        <% } %>
+
       </div>
+
     </div>
+
     <hr>
+
   <% }) %>
 
 </div>
 
-      <% }) %>
-
+<% }) %>
       <!-- Pagination -->
       <nav>
         <ul class="pagination justify-content-center mt-4">
@@ -214,6 +219,8 @@ const isCancelled = order.cancelledProducts?.some(
 
   </div>
 </div>
+
+
 <!-- PRODUCT CANCEL MODAL -->
 <div class="modal fade" id="cancelProductModal" tabindex="-1">
   <div class="modal-dialog">
@@ -248,7 +255,51 @@ const isCancelled = order.cancelledProducts?.some(
     </div>
   </div>
 </div>
+<!-- PRODUCT RETURN MODAL -->
+<div class="modal fade" id="returnProductModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content p-4">
 
+      <h5 class="text-center mb-3">Return Product</h5>
+
+      <form method="POST" action="/return-product">
+
+        <input type="hidden" name="orderId" id="modalReturnOrderId">
+        <input type="hidden" name="productId" id="modalReturnProductId">
+
+        <div class="mb-3">
+          <select name="reason" class="form-select" required>
+            <option value="">Select Reason</option>
+            <option>Product damaged</option>
+            <option>Wrong item delivered</option>
+            <option>Quality not good</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <textarea name="description"
+            class="form-control"
+            placeholder="Additional details (optional)">
+          </textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-warning">
+            Confirm Return
+          </button>
+
+          <button type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal">
+            Close
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
 <!-- SINGLE REUSABLE CANCEL MODAL -->
 <div class="modal fade" id="cancelModal" tabindex="-1">
   <div class="modal-dialog">
@@ -293,8 +344,11 @@ const isCancelled = order.cancelledProducts?.some(
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
- document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Cancel Order
   const cancelButtons = document.querySelectorAll('.cancel-btn');
   const modalOrderId = document.getElementById('modalOrderId');
 
@@ -303,26 +357,45 @@ const isCancelled = order.cancelledProducts?.some(
       modalOrderId.value = this.dataset.id;
     });
   });
-});
-const cancelProductButtons = document.querySelectorAll('.cancel-product-btn');
-const modalProductOrderId = document.getElementById('modalProductOrderId');
-const modalProductId = document.getElementById('modalProductId');
 
-cancelProductButtons.forEach(btn => {
-  btn.addEventListener('click', function() {
-    modalProductOrderId.value = this.dataset.orderid;
-    modalProductId.value = this.dataset.orderitemid;
+  // Cancel Product
+  const cancelProductButtons = document.querySelectorAll('.cancel-product-btn');
+  const modalProductOrderId = document.getElementById('modalProductOrderId');
+  const modalProductId = document.getElementById('modalProductId');
+
+  cancelProductButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      modalProductOrderId.value = this.dataset.orderid;
+      modalProductId.value = this.dataset.orderitemid;
+    });
   });
-});
-</script>
+
+  // Return Product 
+  const returnProductButtons = document.querySelectorAll('.return-product-btn');
+  const modalReturnOrderId = document.getElementById('modalReturnOrderId');
+  const modalReturnProductId = document.getElementById('modalReturnProductId');
+
+  returnProductButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      modalReturnOrderId.value = this.dataset.orderid;
+      modalReturnProductId.value = this.dataset.productid;
+    });
+  });
+
+});</script>
 <% if (typeof success !== 'undefined' && success) { %>
 <script>
 Swal.fire({
   icon: "success",
   title: "<%= success %>",
-  confirmButtonColor: "#000"
+  timer: 2000,
+    showConfirmButton: false
 });
 </script>
+
+
+
+
 <% } %>
 
 

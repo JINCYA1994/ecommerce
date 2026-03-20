@@ -31,7 +31,7 @@
             <th>Email</th>
             <th>Date</th>
             <th>Total</th>
-            <th>Status</th>
+           
             <th>Action</th>
           </tr>
         </thead>
@@ -57,66 +57,6 @@
                 <td>₹<%= order.total_price %></td>
 
 <td>
-  <form action="/admin/orders/update-status/<%= order.orderId %>" method="POST">
-
-    <!-- <select name="status"
-            class="form-select form-select-sm"
-            onchange="this.form.submit()">
-
-      <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>
-        Processing
-      </option>
-
-      <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>
-        Shipped
-      </option>
-
-      <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>
-        Delivered
-      </option>
-
-      <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>
-        Cancelled
-      </option>
-
-      <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>
-        Returned
-      </option>
-
-    </select> -->
-
-<%
-  const statusOptions = ["Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
-  const currentStatus = order.status;
-%>
-
-<select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-  <% statusOptions.forEach(option => { %>
-    <option 
-      value="<%= option %>" 
-      <%= currentStatus === option ? "selected" : "" %>
-      <%= 
-        (currentStatus === "Shipped" && option === "Processing") ||
-        (currentStatus === "Delivered" && (option === "Processing" || option === "Shipped")) ||
-        (currentStatus === "Cancelled" && option !== "Cancelled") ||
-        (currentStatus === "Returned" && option !== "Returned")
-        ? "disabled" : "" 
-      %>
-    >
-      <%= option %>
-    </option>
-  <% }) %>
-</select>
-
-  </form>
-</td>
-
-
-
-
-
-
-                <td>
                   <a href="/admin/orders/<%= order.orderId %>" 
                      class="btn btn-sm btn-primary">
                      View
@@ -174,5 +114,22 @@
   </nav>
 
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<% if (orderMessage) { %>
+<script>
+  Swal.fire({
+    icon: 'success',
+ 
+    text: '<%= orderMessage %>',
+    confirmButtonColor: '#28a745',
+    confirmButtonText: false,
+    timer:2000
+  });
+</script>
+<% } %>
+
+
 
 <%- include("../../views/partials/admin/footer") %>
