@@ -1,42 +1,106 @@
  const Category=require('../../models/categorySchema')
-
-const getcategory=async(req,res)=>{
-try {
-    let search = req.query.search || "";
-    let page = parseInt(req.query.page) || 1;
-    let limit = 2;
+const Product = require('../../models/productSchema');
+// const getcategory=async(req,res)=>{
+// try {
+//     let search = req.query.search || "";
+//     let page = parseInt(req.query.page) || 1;
+//     let limit = 5;
 
     
-    let query = { isDeleted: { $ne: true } };
-    if (search) {
-      query.name = { $regex: search, $options: "i" }; 
-    }
+//     let query = { isDeleted: { $ne: true } };
+//     if (search) {
+//       query.name = { $regex: search, $options: "i" }; 
+//     }
 
   
-    const totalCategories = await Category.countDocuments(query);
+//     const totalCategories = await Category.countDocuments(query);
 
  
+//     const categories = await Category.find(query)
+//       .skip((page - 1) * limit)
+//       .limit(limit)
+//       .sort({ createdAt: -1 });
+
+
+//     const totalPages = Math.ceil(totalCategories / limit);
+
+//     res.render('category', {
+//       categories,
+//       search,
+//       currentPage: page,
+//       totalPages,
+//   success: req.flash('success'),
+//   error: req.flash('error')
+//     });
+//   } catch (err) {
+//     console.error("Error loading categories:", err);
+//     res.status(500).send("Server Error");
+//   }
+// };
+
+
+const getcategory = async (req, res) => {
+  try {
+    let search = req.query.search || "";
+    let page = parseInt(req.query.page) || 1;
+    let limit = 5;
+
+    let query = { isDeleted: { $ne: true } };
+
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+
+    const totalCategories = await Category.countDocuments(query);
+
     const categories = await Category.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ createdAt: -1 });
 
+    // FIXED HERE
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (cat) => {
+       const productCount = await Product.countDocuments({
+  category_id: cat._id,
+  isDeleted: false,
+  variants: {
+    $elemMatch: {
+      sizes: {
+        $elemMatch: {
+          isDeleted: false
+        }
+      }
+    }
+  }
+});
+
+        return {
+          ...cat.toObject(),
+          productCount
+        };
+      })
+    );
 
     const totalPages = Math.ceil(totalCategories / limit);
 
     res.render('category', {
-      categories,
+      categories: categoriesWithCount,
       search,
       currentPage: page,
       totalPages,
-  success: req.flash('success'),
-  error: req.flash('error')
+      success: req.flash('success'),
+      error: req.flash('error')
     });
+
   } catch (err) {
     console.error("Error loading categories:", err);
     res.status(500).send("Server Error");
   }
 };
+
+
+
 
 
 //add category
@@ -139,28 +203,83 @@ const unlistCategory=async(req,res)=>{
   }
 }
   
+const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-//delete category
+    const productsExist = await Product.findOne({
+      category_id: id,
+      isDeleted: false,
+      variants: {
+        $elemMatch: {
+          sizes: {
+            $elemMatch: {
+              isDeleted: false
+            }
+          }
+        }
+      }
+    });
 
-const deleteCategory=async(req,res)=>{
-  try{
-    const {id}=req.params
-await Category.updateOne({_id:id},{$set:{isDeleted:true}})
- req.flash('success', 'Category deleted successfully!');
+    if (productsExist) {
+      req.flash('error', 'Cannot delete category! Active products exist.');
+      return res.redirect('/admin/category');
+    }
 
-console.log("category deleted successfully")
-res.redirect('/admin/category')
-}
-catch(err){
-console.error(err)
- req.flash('error', 'Something went wrong while deleting the category');
+    await Category.updateOne(
+      { _id: id },
+      { $set: { isDeleted: true } }
+    );
 
- 
-res.redirect('/admin/category')
-}
-}
+    req.flash('success', 'Category deleted successfully!');
+    res.redirect('/admin/category');
+
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Something went wrong while deleting the category');
+    res.redirect('/admin/category');
+  }
+};
 
 
+// const deleteCategory = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+// const productsExist = await Product.findOne({
+//   category_id: id,
+//   isDeleted: false,
+//   variants: {
+//     $elemMatch: {
+//       sizes: {
+//         $elemMatch: {
+//           isDeleted: false
+//         }
+//       }
+//     }
+//   }
+// });
+   
+  
+//     if (productsExist) {
+//       req.flash('error', 'Cannot delete category! Products exist under this category.');
+//       return res.redirect('/admin/category');
+//     }
+
+//     //  If no products → delete
+//     await Category.updateOne(
+//       { _id: id },
+//       { $set: { isDeleted: true } }
+//     );
+
+//     req.flash('success', 'Category deleted successfully!');
+//     res.redirect('/admin/category');
+
+//   } catch (err) {
+//     console.error(err);
+//     req.flash('error', 'Something went wrong while deleting the category');
+//     res.redirect('/admin/category');
+//   }
+// };
 
 
 

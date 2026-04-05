@@ -4,17 +4,26 @@ const Product = require('../../models/productSchema');
 
 const getProducts = async (req, res) => {
   try {
-    let search = req.query.search || "";
+  //   let search = req.query.search || "";
+
+   const search = (req.query.search || "")
+  .trim()
+  .replace(/\s+/g, " ");
     let page = parseInt(req.query.page) || 1;
     let limit = 10;
     let skip = (page - 1) * limit;
 
-    let query = { };
+    let query = {  isDeleted: { $ne: true } };
 
-    if (search) {
-      query.product_name = { $regex: search, $options: "i" };
-    }
-
+    // if (search) {
+    //   query.product_name = { $regex: search, $options: "i" };
+    // }
+      if (search) {
+  query.product_name = {
+    $regex: search.split(" ").join(".*"),
+    $options: "i"
+  };
+      }
     const products = await Product.find(query)
       .populate("category_id")
       .sort({ createdAt: -1 })
@@ -42,12 +51,104 @@ const getProducts = async (req, res) => {
 
 
 
+const updateLimit = async (req, res) => {
+  try {
+    const { productId, variantId, sizeId } = req.params;
+    const { maxOrderQty } = req.body;
+    const limit = Number(maxOrderQty);
 
+    if (isNaN(limit) || limit < 1) {
+      return res.json({
+        success: false,
+        message: "Limit must be at least 1"
+      });
+    }
 
+    const product = await Product.findById(productId);
+    if (!product) return res.json({ success: false });
+
+    const variant = product.variants.id(variantId);
+    if (!variant) return res.json({ success: false });
+
+    const size = variant.sizes.id(sizeId);
+    if (!size) return res.json({ success: false });
+
+    // MAIN VALIDATION (after getting size)
+    if (limit > size.stock) {
+      return res.json({
+        success: false,
+        message: `Maximum order quantity cannot exceed stock (${size.stock})`
+      });
+    }
+if (limit > size.stock) {
+  size.maxOrderQty = size.stock; 
+} else {
+  size.maxOrderQty = limit;
+}
+    
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      {
+        _id: productId,
+        "variants._id": variantId,
+        "variants.sizes._id": sizeId
+      },
+      {
+        $set: {
+          "variants.$[variant].sizes.$[size].maxOrderQty": Number(maxOrderQty)
+        }
+      },
+      {
+        arrayFilters: [
+          { "variant._id": variantId },
+          { "size._id": sizeId }
+        ],
+        new: true
+      }
+    );
+
+    if (!updatedProduct) {
+      return res.json({ success: false, message: "Update failed" });
+    }
+
+    res.json({ success: true });
+
+  } catch (error) {
+    console.log("Update limit error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 //list products
 
-const listProduct=async (req,res) => {
+const listProduct=async(req,res)=>{
+  try{
+    const{productId}=req.params
+    await Product.updateOne({_id:productId},{$set:{isListed:true}})
+    res.redirect('/admin/products')
+  }catch(err){
+    console.error(err)
+    res.status(500).send('Server Error')
+  }
+}
+//unlistproduct
+
+const unlistProduct=async(req,res)=>{
+  try{
+    const{productId}=req.params
+    await Product.updateOne({_id:productId},{$set:{isListed:false}})
+    res.redirect('/admin/products')
+  }catch(err){
+    console.error(err)
+    res.status(500).send('Server Error')
+  }
+}
+
+
+
+//list variants
+
+const listVariant=async (req,res) => {
   try {
     const {productId,variantId,sizeId}=req.params
      let page = parseInt(req.query.page) || 1
@@ -65,8 +166,8 @@ await Product.updateOne(
 }
 
 
-//unlist products
-const unlistProduct=async (req,res) => {
+//unlist variants
+const unlistVariant=async (req,res) => {
   try {
     const {productId,variantId,sizeId}=req.params
    let page = parseInt(req.query.page) || 1
@@ -86,29 +187,74 @@ await Product.updateOne(
 
 //delete
 
-const deleteSize=async(req,res)=>{
-  try{
-  const { productId, variantId, sizeId } = req.params;  
+// const deleteSize=async(req,res)=>{
+//   try{
+//   const { productId, variantId, sizeId } = req.params;  
 
-await Product.updateOne(
-  {_id:productId },
- { $set: { "variants.$[v].sizes.$[s].isDeleted": true } },
-  { arrayFilters: [{ "v._id": variantId }, { "s._id": sizeId }] }
-);
+// await Product.updateOne(
+//   {_id:productId },
+//  { $set: { "variants.$[v].sizes.$[s].isDeleted": true } },
+//   { arrayFilters: [{ "v._id": variantId }, { "s._id": sizeId }] }
+// );
 
-console.log("Size deleted successfully")
-res.redirect(`/admin/products?page=${page || 1}`)
-}
-catch(err){
-console.log(err.message)
-res.redirect('/admin/products')
-}
-}
+// console.log("Size deleted successfully")
+// res.redirect(`/admin/products?page=${page || 1}`)
+// }
+// catch(err){
+// console.log(err.message)
+// res.redirect('/admin/products')
+// }
+// }
+const deleteSize = async (req, res) => {
+  try {
+    const { productId, variantId, sizeId } = req.params;
+
+    //  Soft delete size
+    await Product.updateOne(
+      { _id: productId },
+      {
+        $set: { "variants.$[v].sizes.$[s].isDeleted": true }
+      },
+      {
+        arrayFilters: [
+          { "v._id": variantId },
+          { "s._id": sizeId }
+        ]
+      }
+    );
+
+    //  Get updated product
+    const product = await Product.findById(productId);
+
+    //  Check if ANY active size exists
+    let hasActiveSize = false;
+
+    product.variants.forEach(variant => {
+      variant.sizes.forEach(size => {
+        if (!size.isDeleted) {
+          hasActiveSize = true;
+        }
+      });
+    });
+
+    // If NO active sizes → delete product
+    if (!hasActiveSize) {
+      await Product.findByIdAndUpdate(productId, {
+        isDeleted: true
+      });
+    }
+
+    res.redirect('/admin/products');
+
+  } catch (err) {
+    console.log(err.message);
+    res.redirect('/admin/products');
+  }
+};
 
 
 
 
 
 
-
- module.exports = {getProducts,deleteSize,listProduct,unlistProduct}
+ module.exports = {getProducts,deleteSize,listVariant,unlistVariant,updateLimit,listProduct,unlistProduct }

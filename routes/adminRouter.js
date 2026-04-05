@@ -58,8 +58,12 @@ router.post(
 //product management
 router.get('/products',adminAuth,productController.getProducts)
 router.post('/products/:productId/variant/:variantId/size/:sizeId/delete',adminAuth,productController.deleteSize)
-router.get('/products/:productId/variant/:variantId/size/:sizeId/list',adminAuth,productController.listProduct)
-router.get('/products/:productId/variant/:variantId/size/:sizeId/unlist',adminAuth,productController.unlistProduct)
+router.get('/products/:productId/variant/:variantId/size/:sizeId/list',adminAuth,productController.listVariant)
+router.get('/products/:productId/variant/:variantId/size/:sizeId/unlist',adminAuth,productController.unlistVariant)
+router.post('/products/:productId/variant/:variantId/size/:sizeId/update-limit',adminAuth,productController.updateLimit);
+router.get('/products/list/:productId',adminAuth,productController.listProduct)
+router.get('/products/unlist/:productId',adminAuth,productController.unlistProduct)
+
 
 // edit product
 router.delete("/products/:productId/variant/:variantId/image/:index",editproductController.deleteVariantImage);

@@ -120,7 +120,8 @@
                   </span>
 
                   <!-- Clickable Image -->
-                  <a href="/productDetails/<%= product._id %>">
+                  <!-- <a href="/productDetails/<%= product._id %>"> -->
+                    <a href="/productDetails/<%= product._id %>?variant=<%= product.randomVariant?._id %>">
                     <img 
                       src="<%= product.randomVariant?.images[0] || product.variants[0]?.images[0] || '/img/placeholder.jpg' %>" 
                       class="card-img-top main-image" 
@@ -439,6 +440,30 @@ document.getElementById("returnUrl").value = returnUrl;
 
 });
 
+
+
+
+
+thumb.addEventListener("click", function() {
+
+  const card = this.closest(".card");
+
+  const mainImage = card.querySelector(".main-image");
+  mainImage.src = this.dataset.mainImage;
+
+  const addBtn = card.querySelector(".openCartModal");
+
+  addBtn.dataset.variantId = this.dataset.variantId;
+  addBtn.dataset.productImage = this.dataset.mainImage;
+  addBtn.dataset.color = this.dataset.color;
+
+  //  NEW: update product link also
+  const productLink = card.querySelector("a");
+  const productId = addBtn.dataset.productId;
+
+  productLink.href = `/productDetails/${productId}?variant=${this.dataset.variantId}`;
+
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

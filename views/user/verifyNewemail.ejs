@@ -89,7 +89,7 @@
     <input type="hidden" id="message" value="<%= typeof message !== 'undefined' ? message : '' %>"/>
 <input type="hidden" id="email" name="email" value="<%= email %>"/>
 <input type="hidden" id="purpose" name="purpose" value="<%= purpose %>"/>
-
+<input type="hidden" id="remainingTime" value="<%= remainingTime %>">
     <div class="otp-inputs d-flex justify-content-center mb-3">
       <input type="text" maxlength="1" name="otp[]" required>
       <input type="text" maxlength="1" name="otp[]" required>
@@ -106,47 +106,66 @@
   <a href="#" id="resendLink" class="d-block text-center">Resend OTP</a>
 </div>
 
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const message = document.getElementById('message').value;
-    if (message) 
-      swal(message);
 
-  });
-  startTimer(60);
+  // SweetAlert message
+  const message = document.getElementById('message').value;
+  if (message) swal(message);
 
-   function startTimer(duration) {
-    let seconds = duration;
-    let timer = document.getElementById("timer");
-    let resendLink = document.getElementById("resendLink");
+  // Get remaining time from backend
+  const remainingTime = parseInt(document.getElementById("remainingTime").value);
 
-    resendLink.classList.remove("active"); 
-    timer.style.display = "block";
+  //  Start timer with correct value
+  startTimer(remainingTime > 0 ? remainingTime : 0);
+});
 
-    let countdown = setInterval(() => {
-      timer.textContent = `Please wait ${seconds}s to resend OTP .`;
-      seconds--;
 
-      if (seconds < 0) {
-        clearInterval(countdown);
-        timer.textContent = "";
-        resendLink.classList.add("active"); 
-      }
-    }, 1000);
+// TIMER FUNCTION (FIXED)
+function startTimer(duration) {
+  let seconds = duration;
+  let timer = document.getElementById("timer");
+  let resendLink = document.getElementById("resendLink");
+
+  if (seconds <= 0) {
+    timer.textContent = "";
+    resendLink.classList.add("active");
+    return;
   }
 
-  document.querySelectorAll(".otp-inputs input").forEach((input, idx, inputs) => {
-    input.addEventListener("input", () => {
-      if (input.value && idx < inputs.length - 1) {
-        inputs[idx + 1].focus();
-      }
-    });
+  resendLink.classList.remove("active");
+  timer.style.display = "block";
+
+  let countdown = setInterval(() => {
+    timer.textContent = `Please wait ${seconds}s to resend OTP`;
+    seconds--;
+
+    if (seconds < 0) {
+      clearInterval(countdown);
+      timer.textContent = "";
+      resendLink.classList.add("active");
+    }
+  }, 1000);
+}
+
+
+//  AUTO FOCUS OTP INPUTS
+document.querySelectorAll(".otp-inputs input").forEach((input, idx, inputs) => {
+  input.addEventListener("input", () => {
+    if (input.value && idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+    }
   });
+});
+
+
+//  RESEND OTP
 document.getElementById("resendLink").addEventListener("click", async (e) => {
   e.preventDefault();
+
   const resendLink = document.getElementById("resendLink");
 
+  // Prevent click if timer not finished
   if (!resendLink.classList.contains("active")) return;
 
   resendLink.classList.remove("active");
@@ -162,17 +181,19 @@ document.getElementById("resendLink").addEventListener("click", async (e) => {
     });
 
     const data = await response.json();
+
     if (data.success) {
       swal("Success", "New OTP has been sent to your email!", "success");
+
+      //  Restart timer from 60 after resend
       startTimer(60);
     } else {
       swal("Error", data.message || "Failed to resend OTP", "error");
     }
+
   } catch (err) {
     swal("Error", "Something went wrong!", "error");
   }
 });
-  
 </script>
-
 <%- include("../../views/partials/user/footer") %>

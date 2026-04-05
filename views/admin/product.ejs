@@ -170,7 +170,8 @@
             <th>No</th>
             <th>Product Name</th>
             <th>Category</th>
-            <th>Variants</th>
+            <th>Status</th>
+           <th>Variants</th>
           </tr>
         </thead>
 
@@ -186,6 +187,19 @@
                   <%= product.category_id 
                       ? (product.category_id.category_name || product.category_id.name) 
                       : 'N/A' %>
+                </td>
+ <td>
+                  <% if(product.isListed) { %>
+                    <a href="/admin/products/unlist/<%= product._id %>"
+                      class="badge bg-success badge-status text-decoration-none">
+                      Listed
+                    </a>
+                  <% } else { %>
+                    <a href="/admin/products/list/<%= product._id %>"
+                      class="badge bg-danger badge-status text-decoration-none">
+                      Unlisted
+                    </a>
+                  <% } %>
                 </td>
 
                 <td>
@@ -282,6 +296,9 @@
                 <th>Price</th>
                 <th>Discount</th>
                 <th>Size</th>
+                <th>stock</th>
+                <th>maxOrderQty</th>
+              <th>Update</th>
                 <th>Status</th>
                 <th style="width: 260px;">Actions</th>
               </tr>
@@ -324,6 +341,24 @@ function openVariantModal(productId) {
           <td>₹${variant.price}</td>
           <td>${variant.discount_price || '-'}</td>
           <td>${size.size}</td>
+          <td>${size.stock}</td>
+          <td>
+
+  <input type="number"
+    min="1"
+    id="limit-${size._id}"
+    value="${size.maxOrderQty || 10}"
+    style="width:70px;">
+</td>
+<td>
+  <button 
+    class="btn btn-sm btn-success btn-round"
+    onclick="handleUpdateLimit('${product._id}','${variant._id}','${size._id}')">
+    Update
+  </button>
+</td>
+
+
           <td>
             ${size.isListed
               ? '<span class="badge bg-success badge-status">Listed</span>'
@@ -349,6 +384,7 @@ function openVariantModal(productId) {
             </a>
 
           </td>
+    
         </tr>
       `;
     });
@@ -359,6 +395,63 @@ function openVariantModal(productId) {
   );
   modal.show();
 }
+function updateLimit(productId, variantId, sizeId, value) {
+  fetch(`/admin/products/${productId}/variant/${variantId}/size/${sizeId}/update-limit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      maxOrderQty: value
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      console.log(" Updated");
+    } else {
+      alert(data.message || "Update failed");
+    }
+  })
+  .catch(err => console.log(err));
+}
+
+function handleUpdateLimit(productId, variantId, sizeId) {
+
+  const input = document.getElementById(`limit-${sizeId}`);
+  const value = input.value;
+
+  fetch(`/admin/products/${productId}/variant/${variantId}/size/${sizeId}/update-limit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      maxOrderQty: value
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Updated!',
+      
+        showConfirmButton: false
+      });
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: data.message || 'Update failed'
+      });
+    }
+  })
+  .catch(err => {
+    console.log(err);
+  });
+}
+
+
 
 /* SweetAlert delete confirmation */
 document.addEventListener("submit", function (e) {

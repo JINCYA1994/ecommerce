@@ -12,28 +12,45 @@ const session=require('express-session')
 const loadProductDetails = async (req, res) => {
   try {
     const productId = req.params.id;
-    const selectedVariantId = req.query.variant; //  read clicked variant ID
-
+    const selectedVariantId = req.query.variant; 
+console.log("Selected Variant:", selectedVariantId);
     const product = await Product.findById(productId)
       .populate('category_id')
       .lean();
  
 
-    if (!product) {
-      return res.status(404).send('Product not found');
-    }
 
 
-    // Find active variant based on query or fallback to first one
-    let activeVariant = product.variants[0];
+if (!product || product.isListed === false) {
+  return res.status(404).render('404'); 
   
-    if (selectedVariantId) {
-      const found = product.variants.find(
-        (v) => v._id.toString() === selectedVariantId
-      );
-      if (found) activeVariant = found;
-    }
+}
+   
+//     let activeVariant = product.variants[0];
+  
+//     if (selectedVariantId) {
+//       const found = product.variants.find(
+//         (v) => v._id.toString() === selectedVariantId
+//       );
+//       if (found) activeVariant = found;
+//     }
 
+
+
+
+let activeVariant;
+
+//  if query exists
+if (selectedVariantId) {
+  activeVariant = product.variants.find(
+    v => v._id.toString() === selectedVariantId
+  );
+}
+
+//  fallback (only if not found)
+if (!activeVariant) {
+  activeVariant = product.variants.find(v => v.isListed) || product.variants[0];
+}
     const related = await Product.find({
       category_id: product.category_id,
       _id: { $ne: productId },
@@ -90,7 +107,7 @@ const submitReview = async (req, res) => {
       });
     }
 
-    // 🔄 Update product’s average rating
+    //  Update product’s average rating
     const reviews = await Review.find({ product: productId });
     const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
     const avgRating = totalRating / reviews.length;

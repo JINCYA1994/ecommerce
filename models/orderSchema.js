@@ -43,38 +43,13 @@ const orderSchema = new Schema({
 
   status: {
     type: String,
-    enum: ["Processing", "Shipped", "Delivered", "Cancelled","Returned"],
+    enum: ["Processing", "Shipped", "Delivered", "Cancelled","Returned","Partially Delivered","Partially Delivered"],
     default: "Processing"
   },
-  cancel_reason: { type: String },
-  
-cancel_description: { type: String },
-  
 
-cancelledProducts: [
-  {
-    orderItem_id: {
-      type: Schema.Types.ObjectId,
-      ref: "OrderItem"
-    },
-    var_id: Schema.Types.ObjectId,
-    quantity: Number,
-    cancelReason: String,
-    cancelDescription: String
-  }
-],
-returnedProducts: [
-  {
-    orderItem_id: {
-      type: Schema.Types.ObjectId,
-      ref: "OrderItem"
-    },
-    var_id: Schema.Types.ObjectId,
-    quantity: Number,
-   returnReason: String,
-    returnDescription: String
-  }
-],
+
+
+
   delivery_address: {
     name: { type: String, required: true },
     house_name: { type: String, required: true },

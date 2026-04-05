@@ -172,12 +172,12 @@
           <div class="col-lg-3 col-md-6 d-flex">
             <div class="card border-0 shadow-sm w-100 position-relative product-card">
 
-              <!-- 💖 Wishlist Icon -->
+              <!--  Wishlist Icon -->
               <button class="wishlist-btn position-absolute top-0 end-0 p-2 border-0 bg-transparent">
                 <i class="fa fa-heart"></i>
               </button>
 
-              <!-- 🖼️ Product Image -->
+              <!--  Product Image -->
               <% 
                 const defaultVariant = product.variants?.[0];
                 const defaultImage = defaultVariant?.images?.[0] || '/img/placeholder.jpg';
@@ -201,7 +201,7 @@
 
 
 
-                <!-- 🎨 Color Variants -->
+                <!--  Color Variants -->
                 <div class="d-flex justify-content-center mb-3 flex-wrap">
                   <% 
                     const shownColors = new Set();
@@ -223,10 +223,10 @@
                   %>
                 </div>
 
-                <!-- 🏷️ Product Name -->
+                <!--  Product Name -->
                 <h6 class="fw-bold"><%= product.product_name %></h6>
 
-                <!-- 💸 Price + Discount -->
+                <!--  Price + Discount -->
                 <% 
                   const variant = defaultVariant;
                   if (variant?.discount_price && variant.discount_price < variant.price) { 
@@ -338,7 +338,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  // 🧠 Change main image + update link when color clicked
+  //  Change main image + update link when color clicked
   document.querySelectorAll(".color-thumb").forEach(thumb => {
     thumb.addEventListener("click", () => {
       const card = thumb.closest(".card");
@@ -351,14 +351,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const variantId = thumb.dataset.variantId;
       const newImage = thumb.dataset.mainImage;
 
-      // ✅ Update main image
+      //  Update main image
       mainImage.src = newImage;
 
-      // ✅ Update product link href
+      //  Update product link href
       const newHref = `/productDetails/${productId}?variant=${variantId}`;
       productLink.href = newHref;
 
-      // ✅ Also update click event for main image
+      //  Also update click event for main image
       mainImage.onclick = (e) => {
         e.preventDefault();
         window.location.href = newHref;
@@ -366,7 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 💖 Wishlist toggle
+  //  Wishlist toggle
   document.querySelectorAll(".wishlist-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();

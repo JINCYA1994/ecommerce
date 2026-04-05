@@ -133,140 +133,325 @@ return info.accepted.length>0
        
   }
 
-
-const registerSignup=async (req,res) => 
-{ 
-try { 
-const {username,email,password,confirmPassword}=req.body 
-
-if(!username||!email||!password||!confirmPassword)
-{ 
-return res.render('signup',{message:'All fields are required'}) 
-} 
-
-if(password!==confirmPassword)
-{ 
-return res.render('signup',  { message: 'Passwords do not match' }); 
-} 
-const existingUsername = await User.findOne({ username });
-
- if (existingUsername) 
-  { 
-return res.render('signup', { message: "Username already exists" }); 
-} 
-const existUser=await User.findOne({email}) 
-if(existUser)
-{ 
-return res.render('signup',{message:"user already exist"})
- } 
-const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/; 
-if (!strongPassword.test(password)) 
-{ 
-return res.render('signup', { message: 'Password must contain at least 1 uppercase, 1 lowercase, 1 number, 1 special character, and be at least 6 characters long.' }); 
-} 
-const hashedpassword=await bcrypt.hash(password,10) 
-
-
-const existingOtp = await Otp.findOne({ email, purpose: "signup" });
-
-if (!existingOtp) {
-  const otp = generateOTP();
-  await Otp.deleteMany({ email, purpose: "signup" });
-  const newOtp = new Otp({ email, otp, purpose: "signup" });
-  await newOtp.save();
-  console.log("New OTP created:", otp);
-
-
-
-  const emailSent = await sendOtpEmail(email, otp);
-  if (!emailSent) {
-    return res.render('signup', { message: 'Failed to send OTP. Please try again later.' });
-  }
-} else {
-  console.log("Existing OTP still valid. Skipping new email send.");
-}
-req.session.tempUser = {
-    username,
-    email,
-    password: hashedpassword,
-     }; 
-console.log("Signup passed, OTP sent to:", email); 
-
-return res.render('verifyOtp', { email, purpose: "signup",message: 'OTP sent to your email' });
- }
- catch (error) 
- { console.error("error in signup:",error) 
-res.render('signup',{message:"Something went wrong"}) 
-
-} 
-} 
-
-
-
-const verifyOtp = async (req, res) => {
+const registerSignup = async (req, res) => {
   try {
-const { email,purpose } = req.body;
-const otpArray = req.body.otp; 
-const otp = otpArray.join('');
-  console.log("Email received:", email);
-  console.log("Purpose received:", purpose);
-   console.log("Entered OTP:", otp);
+    const { username, email, password, confirmPassword } = req.body;
 
-    const record = await Otp.findOne({ email, otp, purpose});
-     console.log("OTP found in DB:", record);
-    if (!record) {
-      return res.render('verifyOtp',{ email,purpose: "signup", message: 'Invalid OTP or expired' });
+    // validations
+    if (!username || !email || !password || !confirmPassword) {
+      return res.render('signup', { message: 'All fields are required' });
     }
 
+    if (password !== confirmPassword) {
+      return res.render('signup', { message: 'Passwords do not match' });
+    }
+
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
+      return res.render('signup', { message: "Username already exists" });
+    }
+
+    const existUser = await User.findOne({ email });
+    if (existUser) {
+      return res.render('signup', { message: "User already exists" });
+    }
+
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
+    if (!strongPassword.test(password)) {
+      return res.render('signup', {
+        message: 'Password must contain uppercase, lowercase, number & special character'
+      });
+    }
+
+    const hashedpassword = await bcrypt.hash(password, 10);
+
+    //  ALWAYS create new OTP
+    const otp = generateOTP();
+
+    await Otp.deleteMany({ email, purpose: "signup" });
+
+    const newOtp = new Otp({
+      email,
+      otp,
+      purpose: "signup"
+    });
+
+    await newOtp.save();
+
+    console.log("New OTP created:", otp);
+
+    const emailSent = await sendOtpEmail(email, otp);
+    if (!emailSent) {
+      return res.render('signup', {
+        message: 'Failed to send OTP. Please try again later.'
+      });
+    }
+
+    // store temp user
+    req.session.tempUser = {
+      username,
+      email,
+      password: hashedpassword
+    };
+
+    return res.render('verifyOtp', {
+      email,
+      purpose: "signup",
+      message: 'OTP sent to your email'
+    });
+
+  } catch (error) {
+    console.error("Signup error:", error);
+    res.render('signup', { message: "Something went wrong" });
+  }
+};
+// const registerSignup=async (req,res) => 
+// { 
+// try { 
+// const {username,email,password,confirmPassword}=req.body 
+
+// if(!username||!email||!password||!confirmPassword)
+// { 
+// return res.render('signup',{message:'All fields are required'}) 
+// } 
+
+// if(password!==confirmPassword)
+// { 
+// return res.render('signup',  { message: 'Passwords do not match' }); 
+// } 
+// const existingUsername = await User.findOne({ username });
+
+//  if (existingUsername) 
+//   { 
+// return res.render('signup', { message: "Username already exists" }); 
+// } 
+// const existUser=await User.findOne({email}) 
+// if(existUser)
+// { 
+// return res.render('signup',{message:"user already exist"})
+//  } 
+// const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/; 
+// if (!strongPassword.test(password)) 
+// { 
+// return res.render('signup', { message: 'Password must contain at least 1 uppercase, 1 lowercase, 1 number, 1 special character, and be at least 6 characters long.' }); 
+// } 
+// const hashedpassword=await bcrypt.hash(password,10) 
+
+
+// const existingOtp = await Otp.findOne({ email, purpose: "signup" });
+
+// if (!existingOtp) {
+//   const otp = generateOTP();
+//   await Otp.deleteMany({ email, purpose: "signup" });
+//   const newOtp = new Otp({ email, otp, purpose: "signup" });
+//   await newOtp.save();
+//   console.log("New OTP created:", otp);
+
+
+
+//   const emailSent = await sendOtpEmail(email, otp);
+//   if (!emailSent) {
+//     return res.render('signup', { message: 'Failed to send OTP. Please try again later.' });
+//   }
+// } else {
+//   console.log("Existing OTP still valid. Skipping new email send.");
+// }
+// req.session.tempUser = {
+//     username,
+//     email,
+//     password: hashedpassword,
+//      }; 
+// console.log("Signup passed, OTP sent to:", email); 
+
+// return res.render('verifyOtp', { email, purpose: "signup",message: 'OTP sent to your email' });
+//  }
+//  catch (error) 
+//  { console.error("error in signup:",error) 
+// res.render('signup',{message:"Something went wrong"}) 
+
+// } 
+// } 
+
+
+
+// const verifyOtp = async (req, res) => {
+//   try {
+// const { email,purpose } = req.body;
+
+// const otpArray = req.body.otp;
+// const otp = otpArray.filter(d => d !== '').join('').trim();
+
+// const record = await Otp.findOne({ email, purpose });
+
+// if (!record) {
+//   return res.render('verifyOtp', {
+//     email,
+//     purpose,
+//     message: 'OTP expired'
+//   });
+// }
+
+// if (record.otp !== otp) {
+//   return res.render('verifyOtp', {
+//     email,
+//     purpose,
+//     message: 'Invalid OTP'
+//   });
+// }
+
+// // success
+// await Otp.deleteOne({ _id: record._id });
  
+//     const tempUser = req.session.tempUser;
+//     if (!tempUser) {
+//       return res.render('signup', { message: 'Session expired. Please signup again.' });
+//     }
+
+//     const newUser = new User(tempUser);
+//     await newUser.save();
+
+    
+//     req.session.tempUser = null;
+//     req.session.user = newUser;
+
+// req.flash("success_msg", "Signup successful.");
+//    return res.redirect("/home")
+//   } catch (error) {
+//     console.error('OTP verification error:', error);
+//     res.render('verifyOtp', { email: req.body.email, purpose: "signup",message: 'Something went wrong' });
+//   }
+// };
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, purpose } = req.body;
+
+    // clean OTP
+    const otpArray = req.body.otp;
+    const otp = otpArray.filter(d => d !== '').join('').trim();
+
+    console.log("Entered OTP:", otp);
+
+    const record = await Otp.findOne({ email, purpose });
+
+    if (!record) {
+      return res.render('verifyOtp', {
+        email,
+        purpose,
+        message: 'OTP expired'
+      });
+    }
+
+    console.log("DB OTP:", record.otp);
+
+    if (record.otp !== otp) {
+      return res.render('verifyOtp', {
+        email,
+        purpose,
+        message: 'Invalid OTP'
+      });
+    }
+
+    // success
     await Otp.deleteOne({ _id: record._id });
 
- 
     const tempUser = req.session.tempUser;
+
     if (!tempUser) {
-      return res.render('signup', { message: 'Session expired. Please signup again.' });
+      return res.render('signup', {
+        message: 'Session expired. Please signup again.'
+      });
     }
 
     const newUser = new User(tempUser);
     await newUser.save();
 
-    
     req.session.tempUser = null;
     req.session.user = newUser;
 
-req.flash("success_msg", "Signup successful.");
-   return res.redirect("/home")
+    req.flash("success_msg", "Signup successful");
+
+    return res.redirect("/home");
+
   } catch (error) {
-    console.error('OTP verification error:', error);
-    res.render('verifyOtp', { email: req.body.email, purpose: "signup",message: 'Something went wrong' });
+    console.error("OTP verification error:", error);
+    res.render('verifyOtp', {
+      email: req.body.email,
+      purpose: "signup",
+      message: 'Something went wrong'
+    });
   }
-};
+};const resendOtp = async (req, res) => {
+  try {
+    const email = req.session.tempUser?.email;
 
-const resendOtp=async(req,res)=>{
-  try{
-const email=req.session.tempUser?.email
-if(!email){
-  res.render('signup',{message:'Session expired. Please signup again.' })
-}
- const  newOtpCode = generateOTP();
-
-   const newOtp = new Otp({ email, otp: newOtpCode, purpose: "signup" });
-   console.log(" OTP saved:", newOtp);
-    await Otp.deleteMany({ email, purpose:"signup" });
-    await newOtp.save();
-
-    const emailSent = await sendOtpEmail(email, newOtpCode);
-    if (!emailSent) {
-      return res.render('verifyOtp', { email, purpose: "signup",message: 'Failed to resend OTP. Try again later.' });
+    if (!email) {
+      return res.render('signup', {
+        message: 'Session expired. Please signup again.'
+      });
     }
 
-  
-    res.render('verifyOtp', { email, purpose: "signup",message: 'New OTP sent to your email' });
-  }catch (error) {
+    const newOtpCode = generateOTP();
+
+    await Otp.deleteMany({ email, purpose: "signup" });
+
+    const newOtp = new Otp({
+      email,
+      otp: newOtpCode,
+      purpose: "signup"
+    });
+
+    await newOtp.save();
+
+    console.log("Resent OTP:", newOtpCode);
+
+    const emailSent = await sendOtpEmail(email, newOtpCode);
+
+    if (!emailSent) {
+      return res.render('verifyOtp', {
+        email,
+        purpose: "signup",
+        message: 'Failed to resend OTP'
+      });
+    }
+
+    return res.render('verifyOtp', {
+      email,
+      purpose: "signup",
+      message: 'New OTP sent'
+    });
+
+  } catch (error) {
     console.error("Resend OTP error:", error);
-    res.render("verifyOtp", { message: "Something went wrong while resending OTP" });
+    res.render('verifyOtp', {
+      message: "Something went wrong"
+    });
   }
-}
+};
+// const resendOtp=async(req,res)=>{
+//   try{
+// const email=req.session.tempUser?.email
+// if(!email){
+//   res.render('signup',{message:'Session expired. Please signup again.' })
+// }
+//  const  newOtpCode = generateOTP();
+
+//    const newOtp = new Otp({ email, otp: newOtpCode, purpose: "signup" });
+//    console.log(" OTP saved:", newOtp);
+//     await Otp.deleteMany({ email, purpose:"signup" });
+//     await newOtp.save();
+
+//     const emailSent = await sendOtpEmail(email, newOtpCode);
+//     if (!emailSent) {
+//       return res.render('verifyOtp', { email, purpose: "signup",message: 'Failed to resend OTP. Try again later.' });
+//     }
+
+  
+//     res.render('verifyOtp', { email, purpose: "signup",message: 'New OTP sent to your email' });
+//   }catch (error) {
+//     console.error("Resend OTP error:", error);
+//     res.render("verifyOtp", { message: "Something went wrong while resending OTP" });
+//   }
+// }
 
 
 const logout=async (req,res) => {
@@ -286,4 +471,18 @@ try {
 
 
 
-module.exports={loadHomepage,loadlogin,loadSignup,registerSignup,loginpost,verifyOtp,resendOtp,logout}   
+const pageNotFound = (req, res) => {
+  try {
+    res.status(404).render('404');
+  } catch (error) {
+    console.error("404 error:", error.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+module.exports = {
+  pageNotFound
+};
+
+
+module.exports={loadHomepage,loadlogin,loadSignup,registerSignup,loginpost,verifyOtp,resendOtp,logout, pageNotFound }   

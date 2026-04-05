@@ -19,7 +19,7 @@ router.get('/login', preventLogin, userController.loadlogin);
 
 router.get('/',userController.loadHomepage)  
 router.get('/home',userAuth,userController.loadHomepage)  
-// router.get('/login',userController.loadlogin)  
+ 
 router.post('/login',userController.loginpost) 
 router.post('/signup',userController.registerSignup)
 router.get('/signup',userController.loadSignup)
@@ -94,6 +94,7 @@ router.post('/cancel-product',userAuth,orderdetailsController.cancelProduct)
 router.post('/return-product',userAuth,orderdetailsController.returnProduct)
 //checkout
 router.get('/checkout',userAuth,checkoutController.viewcheckoutPage)
+
 router.post('/place-order',userAuth,orderController.placeOrderpage)
 
 //shop
@@ -105,5 +106,8 @@ router.get("/getVariantSizes/:variantId", shopController.getVariantSizes);
 router.get('/productDetails/:id',productController.loadProductDetails)
 
 router.post('/product/:id/review', productController.submitReview);
+
+router.get ('/pagenotfound',userController. pageNotFound )
+
 
         module.exports  =router

@@ -6,48 +6,6 @@ const User=require('../../models/userSchema')
 
 
 
-// const listorderDetails  = async (req, res) => {
-//   try {
-
-//     const userId = req.session.user;
-//     const search = req.query.search || "";
-//     const page = parseInt(req.query.page) || 1;
-//     const limit = 5;
-//     const skip = (page - 1) * limit;
-
-//     let filter = { user_id: userId };
-
-//     if (search) {
-//       filter.orderId = { $regex: search, $options: "i" };
-//     }
-
-//     const totalOrders = await Order.countDocuments(filter);
-//     const userData = await User.findById(userId); 
-//     const orders = await Order.find(filter)
-//       .sort({ createdAt: -1 })
-//       .skip(skip)
-//       .limit(limit);
-
-//     const totalPages = Math.ceil(totalOrders / limit);
-
-     
-
-
-
-
-
-//     res.render("order", {
-//       orders,
-//       currentPage: page,
-//       totalPages,
-//       search,userData 
-//     });
-
-//   } catch (error) {
-//     console.log(error);
-//     res.redirect("/");
-//   }
-// };
 
 const listorderDetails  = async (req, res) => {
   try {
@@ -89,7 +47,8 @@ const listorderDetails  = async (req, res) => {
           price: item.price,
           quantity: item.quantity,
           image: variant.images[0],
-          cancelledProducts: order.cancelledProducts || []
+          
+           status: item.status
         };
       }));
 
@@ -101,20 +60,23 @@ const listorderDetails  = async (req, res) => {
     }));
 
     const totalPages = Math.ceil(totalOrders / limit);
-
+const orderMessage = req.session.orderMessage;
+     req.session.orderMessage = null;
     res.render("order", {
       orders,
       currentPage: page,
       totalPages,
       search,
-      userData,success: req.session.success
+      userData, orderMessage
     });
-req.session.success=null
+
   } catch (error) {
     console.log(error);
     res.redirect("/");
   }
 };
+
+
 
 const orderDetails = async (req, res) => {
   try {
@@ -139,7 +101,7 @@ const orderDetails = async (req, res) => {
         color: variant.color,
         price: item.price,
         quantity: item.quantity,
-        image: variant.images[0] 
+        image: variant.images[0] , status: item.status 
       };
     }));
 
@@ -186,7 +148,7 @@ const cancelOrder = async (req, res) => {
         await product.save();
       }
     }
-req.session.success = "Order Cancelled";
+req.session.orderMessage = "Order Cancelled";
     res.redirect('/orders');
 
   } catch (error) {
@@ -195,45 +157,30 @@ req.session.success = "Order Cancelled";
   }
 };
 
+
 const returnProduct = async (req, res) => {
   try {
-    const { orderId, productId, reason, description } = req.body;
-
-    if (!orderId || !productId) {
-      return res.status(400).send("Invalid request");
-    }
-
-    const order = await Order.findById(orderId);
-    if (!order) return res.redirect('/orders');
+    const { productId, reason, description } = req.body;
 
     const orderItem = await OrderItem.findById(productId);
     if (!orderItem) return res.redirect('/orders');
 
-    //  prevent duplicate return
-    const alreadyReturned = order.returnedProducts.some(
-      p => p.orderItem_id.toString() === productId
-    );
-
-    if (alreadyReturned) {
+    if (orderItem.status !== "Delivered") {
       return res.redirect('/orders');
     }
 
-    //  PUSH RETURN
-    order.returnedProducts.push({
-      orderItem_id: orderItem._id,
-      var_id: orderItem.var_id,
-      quantity: orderItem.quantity,
-      returnReason: reason || "Not specified",
-      returnDescription: description || ""
-    });
+    orderItem.status = "Return Requested";
+    orderItem.returnReason = reason;
+    orderItem.returnDescription = description;
 
-    await order.save();
+    await orderItem.save();
 
-    req.session.success = "Return Requested";
+    req.session.orderMessage= "Return Requested";
+    req.session.orderMessage = null;
     res.redirect('/orders');
 
   } catch (error) {
-    console.log("Return Product Error:", error);
+    console.log(error);
     res.redirect('/orders');
   }
 };
@@ -243,88 +190,76 @@ const returnProduct = async (req, res) => {
 const cancelProduct = async (req, res) => {
   try {
     const { orderId, productId, reason, description } = req.body;
-    console.log(req.body);
-
-    if (!orderId || !productId) {
-      return res.status(400).send("Invalid request");
-    }
-    
-
- 
-    const order = await Order.findById(orderId);
-    if (!order) return res.redirect('/orders');
 
     const orderItem = await OrderItem.findById(productId);
     if (!orderItem) return res.redirect('/orders');
 
-    // Push product into cancelledProducts array
-    order.cancelledProducts.push({
-       orderItem_id: orderItem._id,
-      var_id: orderItem.var_id,
-      quantity: orderItem.quantity,
-      cancelReason: reason || "Not specified",
-      cancelDescription: description || ""
-    });
+    // already cancelled check
+    if (orderItem.status === "Cancelled") {
+      req.session.orderMessage = "Already Cancelled";
+      return res.redirect('/orders');
+    }
 
-    // Optional: Reduce stock back to product variant
+    // update status
+    orderItem.status = "Cancelled";
+    orderItem.cancelReason = reason;
+    orderItem.cancelDescription = description;
+    await orderItem.save();
+
+    // STOCK RESTORE (VERY IMPORTANT)
     const product = await Product.findOne({ 'variants._id': orderItem.var_id });
+
     if (product) {
       const variant = product.variants.id(orderItem.var_id);
-      // If your variant has sizes
-      if (variant.sizes && variant.sizes.length) {
+
+      if (variant) {
         const sizeObj = variant.sizes.find(s => s.size === orderItem.size);
-        if (sizeObj) sizeObj.stock += orderItem.quantity;
-      } else {
-        variant.stock = (variant.stock || 0) + orderItem.quantity;
+
+        if (sizeObj) {
+          sizeObj.stock += orderItem.quantity;
+          await product.save();
+        }
       }
-      await product.save();
     }
 
-    await order.save();
+    
+    const remaining = await OrderItem.find({
+      order_id: orderItem.order_id,
+      status: { $ne: "Cancelled" }
+    });
 
-    // Optional: mark order as Cancelled if all products are cancelled
-const remainingItems = await OrderItem.find({
-  order_id: orderId,
-  _id: { $nin: order.cancelledProducts.map(p => p.orderItem_id) }
-});
-
-    if (remainingItems.length === 0) {
-      order.status = "Cancelled";
-      await order.save();
+    if (remaining.length === 0) {
+      await Order.findByIdAndUpdate(orderItem.order_id, {
+        status: "Cancelled"
+      });
     }
-req.session.success = "Product Cancelled";
-    res.redirect('/orders');
+
+    req.session.orderMessage = "Product Cancelled Successfully";
+    return res.redirect('/orders');
+
   } catch (error) {
-    console.log("Cancel Product Error:", error);
+    console.log(error);
     res.redirect('/orders');
   }
 };
 
 
-const invoicePage = async (req, res) => {
+
+  const invoicePage = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const order = await Order.findOne({ _id: orderId });
 
+    const order = await Order.findById(orderId);
     if (!order) return res.redirect('/orders');
 
-    // Get order items
+    // Get all order items
     const orderItemsRaw = await OrderItem.find({ order_id: order._id });
 
-
-// Get cancelled item ids
-    const cancelledIds = order.cancelledProducts.map(
-      item => item.orderItem_id.toString()
-    );
-
-    // Remove cancelled products
     const filteredItems = orderItemsRaw.filter(
-      item => !cancelledIds.includes(item._id.toString())
+      item => item.status !== "Cancelled"
     );
 
-
-
-    // Populate product and variant details
+    // Populate product details
     const items = await Promise.all(filteredItems.map(async (item) => {
       const product = await Product.findOne({ 'variants._id': item.var_id });
       if (!product) return null;
@@ -335,24 +270,32 @@ const invoicePage = async (req, res) => {
         name: product.product_name,
         quantity: item.quantity,
         price: item.price,
-        image: variant.images[0] || '/images/default-product.png'
+        image: variant?.images?.[0] || '/images/default-product.png'
       };
     }));
 
+    // remove null values
+    const cleanItems = items.filter(Boolean);
 
-    const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const delivery = 50; 
-    const discount = 0; 
+    // calculations
+    const subtotal = cleanItems.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+
+    const delivery = 50;
+    const discount = 0;
     const total = subtotal + delivery - discount;
 
+    // invoice object
     const invoiceData = {
       invoiceNumber: order.orderId,
       date: order.createdAt.toLocaleDateString(),
       customer: order.delivery_address,
       shipping: order.delivery_address,
-      paymentMethod: order.paymentMethod || "Cash on Delivery",
+      paymentMethod: order.payment_method || "Cash on Delivery",
       status: order.status,
-      items,
+      items: cleanItems,
       subtotal,
       discount,
       delivery,
@@ -366,7 +309,6 @@ const invoicePage = async (req, res) => {
     res.redirect('/orders');
   }
 };
-
 
 
 

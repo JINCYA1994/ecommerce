@@ -18,10 +18,10 @@
        query.orderId = { $regex: search, $options: "i" }; 
      }
  
-   
+ 
      const totalorders = await Order.countDocuments(query);
-   const orderMessage = req.session.orderMessage;
-     req.session.orderMessage = null;
+     const orderMessage = req.session.orderMessage;
+      req.session.orderMessage = null;
   
        const orders = await Order.find(query)
       .populate('user_id')
@@ -31,14 +31,15 @@
 
  
  
-     const totalPages = Math.ceil(totalorders / limit);
+      const totalPages = Math.ceil(totalorders / limit);
  
-     res.render('orders', {
+      res.render('orders', {
        orders,
        search,
        currentPage: page,
        totalPages,
        orderMessage,
+       
    success: req.flash('success'),
    error: req.flash('error')
      });
@@ -115,24 +116,54 @@ res.redirect(`/admin/orders/${order.orderId}`);
   }
 }
 
-
 const updateOrderStatus = async (orderId) => {
 
   const items = await OrderItem.find({ order_id: orderId });
 
+  //  ORIGINAL STATUSES
   const statuses = items.map(item => item.status);
+
+  //  NORMALIZE (IMPORTANT FIX)
+  const normalizeStatus = (status) => {
+    if (status === "Return Rejected") return "Delivered";
+    return status;
+  };
+
+  const normalizedStatuses = statuses.map(normalizeStatus);
 
   let newStatus = "Processing";
 
-  if (statuses.every(s => s === "Delivered")) {
-    newStatus = "Delivered";
-  }
+  const allCancelled = normalizedStatuses.every(s => s === "Cancelled");
+  const allReturned = normalizedStatuses.every(s => s === "Returned");
+  const allDelivered = normalizedStatuses.every(s => s === "Delivered");
 
-  else if (statuses.every(s => s === "Cancelled")) {
+  const someReturned = normalizedStatuses.some(s => s === "Returned");
+  const someDelivered = normalizedStatuses.some(s => s === "Delivered");
+  const someCancelled = normalizedStatuses.some(s => s === "Cancelled");
+
+  //  PRIORITY ORDER IMPORTANT
+
+  if (allCancelled) {
     newStatus = "Cancelled";
   }
 
-  else if (statuses.includes("Shipped")) {
+  else if (allReturned) {
+    newStatus = "Returned";
+  }
+
+  else if (someReturned) {
+    newStatus = "Partially Returned";
+  }
+
+  else if (allDelivered) {
+    newStatus = "Delivered";
+  }
+
+  else if (someDelivered && someCancelled) {
+    newStatus = "Partially Delivered";
+  }
+
+  else if (normalizedStatuses.includes("Shipped")) {
     newStatus = "Shipped";
   }
 
@@ -143,9 +174,60 @@ const updateOrderStatus = async (orderId) => {
   await Order.findByIdAndUpdate(orderId, {
     status: newStatus
   });
-
 };
 
+
+
+
+// const updateOrderStatus = async (orderId) => {
+
+//   const items = await OrderItem.find({ order_id: orderId });
+//   const statuses = items.map(item => item.status);
+
+//   let newStatus = "Processing";
+
+//   const allCancelled = statuses.every(s => s === "Cancelled");
+//   const allReturned = statuses.every(s => s === "Returned");
+//   const allDelivered = statuses.every(s => s === "Delivered");
+
+//   const someReturned = statuses.some(s => s === "Returned");
+//   const someDelivered = statuses.some(s => s === "Delivered");
+//   const someCancelled = statuses.some(s => s === "Cancelled");
+
+//   //  PRIORITY ORDER IMPORTANT
+
+//   if (allCancelled) {
+//     newStatus = "Cancelled";
+//   }
+
+//   else if (allReturned) {
+//     newStatus = "Returned";
+//   }
+
+//   else if (someReturned) {
+//     newStatus = "Partially Returned";
+//   }
+
+//   else if (allDelivered) {
+//     newStatus = "Delivered";
+//   }
+
+//   else if (someDelivered && someCancelled) {
+//     newStatus = "Partially Delivered";
+//   }
+
+//   else if (statuses.includes("Shipped")) {
+//     newStatus = "Shipped";
+//   }
+
+//   else {
+//     newStatus = "Processing";
+//   }
+
+//   await Order.findByIdAndUpdate(orderId, {
+//     status: newStatus
+//   });
+// };
 
 const viewOrderDetails = async (req, res) => {
   try {
@@ -200,37 +282,18 @@ const viewOrderDetails = async (req, res) => {
   }
 };
 
-
 const handleReturn = async (req, res) => {
   try {
     const { orderId, productId, action } = req.body;
 
-    if (!orderId || !productId) {
-      return res.status(400).send("Invalid request");
-    }
-
-    const order = await Order.findById(orderId);
-    if (!order) return res.redirect('/admin/orders');
-
     const orderItem = await OrderItem.findById(productId);
     if (!orderItem) return res.redirect('/admin/orders');
 
-    //  APPROVE RETURN
+    //  APPROVE
     if (action === "approve") {
 
-      // prevent duplicate
-      const alreadyReturned = order.returnedProducts?.some(
-        p => p.orderItem_id.toString() === orderItem._id.toString()
-      );
-
-      if (!alreadyReturned) {
-        order.returnedProducts.push({
-          orderItem_id: orderItem._id,
-          var_id: orderItem.var_id,
-          quantity: orderItem.quantity,
-          reason: "Approved by admin"
-        });
-      }
+      orderItem.status = "Returned";
+      await orderItem.save();
 
       // STOCK INCREMENT
       const product = await Product.findOne({ 'variants._id': orderItem.var_id });
@@ -238,44 +301,40 @@ const handleReturn = async (req, res) => {
       if (product) {
         const variant = product.variants.id(orderItem.var_id);
 
-        if (variant.sizes && variant.sizes.length) {
-          const sizeObj = variant.sizes.find(
-            s => s.size === orderItem.size
-          );
-          if (sizeObj) sizeObj.stock += orderItem.quantity;
-        } else {
-          variant.stock = (variant.stock || 0) + orderItem.quantity;
-        }
+        const sizeObj = variant.sizes.find(
+          s => s.size === orderItem.size
+        );
+
+        if (sizeObj) sizeObj.stock += orderItem.quantity;
 
         await product.save();
       }
 
-      //  update item status
-      orderItem.status = "Returned";
-      await orderItem.save();
-
     }
 
-    //  REJECT RETURN
+    //  REJECT
     else if (action === "reject") {
-      orderItem.status = "Delivered";
+      orderItem.status = "Return Rejected";
       await orderItem.save();
     }
 
-    await order.save();
-
-    // IMPORTANT
-    await updateOrderStatus(order._id);
-
-    req.session.orderMessage = "Return handled successfully";
-    res.redirect("back");
-
-  } catch (error) {
-    console.log("Return Error:", error);
+    await updateOrderStatus(orderItem.order_id);
+    const order = await Order.findById(orderItem.order_id);
+    res.redirect(`/admin/orders/${order.orderId}`);}
+ catch (error) {
+    console.log(error);
     res.redirect('/admin/orders');
   }
 };
 
 
- 
+
+
+
+
+
  module.exports={getordersPage,updateProductStatus,viewOrderDetails ,handleReturn }
+
+
+
+

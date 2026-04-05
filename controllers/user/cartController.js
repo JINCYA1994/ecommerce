@@ -3,45 +3,191 @@ const Product = require('../../models/productSchema');
 const Cart = require('../../models/cartSchema');
 
 // Get Cart Page
+// const getcartpage = async (req, res) => {
+//   try {
+//     const userId = req.session.user;
+
+//     const userData = req.session.user || null;
+//     if (!userId) return res.redirect('/login');
+
+//     const cart = await Cart.findOne({ user_id: userId }).populate('items.product_id');
+
+//     if (!cart || cart.items.length === 0) {
+//       return res.render('cart', { cart: null,userData });
+//     }
+
+//     let grandTotal = 0;
+// const updatedItems = await Promise.all(
+//       cart.items.map(async (item) => {
+
+//         const product = item.product_id;
+//         if (!product){
+//             await Cart.updateOne(
+//     { _id: cart._id },
+//     { $pull: { items: { _id: item._id } } }
+//   );
+//  return null;
+//         }
+
+//         const variant = product.variants.id(item.var_id);
+//         if (!variant){
+
+//   await Cart.updateOne(
+//     { _id: cart._id },
+//     { $pull: { items: { _id: item._id } } }
+//   );
+
+//   return null;
+// }
+
+//         const selectedSize = variant.sizes.find(
+//           s => s.size == item.size
+//         );
+//         if (!selectedSize)  {
+
+//   await Cart.updateOne(
+//     { _id: cart._id },
+//     { $pull: { items: { _id: item._id } } }
+//   );
+
+//   return null;
+// }
+
+// if (item.quantity > selectedSize.stock) {
+//   item.quantity = selectedSize.stock;
+
+//   await Cart.updateOne(
+//     { _id: cart._id, "items._id": item._id },
+//     { $set: { "items.$.quantity": selectedSize.stock } }
+//   );
+// }
+
+//  if (!selectedSize.isListed || selectedSize.isDeleted) {
+
+//           await Cart.updateOne(
+//             { _id: cart._id },
+//             { $pull: { items: { _id: item._id } } }
+//           );
+
+//           return null;
+//         }
+
+//         const price = variant.discount_price || variant.price;
+//         const total = price * item.quantity;
+//         grandTotal += total;
+
+//         return {
+//           _id: item._id,
+//           product_name: product.product_name,
+//           image: variant.images[0],
+//           color: variant.color,
+//           size: item.size,
+//           price,
+//           quantity: item.quantity,
+//           total,
+//           stock: selectedSize.stock
+//         };
+
+//       })
+//     );
+
+//     const filteredItems = updatedItems.filter(Boolean);
+
+//     res.render('cart', {
+//       cart: { items: filteredItems, total: grandTotal },
+//       userData
+//     });
+
+//   } catch (error) {
+//     console.log("Get cart error:", error);
+//     res.status(500).send("Server Error");
+//   }
+// };
+    
+
 const getcartpage = async (req, res) => {
   try {
     const userId = req.session.user;
-
     const userData = req.session.user || null;
+const cartError = req.session.cartError;
+req.session.cartError = null;
     if (!userId) return res.redirect('/login');
 
     const cart = await Cart.findOne({ user_id: userId }).populate('items.product_id');
 
     if (!cart || cart.items.length === 0) {
-      return res.render('cart', { cart: null,userData });
+      return res.render('cart', { cart: null, userData, cartError   });
     }
 
     let grandTotal = 0;
-const updatedItems = await Promise.all(
+
+    const updatedItems = await Promise.all(
       cart.items.map(async (item) => {
 
         const product = item.product_id;
-        if (!product) return null;
 
-        const variant = product.variants.id(item.var_id);
-        if (!variant) return null;
-
-        const selectedSize = variant.sizes.find(
-          s => s.size == item.size
-        );
-        if (!selectedSize) return null;
-
-        if (!selectedSize.isListed || selectedSize.isDeleted) {
-
+        //  remove invalid product
+        if (!product) {
           await Cart.updateOne(
             { _id: cart._id },
             { $pull: { items: { _id: item._id } } }
           );
-
           return null;
         }
 
-        const price = variant.discount_price || variant.price;
+        const variant = product.variants.id(item.var_id);
+
+        //  remove invalid variant
+        if (!variant) {
+          await Cart.updateOne(
+            { _id: cart._id },
+            { $pull: { items: { _id: item._id } } }
+          );
+          return null;
+        }
+
+        const selectedSize = variant.sizes.find(s => s.size == item.size);
+
+        //  remove invalid size
+        if (!selectedSize) {
+          await Cart.updateOne(
+            { _id: cart._id },
+            { $pull: { items: { _id: item._id } } }
+          );
+          return null;
+        }
+
+        //  remove unlisted/deleted
+        if (!selectedSize.isListed || selectedSize.isDeleted) {
+          await Cart.updateOne(
+            { _id: cart._id },
+            { $pull: { items: { _id: item._id } } }
+          );
+          return null;
+        }
+
+        
+        const finalQty = Math.min(
+          item.quantity,
+          selectedSize.stock,
+          selectedSize.maxOrderQty
+        );
+
+        if (item.quantity !== finalQty) {
+          item.quantity = finalQty;
+
+          await Cart.updateOne(
+            { _id: cart._id, "items._id": item._id },
+            { $set: { "items.$.quantity": finalQty } }
+          );
+        }
+
+        //  price calculation
+        const price =
+          variant.discount_price && variant.discount_price > 0
+            ? variant.discount_price
+            : variant.price;
+
         const total = price * item.quantity;
         grandTotal += total;
 
@@ -54,6 +200,9 @@ const updatedItems = await Promise.all(
           price,
           quantity: item.quantity,
           total,
+          stock: selectedSize.stock,
+          maxOrderQty: selectedSize.maxOrderQty,
+          isUnavailable: !product.isListed || product.isDeleted || selectedSize.stock === 0,
         };
 
       })
@@ -62,8 +211,8 @@ const updatedItems = await Promise.all(
     const filteredItems = updatedItems.filter(Boolean);
 
     res.render('cart', {
-      cart: { items: filteredItems, total: grandTotal },
-      userData
+      cart: { items: filteredItems, total: grandTotal,cartError  },
+      userData,  cartError
     });
 
   } catch (error) {
@@ -71,9 +220,6 @@ const updatedItems = await Promise.all(
     res.status(500).send("Server Error");
   }
 };
-    
- const MAX_ORDER_QTY = 3;
-
 
 
 
@@ -130,11 +276,10 @@ if (existingItem) {
   }
 
   // max order limit check
-  if (existingItem.quantity + 1 > MAX_ORDER_QTY) {
-    req.session.cartMessage = "Maximum order limit reached!";
-    return res.redirect('/shop');
-  }
-
+if (existingItem.quantity + 1 > selectedSize.maxOrderQty) {
+  req.session.cartMessage = `Maximum order limit is ${selectedSize.maxOrderQty}`;
+  return res.redirect('/shop');
+}
   existingItem.quantity += 1;
 
 }
@@ -224,12 +369,7 @@ const updateQuantity = async (req, res) => {
     const variant = product.variants.id(item.var_id);
     const selectedSize = variant.sizes.find(s => s.size == item.size);
 
-    // if (action === 'increment') {
-    //   if (item.quantity >= selectedSize.stock) return res.json({ success: false, message: 'Stock limit reached' });
-    //   item.quantity += 1;
-    // } 
-    
-    
+  
     if (action === 'increment') {
 
   if (item.quantity >= selectedSize.stock) {
@@ -239,10 +379,10 @@ const updateQuantity = async (req, res) => {
     });
   }
 
-  if (item.quantity >= MAX_ORDER_QTY) {
+  if  (item.quantity >= selectedSize.maxOrderQty) {
     return res.json({
       success: false,
-      message: 'Maximum order limit is 3'
+      message: `Maximum order limit is ${selectedSize.maxOrderQty}`
     });
   }
 
@@ -256,19 +396,35 @@ const updateQuantity = async (req, res) => {
 
     await cart.save();
 
-    // Recalculate cart total
-    let grandTotal = 0;
-    cart.items.forEach(i => {
-      const prod = i.product_id.equals(product._id) ? product : null;
-      const varnt = prod ? prod.variants.id(i.var_id) : null;
-      const selSize = varnt ? varnt.sizes.find(s => s.size == i.size) : null;
-      if (prod && varnt && selSize) {
-        const price = varnt.discount_price || varnt.price;
-        grandTotal += price * i.quantity;
-      }
-    });
+   let grandTotal = 0;
 
-    res.json({ success: true, quantity: item.quantity, cartTotal: grandTotal });
+const productIds = cart.items.map(i => i.product_id);
+
+const products = await Product.find({ _id: { $in: productIds } });
+
+cart.items.forEach(i => {
+  const prod = products.find(p => p._id.equals(i.product_id));
+  if (!prod) return;
+
+  const varnt = prod.variants.id(i.var_id);
+  if (!varnt) return;
+
+  const selSize = varnt.sizes.find(s => s.size == i.size);
+  if (!selSize) return;
+
+  const price =
+    varnt.discount_price && varnt.discount_price > 0
+      ? varnt.discount_price
+      : varnt.price;
+
+  grandTotal += price * i.quantity;
+});
+let totalItems = 0;
+
+cart.items.forEach(i => {
+  totalItems += i.quantity;
+});
+    res.json({ success: true, quantity: item.quantity, cartTotal: grandTotal, totalItems });
 
   } catch (err) {
     console.error(err);

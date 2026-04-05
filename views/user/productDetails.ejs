@@ -107,8 +107,8 @@
             <% }) %>
           </div>
         </div>
-
-        <!-- Quantity -->
+<!-- 
+        Quantity
         <div class="d-flex align-items-center mb-3">
           <strong class="me-3">Quantity:</strong>
           <div class="input-group" style="width:120px;">
@@ -116,7 +116,7 @@
             <input id="quantity" type="text" class="form-control text-center" value="1">
             <button class="btn btn-outline-secondary" type="button" onclick="changeQty(1, event)">+</button>
           </div>
-        </div>
+        </div> -->
 
         <!-- Buttons -->
         <div class="mt-4 d-flex gap-3 align-items-center">
@@ -129,12 +129,12 @@
             <button type="submit" class="btn btn-dark px-4">Add To Cart</button>
           </form>
 
-          <form action="/checkout" method="POST" class="d-inline">
+          <!-- <form action="/checkout" method="POST" class="d-inline">
             <input type="hidden" name="productId" value="<%= product._id %>">
             <input type="hidden" name="variantId" value="<%= (activeVariant && activeVariant._id) || product.variants[0]._id %>">
             <input type="hidden" name="quantity" value="1">
             <button type="submit" class="btn btn-danger px-4">Buy Now</button>
-          </form>
+          </form> -->
 
           <i id="wishlistIcon" class="fa-regular fa-heart fs-4 text-secondary" style="cursor:pointer;" onclick="toggleWishlist(this)"></i>
         </div>
@@ -331,23 +331,23 @@
     }
 
     // Quantity control
-    window.changeQty = function(delta, event) {
-      event.preventDefault();
-      const input = document.getElementById("quantity");
-      let qty = parseInt(input.value) || 1;
-      const maxQty = Math.min(3, selectedStock || 3);
+    // window.changeQty = function(delta, event) {
+    //   event.preventDefault();
+    //   const input = document.getElementById("quantity");
+    //   let qty = parseInt(input.value) || 1;
+    //   const maxQty = Math.min(3, selectedStock || 3);
 
-      qty += delta;
-      if (qty < 1) qty = 1;
-      if (qty > maxQty) {
-        qty = maxQty;
-        showFlashMessage(`⚠️ You can order a maximum of ${maxQty} quantity for this size.`);
-      }
+    //   qty += delta;
+    //   if (qty < 1) qty = 1;
+    //   if (qty > maxQty) {
+    //     qty = maxQty;
+    //     showFlashMessage(`⚠️ You can order a maximum of ${maxQty} quantity for this size.`);
+    //   }
 
-      input.value = qty;
-      const formQty = document.getElementById('formQuantity');
-      if (formQty) formQty.value = qty;
-    }
+    //   input.value = qty;
+    //   const formQty = document.getElementById('formQuantity');
+    //   if (formQty) formQty.value = qty;
+    // }
 
     // Size selection + show stock
     window.selectSize = function(size, stock, event) {

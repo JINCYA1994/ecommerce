@@ -127,11 +127,19 @@
           </thead>
           <tbody>
             <% cart.items.forEach(item => { %>
-              <tr>
+             <tr class="<%= item.isUnavailable ? 'table-danger' : '' %>">
                 <td>
                   <img src="<%= item.image %>" class="product-img">
                 </td>
-                <td><%= item.product_name %></td>
+               <td>
+  <%= item.product_name %>
+
+  <% if (item.isUnavailable) { %>
+    <div style="color:red; font-size:12px;">
+      Product unavailable
+    </div>
+  <% } %>
+</td>
                 <td>₹<%= item.price %></td>
                 <td>
                 <div class="qty-box">
@@ -258,6 +266,11 @@ qtyButtons.forEach(button => {
         
         document.querySelector('.cart-total-box h5').innerText =
           `Cart Total: ₹${data.cartTotal}`;
+  const cartCount = document.getElementById('cart-count');
+  if (cartCount) {
+    cartCount.innerText = data.totalItems;
+  }
+
       } else {
         Swal.fire('Oops!', data.message, 'warning');
       }
@@ -273,6 +286,19 @@ qtyButtons.forEach(button => {
 
 
 </script>
+
+<% if (cartError) { %>
+<script>
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: '<%= cartError %>',
+     timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
+
 
 </body>
 </html>

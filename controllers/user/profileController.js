@@ -57,10 +57,9 @@ const forgotEmailValid = async (req, res) => {
     if (sent) {
       console.log(`OTP sent to ${email}: ${otp}`);
 
-      //  Store in session (IMPORTANT FIX)
       req.session.forgotEmail = email;
       req.session.forgotPurpose = "forgot_password";
-
+ req.session.otpExpireTime = Date.now() + 60 * 1000;
       return res.json({success:true})
     } else {
     
@@ -240,7 +239,10 @@ const resendOtp = async (req, res) => {
     const sent = await sendOtpEmail(email, newOtpCode);
  console.log(" Email send result:", sent);
     if (sent) {
+       req.session.otpExpireTime = Date.now() + 60 * 1000; 
       return res.json({ success: true, message: "OTP resent successfully!" });
+
+
     } else {
       return res.json({ success: false, message: "Failed to resend OTP." });
     }
@@ -345,6 +347,7 @@ const updateEmail=async (req,res) => {
       return res.redirect("/edit-email");
     }
       const otp = generateOTP();
+      console.log(otp)
       await Otp.deleteMany({ email, purpose: "edit_email" });
     const newOtp = new Otp({
       email,
@@ -355,13 +358,14 @@ const updateEmail=async (req,res) => {
    const sent = await sendOtpEmail(email, otp);
 
     if (sent) {
+      
       console.log(`OTP sent to ${email}: ${otp}`);
       // temporarily store email in session
       req.session.tempEmail = email;
       req.session.tempUserId = userId;
-
+req.session.otpExpireTime = Date.now() + 60 * 1000; 
       // render verification page
-      return res.render("verifyNewemail", { email, purpose: "edit_email" });
+      return res.render("verifyNewemail", { email, purpose: "edit_email" ,remainingTime:60});
     } else {
       req.flash("error", "Failed to send OTP. Try again.");
       return res.redirect("/edit-email");
@@ -428,6 +432,7 @@ const updateEmailresend = async (req, res) => {
     const sent = await sendOtpEmail(email, newOtpCode);
   console.log(" Email send result:", sent);
     if (sent) {
+      req.session.otpExpireTime = Date.now() + 60 * 1000;
       console.log(` Resent OTP to ${email}: ${newOtpCode}`);
       return res.json({ success: true, message: "OTP resent successfully!" });
     } else {
@@ -541,8 +546,14 @@ const getVerifyEmailOtpPage = async (req, res) => {
       req.flash("error", "Session expired");
       return res.redirect("/edit-email");
     }
+const expireTime = req.session.otpExpireTime;
 
-    res.render("verifyNewemail", { email, purpose: "edit_email" });
+let remainingTime = 0;
+if (expireTime) {
+  remainingTime = Math.max(0, Math.floor((expireTime - Date.now()) / 1000));
+}
+
+    res.render("verifyNewemail", { email, purpose: "edit_email" , remainingTime });
   } catch (error) {
     console.error(error);
     res.redirect("/edit-email");

@@ -95,7 +95,7 @@
 
 <div class="container mt-5 pt-4">
 
-  <% if (success && success.length > 0) { %>
+  <!-- <% if (success && success.length > 0) { %>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
       <i class="fa-solid fa-circle-check me-2"></i> <%= success[0] %>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -107,7 +107,7 @@
       <i class="fa-solid fa-triangle-exclamation me-2"></i> <%= error[0] %>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-  <% } %>
+  <% } %> -->
 
   <!-- Heading -->
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -194,13 +194,11 @@
                       data-bs-target="#editCategoryModal">
                       <i class="fa-solid fa-pen-to-square me-1"></i> Edit
                     </button>
-
-                    <button class="btn btn-danger btn-sm btn-round deleteBtn"
-                      data-id="<%= category._id %>"
-                      data-bs-toggle="modal"
-                      data-bs-target="#deleteCategoryModal">
-                      <i class="fa-solid fa-trash me-1"></i> Delete
-                    </button>
+<button class="btn btn-danger btn-sm btn-round deleteBtn"
+  data-id="<%= category._id %>"
+  data-count="<%= category.productCount %>">
+  <i class="fa-solid fa-trash me-1"></i> Delete
+</button>
 
                   </div>
                 </td>
@@ -360,7 +358,7 @@
   </div>
 </div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Prefill Edit Modal JS -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -411,15 +409,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Delete Modal JS -->
 <script>
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
 
   const deleteButtons = document.querySelectorAll('.deleteBtn');
   const deleteForm = document.getElementById('deleteCategoryForm');
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
 
   deleteButtons.forEach(button => {
     button.addEventListener('click', () => {
+
       const id = button.dataset.id;
+      const count = parseInt(button.dataset.count);
+
+      //  BLOCK
+      if (count > 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Cannot Delete',
+          text: 'Products exist under this category!'
+        });
+        return;
+      }
+
+      //  allow modal
       deleteForm.action = `/admin/category/delete/${id}`;
+      deleteModal.show();
     });
   });
 
@@ -459,5 +476,26 @@ addForm.addEventListener('submit', function(e){
 });
 </script>
 
+<script>
+  const successMessage = "<%= success && success.length > 0 ? success[0] : '' %>";
+  const errorMessage = "<%= error && error.length > 0 ? error[0] : '' %>";
 
+  if (successMessage) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: successMessage,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  if (errorMessage) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: errorMessage
+    });
+  }
+</script>
 <%- include("../../views/partials/admin/footer") %>

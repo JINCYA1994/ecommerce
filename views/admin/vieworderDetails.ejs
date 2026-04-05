@@ -90,40 +90,24 @@
 
 <td>
 
-<%
-const isCancelled = order.cancelledProducts?.some(
-  p => p.orderItem_id.toString() === item._id.toString()
-);
-
-const isReturnRequested = order.returnedProducts?.some(
-  p => p.orderItem_id.toString() === item._id.toString()
-);
-%>
 
 <span class="badge 
-<%= isCancelled ? 'bg-danger' :
+<%= item.status === 'Cancelled' ? 'bg-danger' :
     item.status === 'Returned' ? 'bg-success' :
-    isReturnRequested ? 'bg-warning text-dark' :
+    item.status === 'Return Requested' ? 'bg-warning text-dark' :
     item.status === 'Delivered' ? 'bg-success' :
-    item.status === 'Cancelled' ? 'bg-danger' :
-    'bg-info' %>">
+    item.status === 'Shipped' ? 'bg-info' :
+    'bg-secondary' %>">
 
-<%= isCancelled ? 'Cancelled' :
-    item.status === 'Returned' ? 'Returned' :
-    isReturnRequested ? 'Return Requested' :
-    item.status %>
+<%= item.status %>
 
 </span>
-
 </td>
-
 <td>
 
-<% if(isReturnRequested && item.status !== 'Returned'){ %>
+<% if(item.status === 'Return Requested'){ %>
 
-<form action="/admin/orders/return" 
-      method="POST" 
-      class="d-flex gap-2 return-form">
+<form action="/admin/orders/return" method="POST" class="d-flex gap-2">
 
   <input type="hidden" name="orderId" value="<%= order._id %>">
   <input type="hidden" name="productId" value="<%= item._id %>">
@@ -131,10 +115,10 @@ const isReturnRequested = order.returnedProducts?.some(
   <button type="button" class="btn btn-success btn-sm accept-btn">
     Accept
   </button>
-
-  <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">
-    Reject
-  </button>
+<button type="button" class="btn btn-danger btn-sm reject-btn">
+  Reject
+</button>
+  
 
 </form>
 
@@ -200,6 +184,34 @@ document.querySelectorAll('.accept-btn').forEach(btn => {
         input.type = "hidden";
         input.name = "action";
         input.value = "approve";
+
+        form.appendChild(input);
+
+        form.submit();
+      }
+    });
+
+  });
+});
+document.querySelectorAll('.reject-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+
+    const form = this.closest('form');
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to reject this return request?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Reject",
+      cancelButtonText: "Cancel"
+    }).then((result) => {
+      if (result.isConfirmed) {
+
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "action";
+        input.value = "reject";
 
         form.appendChild(input);
 

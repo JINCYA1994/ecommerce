@@ -23,6 +23,11 @@
     .footer { font-size: 0.9em; color: #555; margin-top: 30px; text-align: center; }
     .btn-group { margin-top: 20px; text-align: center; }
     .btn-group a { margin: 0 5px; }
+      @media print {
+    .btn-group,
+    .footer {
+      display: none !important;
+    }
   </style>
 </head>
 <body>

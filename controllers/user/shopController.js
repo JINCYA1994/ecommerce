@@ -9,22 +9,28 @@ const loadShop = async (req, res) => {
     const category = req.query.category || "";
     const minPrice = parseInt(req.query.minPrice) || 0;
     const maxPrice = parseInt(req.query.maxPrice) || 10000;
-    const search = req.query.search || "";
+    // const search = req.query.search || "";
+    const search = (req.query.search || "")
+  .trim()
+  .replace(/\s+/g, " ");
     const sort = req.query.sort || "";
     const page = parseInt(req.query.page) || 1;
     const limit = 9;
     const cartMessage = req.session.cartMessage;
      req.session.cartMessage = null;
     // Fetch listed categories
-    const categories = await Category.find({ isListed: true });
+    const categories = await Category.find({ isListed: true,isDeleted:false });
 
-    let query = {};
+    let query = {
+  isListed: true,
+
+};
 
     // Category filter
     if (category) {
       const selectedCategory = await Category.findOne({
         _id: category,
-        isListed: true
+        isListed: true,isDeleted:false
       });
 
       if (selectedCategory) {
@@ -38,10 +44,16 @@ const loadShop = async (req, res) => {
     }
 
     // Search filter
-    if (search) {
-      query.product_name = { $regex: search, $options: "i" };
-    }
+    // if (search) {
+    //   query.product_name = { $regex: search, $options: "i" };
+    // }
 
+    if (search) {
+  query.product_name = {
+    $regex: search.split(" ").join(".*"),
+    $options: "i"
+  };
+}
     // Fetch products (NO price filter here)
     let products = await Product.find(query)
       .populate("category_id")
