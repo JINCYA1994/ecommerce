@@ -1,35 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Invoice - <%= invoice.invoiceNumber %></title>
+  <title>Invoice - <%= invoice.invoiceNumber %>
+  </title>
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; }
-    .invoice-box { max-width: 900px; margin: auto; background: #fff; border: 1px solid #ddd; padding: 30px; }
-    .invoice-header { display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px; }
-    .invoice-header h2 { margin: 0; }
-    .addresses { display: flex; justify-content: space-between; margin-bottom: 20px; }
-    .addresses div { width: 45%; }
-    .invoice-details { display: flex; justify-content: space-between; margin-bottom: 20px; }
-    .status-cancelled { background-color: #ffc107; color: #000; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    table th, table td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
-    table th { background: #f4f4f4; }
-    table td img { width: 60px; }
-    .totals { max-width: 300px; margin-left: auto; }
-    .totals p { display: flex; justify-content: space-between; padding: 4px 0; margin: 0; }
-    .totals p.grand { font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px; }
-    .footer { font-size: 0.9em; color: #555; margin-top: 30px; text-align: center; }
-    .btn-group { margin-top: 20px; text-align: center; }
-    .btn-group a { margin: 0 5px; }
-      @media print {
-    .btn-group,
-    .footer {
-      display: none !important;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
     }
+
+    .invoice-box {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 30px;
+    }
+
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+
+    .invoice-header h2 {
+      margin: 0;
+    }
+
+    .addresses {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .addresses div {
+      width: 45%;
+    }
+
+    .invoice-details {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .status-cancelled {
+      background-color: #ffc107;
+      color: #000;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    table th,
+    table td {
+      border-bottom: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    table th {
+      background: #f4f4f4;
+    }
+
+    table td img {
+      width: 60px;
+    }
+
+    .totals {
+      max-width: 300px;
+      margin-left: auto;
+    }
+
+    .totals p {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      margin: 0;
+    }
+
+    .totals p.grand {
+      font-weight: bold;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+
+    .footer {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .btn-group {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .btn-group a {
+      margin: 0 5px;
+    }
+
+    @media print {
+
+      .btn-group,
+      .footer {
+        display: none !important;
+      }}
   </style>
 </head>
+
 <body>
   <div class="invoice-box">
     <!-- Header -->
@@ -47,7 +138,7 @@
         <h4>INVOICE</h4>
         <p>
           Invoice No: <%= invoice.invoiceNumber %><br>
-          Date: <%= invoice.date %>
+            Date: <%= invoice.date %>
         </p>
       </div>
     </div>
@@ -57,27 +148,31 @@
       <div>
         <strong>Bill To</strong><br>
         <%= invoice.customer.name %><br>
-        <%= invoice.customer.house_name %><br>
-        Kerala<br>
-        Pin: <%= invoice.customer.pincode %><br>
-        Ph: <%= invoice.customer.mobilenumber %><br>
-        <%= invoice.customer.email %>
+          <%= invoice.customer.house_name %><br>
+            Kerala<br>
+            Pin: <%= invoice.customer.pincode %><br>
+              Ph: <%= invoice.customer.mobilenumber %><br>
+                <%= invoice.customer.email %>
       </div>
       <div>
         <strong>Ship To</strong><br>
-        <%= invoice.shipping.name %><br>
-        <%= invoice.shipping.house_name%><br>
-        Kerala<br>
-        Pin: <%= invoice.shipping.pincode %><br>
-        Ph: <%= invoice.shipping.mobilenumber %><br>
-        <%= invoice.shipping.email %>
+        <%= invoice.deliveryAddress.name %><br>
+          <%= invoice.deliveryAddress.house_name%><br>
+            Kerala<br>
+            Pin: <%= invoice.deliveryAddress.pincode %><br>
+              Ph: <%= invoice.deliveryAddress.mobilenumber %><br>
+                <%= invoice.deliveryAddress.email %>
       </div>
     </div>
 
     <!-- Payment & Status -->
     <div class="invoice-details">
-      <div><strong>Payment Method:</strong> <%= invoice.paymentMethod %></div>
-      <div><strong>Order Status:</strong> <span class="status-cancelled"><%= invoice.status %></span></div>
+      <div><strong>Payment Method:</strong>
+        <%= invoice.paymentMethod %>
+      </div>
+      <div><strong>Order Status:</strong> <span class="status-cancelled">
+          <%= invoice.status %>
+        </span></div>
     </div>
 
     <!-- Order Items Table -->
@@ -95,19 +190,27 @@
         <% invoice.items.forEach(function(item){ %>
           <tr>
             <td><img src="<%= item.image %>" alt="<%= item.name %>"></td>
-            <td><%= item.name %></td>
-            <td><%= item.quantity %></td>
-            <td>₹<%= item.price %></td>
-            <td>₹<%= (item.quantity * item.price) %></td>
+            <td>
+              <%= item.name %>
+            </td>
+            <td>
+              <%= item.quantity %>
+            </td>
+            <td>₹<%= item.price %>
+            </td>
+            <td>₹<%= (item.quantity * item.price) %>
+            </td>
           </tr>
-        <% }); %>
+          <% }); %>
       </tbody>
     </table>
 
     <!-- Totals -->
     <div class="totals">
       <p>Subtotal: <span>₹<%= invoice.subtotal %></span></p>
-      <p>Discount: <span>₹<%= invoice.discount %></span></p>
+      
+      <p> Coupon Discount:<span>₹<%= invoice.couponDiscount %></span></p>
+      <p>Taxes: <span>₹<%= invoice.taxes %></span></p>
       <p>Delivery: <span>₹<%= invoice.delivery %></span></p>
       <p class="grand">Grand Total: <span>₹<%= invoice.total %></span></p>
     </div>
@@ -116,22 +219,23 @@
     <!-- Footer -->
     <div class="footer">
       <p>Thank you for shopping with Footchic!</p>
-      <p>For support, contact:  support@menssandals.com</p>
+      <p>For support, contact: support@menssandals.com</p>
     </div>
-  
-  
-<!-- Buttons -->
-<div class="btn-group">
-  <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">Go Back</button>
-  <button type="button" class="btn btn-success" onclick="window.print()" >Download Invoice</button>
-</div>
 
-<script>
-  function downloadInvoice(invoiceNumber) {
 
-    window.location.href = '/invoice/download/' + invoiceNumber;
-  }
-</script>
+    <!-- Buttons -->
+    <div class="btn-group">
+      <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">Go Back</button>
+      <button type="button" class="btn btn-success" onclick="window.print()">Download Invoice</button>
+    </div>
+
+    <script>
+      function downloadInvoice(invoiceNumber) {
+
+        window.location.href = '/invoice/download/' + invoiceNumber;
+      }
+    </script>
   </div>
 </body>
+
 </html>

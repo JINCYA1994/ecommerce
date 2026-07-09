@@ -115,10 +115,21 @@
                 <div class="card border-0 shadow-sm w-100 position-relative">
 
                   <!-- Wishlist Icon -->
-                  <span class="wishlist-icon position-absolute top-0 end-0 p-2">
+                  <!-- <span class="wishlist-icon position-absolute top-0 end-0 p-2">
                     <i class="fa fa-heart"></i>
-                  </span>
+                  </span> -->
+<span 
+class="wishlist-icon position-absolute top-0 end-0 p-2 openWishlistModal"
 
+data-product-id="<%= product._id %>"
+data-variant-id="<%= product.randomVariant?._id %>"
+data-product-name="<%= product.product_name %>"
+data-product-image="<%= product.randomVariant?.images[0] %>"
+data-color="<%= product.randomVariant?.color %>">
+
+<i class="fa fa-heart"></i>
+
+</span>
                   <!-- Clickable Image -->
                   <!-- <a href="/productDetails/<%= product._id %>"> -->
                     <a href="/productDetails/<%= product._id %>?variant=<%= product.randomVariant?._id %>">
@@ -154,8 +165,10 @@
                     </div>
 
                     <h6 class="fw-bold"><%= product.product_name %></h6>
-<% if (product.randomVariant?.discount_price && product.randomVariant?.discount_price < product.randomVariant?.price) { %>
-  <p class="mb-1">
+
+<% if(product.randomVariant && product.randomVariant.offerPercentage > 0){ %>
+
+<!-- <p class="mb-1">
     <span class="text-muted text-decoration-line-through me-2">
       ₹<%= product.randomVariant.price %>
     </span>
@@ -168,11 +181,30 @@
       );
     %>
     <span class="badge bg-danger ms-1"><%= discountPercent %>% OFF</span>
-  </p>
+  </p> -->
+<p class="mb-1">
+  <span class="text-muted text-decoration-line-through me-2">
+    ₹<%= product.randomVariant.price %>
+  </span>
+
+  <span class="text-success fw-bold">
+    ₹<%= product.randomVariant.finalPrice %>
+  </span>
+
+  <span class="badge bg-danger ms-1">
+    <%= product.randomVariant.offerPercentage %>% OFF
+  </span>
+</p>
+
+
+
 <% } else { %>
-  <p class="fw-bold text-success mb-1">
-    ₹<%= product.randomVariant?.price || product.variants[0]?.price %>
-  </p>
+ 
+<p class="fw-bold text-success mb-1">
+  
+   ₹<%= product.randomVariant ? product.randomVariant.finalPrice : '' %>
+</p>
+
 <% } %>
 
 <!-- <% if (product.reviews && product.reviews.length > 0) { %>
@@ -281,7 +313,7 @@
           </div>
         </div>
 
-        <form method="POST" action="/cart">
+<form id="cartForm">
            <input type="hidden" name="returnUrl" id="returnUrl">
           <input type="hidden" name="productId" id="modalProductId">
           <input type="hidden" name="variantId" id="modalVariantId">
@@ -303,14 +335,138 @@
   </div>
 </div>
 
+<div class="modal fade" id="wishlistModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <h5 class="modal-title">Add to Wishlist</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img id="wishlistImage" width="80">
+          <div>
+            <h6 id="wishlistName"></h6>
+            <small>Color: <span id="wishlistColor"></span></small>
+          </div>
+        </div>
+
+        <input type="hidden" id="wishlistProductId">
+        <input type="hidden" id="wishlistVariantId">
+        <input type="hidden" id="wishlistSize">
+
+        <div class="mb-3">
+          <label>Select Size:</label>
+          <div id="wishlistSizes" class="d-flex gap-2 flex-wrap"></div>
+        </div>
+
+        <button id="saveWishlist" class="btn btn-danger w-100">
+          Add to Wishlist ❤️
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
 <!-- JS for Auto Filter + Image Preview + Wishlist -->
 <script>
+
+document.getElementById("cartForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); //  prevent reload
+
+  const productId = document.getElementById("modalProductId").value;
+  const variantId = document.getElementById("modalVariantId").value;
+  const size = document.getElementById("selectedSize").value;
+  const returnUrl = document.getElementById("returnUrl").value;
+
+  if (!size) {
+    Swal.fire({
+      icon: "warning",
+      title: "Please select size"
+    });
+    return;
+  }
+
+  try {
+    const res = await fetch("/cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        productId,
+        variantId,
+        size,
+        returnUrl
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+
+      Swal.fire({
+        icon: "success",
+        title: "Added to Cart",
+        timer: 1500,
+        showConfirmButton: false
+      });
+
+      //  cart count update
+      const cartCount = document.getElementById("cart-count");
+      if (cartCount) {
+        cartCount.innerText = data.cartCount;
+        cartCount.classList.remove("d-none");
+      }
+
+      //  close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+      modal.hide();
+
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: data.message || "Something went wrong"
+      });
+    }
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Error", "Server error", "error");
+  }
+});
+
   function applyFilter() {
     document.getElementById('filterForm').submit();
   }
+// document.querySelectorAll(".color-thumb").forEach(thumb => {
 
+//   thumb.addEventListener("click", function() {
 
+//     const card = this.closest(".card");
+
+//     const mainImage = card.querySelector(".main-image");
+//     mainImage.src = this.dataset.mainImage;
+
+//     const addBtn = card.querySelector(".openCartModal");
+
+//     addBtn.dataset.variantId = this.dataset.variantId;
+//     addBtn.dataset.productImage = this.dataset.mainImage;
+//     addBtn.dataset.color = this.dataset.color;
+
+//     // update product details link
+//     const productLink = card.querySelector("a");
+//     const productId = addBtn.dataset.productId;
+
+//     productLink.href = `/productDetails/${productId}?variant=${this.dataset.variantId}`;
+
+//   });
+
+// });
 
 document.querySelectorAll(".color-thumb").forEach(thumb => {
 
@@ -318,27 +474,31 @@ document.querySelectorAll(".color-thumb").forEach(thumb => {
 
     const card = this.closest(".card");
 
-    // change main image
     const mainImage = card.querySelector(".main-image");
     mainImage.src = this.dataset.mainImage;
 
-    // update add to cart button
+    //  CART button update
     const addBtn = card.querySelector(".openCartModal");
-
     addBtn.dataset.variantId = this.dataset.variantId;
     addBtn.dataset.productImage = this.dataset.mainImage;
     addBtn.dataset.color = this.dataset.color;
 
+    //  WISHLIST icon update
+    const wishlistIcon = card.querySelector(".openWishlistModal");
+    wishlistIcon.dataset.variantId = this.dataset.variantId;
+    wishlistIcon.dataset.productImage = this.dataset.mainImage;
+    wishlistIcon.dataset.color = this.dataset.color;
+
+    // optional: product link update
+    const productLink = card.querySelector("a");
+    const productId = addBtn.dataset.productId;
+    productLink.href = `/productDetails/${productId}?variant=${this.dataset.variantId}`;
+
   });
 
-// Wishlist Toggle
-    document.querySelectorAll(".wishlist-icon i").forEach(icon => {
-      icon.addEventListener("click", e => {
-        e.stopPropagation();
-        icon.classList.toggle("active");
-      });
-    });
-  });
+});
+
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -443,27 +603,128 @@ document.getElementById("returnUrl").value = returnUrl;
 
 
 
+document.addEventListener("DOMContentLoaded", () => {
 
-thumb.addEventListener("click", function() {
+  const wishlistModal = new bootstrap.Modal(document.getElementById('wishlistModal'));
 
-  const card = this.closest(".card");
+  document.querySelectorAll(".openWishlistModal").forEach(icon => {
 
-  const mainImage = card.querySelector(".main-image");
-  mainImage.src = this.dataset.mainImage;
+    icon.addEventListener("click", async () => {
 
-  const addBtn = card.querySelector(".openCartModal");
+      const productId = icon.dataset.productId;
+      const variantId = icon.dataset.variantId;
+      const name = icon.dataset.productName;
+      const image = icon.dataset.productImage;
+      const color = icon.dataset.color;
 
-  addBtn.dataset.variantId = this.dataset.variantId;
-  addBtn.dataset.productImage = this.dataset.mainImage;
-  addBtn.dataset.color = this.dataset.color;
+      document.getElementById("wishlistProductId").value = productId;
+      document.getElementById("wishlistVariantId").value = variantId;
+      document.getElementById("wishlistName").innerText = name;
+      document.getElementById("wishlistImage").src = image;
+      document.getElementById("wishlistColor").innerText = color;
 
-  //  NEW: update product link also
-  const productLink = card.querySelector("a");
-  const productId = addBtn.dataset.productId;
+      const res = await fetch(`/getVariantSizes/${variantId}`);
+      const sizes = await res.json();
 
-  productLink.href = `/productDetails/${productId}?variant=${this.dataset.variantId}`;
+      const sizeBox = document.getElementById("wishlistSizes");
+      sizeBox.innerHTML = "";
+
+      sizes.forEach(size => {
+
+        const btn = document.createElement("button");
+        btn.className = "btn btn-outline-dark";
+        btn.innerText = size.size;
+
+        btn.onclick = () => {
+
+          document.getElementById("wishlistSize").value = size.size;
+
+          document.querySelectorAll("#wishlistSizes button")
+          .forEach(b => b.classList.remove("active"));
+
+          btn.classList.add("active");
+
+        };
+
+        sizeBox.appendChild(btn);
+
+      });
+
+      wishlistModal.show();
+
+    });
+
+  });
 
 });
+
+
+
+document.getElementById("saveWishlist").addEventListener("click", async () => {
+
+  const productId = document.getElementById("wishlistProductId").value;
+  const variantId = document.getElementById("wishlistVariantId").value;
+  const size = document.getElementById("wishlistSize").value;
+
+  if (!size) {
+
+    Swal.fire({
+      icon:"warning",
+      title:"Please select size"
+    });
+
+    return;
+
+  }
+
+  const res = await fetch("/add-wishlist", {
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify({
+      productId,
+      var_id:variantId,
+      size
+    })
+
+  });
+
+  const data = await res.json();
+
+  if(data.success){
+
+    Swal.fire({
+      icon:"success",
+      title:"Added to Wishlist ❤️",
+      timer:1500,
+     
+    });
+const modal = bootstrap.Modal.getInstance(document.getElementById('wishlistModal'));
+modal.hide();
+  
+const countElement = document.getElementById("wishlist-count");
+
+countElement.innerText = data.count;
+countElement.classList.remove("d-none");
+
+  }
+else{
+   Swal.fire({
+    icon:"info",
+    title:data.message || "Already in wishlist"
+  });
+}
+
+
+
+
+});
+
+
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -498,6 +759,10 @@ h5 {
   transform: translateY(-5px);
 }
 
+.wishlist-icon{
+cursor:pointer;
+z-index:10;
+}
 .wishlist-icon i {
   font-size: 22px;
   color: #ccc;

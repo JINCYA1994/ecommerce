@@ -115,12 +115,16 @@
   <button type="button" class="btn btn-success btn-sm accept-btn">
     Accept
   </button>
-<button type="button" class="btn btn-danger btn-sm reject-btn">
-  Reject
-</button>
-  
+
+  <button type="button" class="btn btn-danger btn-sm reject-btn">
+    Reject
+  </button>
 
 </form>
+
+<% } else if (item.status === 'Returned' || item.status === 'Cancelled') { %>
+
+<span class="text-muted">No Actions</span>
 
 <% } else { %>
 
@@ -143,6 +147,8 @@
 <% } %>
 
 </td>
+
+
 
 </tr>
 

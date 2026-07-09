@@ -30,7 +30,16 @@ email:{
     type:String,
     trim:true,
   
- },  
+ }, 
+ referralCode:{
+    type:String,
+    unique:true
+  },
+  referredBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+}, 
  googleId:{
   type:String,
   unique:true,

@@ -74,41 +74,52 @@ const verifyLogin = async (req, res) => {
 
 
 
-const loadDashboard=async (req,res) => {
+// const loadDashboard=async (req,res) => {
 
-    try {
-       console.log("Dashboard accessed by:", req.session.admin);
-      res.render('dashboard')
-    } catch (error) {
-        console.error("Admin login error:", error.message);
-         res.redirect('/admin/login');
-    }
+//     try {
+//        console.log("Dashboard accessed by:", req.session.admin);
+//       res.render('dashboard')
+//     } catch (error) {
+//         console.error("Admin login error:", error.message);
+//          res.redirect('/admin/login');
+//     }
   
   
-}
+// }
 
 
-const logout=async (req,res) => {
-try {
-  req.session.destroy(err=>{
-    if(err){
-      console.log('Error destroying session',err)
-      return res.redirect('/pageerror')
-    } 
-    res.redirect('/admin/login') 
-  })
-} catch (error) {
- console.log('Unexpected error during logout',error) 
- res.redirect('/pageerror')
-}
+// const logout=async (req,res) => {
+// try {
+//   req.session.destroy(err=>{
+//     if(err){
+//       console.log('Error destroying session',err)
+//       return res.redirect('/pageerror')
+//     } 
+//     res.redirect('/admin/login') 
+//   })
+// } catch (error) {
+//  console.log('Unexpected error during logout',error) 
+//  res.redirect('/pageerror')
+// }
   
-}
+// }
+
+const logout = (req, res) => {
+    delete req.session.admin;
+
+    req.session.save(err => {
+        if (err) {
+            console.log(err);
+            return res.redirect("/pageerror");
+        }
+
+        res.redirect("/admin/login");
+    });
+};
 
 
 
 
 
 
-
-
- module.exports={loadLogin,verifyLogin,loadDashboard,logout,pageError}
+ module.exports={loadLogin,verifyLogin,logout,pageError}

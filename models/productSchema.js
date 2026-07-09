@@ -20,7 +20,7 @@ const variantSchema = new Schema({
 
   color: { type: String },
   price: { type: Number  },
-  discount_price: { type: Number },             
+  // discount_price: { type: Number },             
   images: [{ type: String }],                   
   sizes: [sizeSchema]  ,  
                         

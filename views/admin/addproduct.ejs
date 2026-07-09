@@ -263,11 +263,7 @@ function addVariant() {
       <div class="text-danger small mt-1" id="priceError${variantIndex}"></div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Discount Price</label>
-      <input type="number" class="form-control" id="discountPrice${variantIndex}" name="variants[${variantIndex}][discountPrice]" min="0">
-      <div class="text-danger small mt-1" id="discountPriceError${variantIndex}"></div>
-    </div>
+   
 
     <div class="mb-3">
       <label class="form-label">Size (6-10)</label>
@@ -506,12 +502,12 @@ function validateForm() {
   // Variant validation
   for (let i = 0; i < variantIndex; i++) {
     const price = document.getElementById(`price${i}`)?.value.trim();
-    const discountPrice = document.getElementById(`discountPrice${i}`)?.value.trim();
+    // const discountPrice = document.getElementById(`discountPrice${i}`)?.value.trim();
     const stock = document.getElementById(`stock${i}`)?.value.trim();
     const color = document.getElementById(`color${i}`)?.value.trim();
     const size = document.getElementById(`size${i}`)?.value.trim();
 
-    ['sizeError','priceError','discountPriceError','stockError','colorError','imageError']
+    ['sizeError','priceError','stockError','colorError','imageError']
       .forEach(id => {
         const el = document.getElementById(id + i);
         if (el) el.textContent = '';
@@ -522,10 +518,10 @@ function validateForm() {
       valid = false;
     }
 
-    if (discountPrice && (Number(discountPrice) > Number(price) || Number(discountPrice) < 0)) {
-      document.getElementById(`discountPriceError${i}`).textContent = "Invalid discount price";
-      valid = false;
-    }
+    // if (discountPrice && (Number(discountPrice) > Number(price) || Number(discountPrice) < 0)) {
+    //   document.getElementById(`discountPriceError${i}`).textContent = "Invalid discount price";
+    //   valid = false;
+    // }
 
     if (!stock || Number(stock) < 0 || Number(stock) > 100) {
       document.getElementById(`stockError${i}`).textContent = "Stock must be between 0 and 100";

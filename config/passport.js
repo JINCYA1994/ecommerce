@@ -30,6 +30,8 @@ passport.use(
       googleId: profile.id,
       isGoogleUser: true
     });
+ 
+    
         return done(null, user); // Must pass user, not newUser or undefined
       } catch (err) {
         return done(err, null);

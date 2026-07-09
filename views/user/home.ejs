@@ -225,22 +225,34 @@
 
                 <!--  Product Name -->
                 <h6 class="fw-bold"><%= product.product_name %></h6>
+<%
+const variant = defaultVariant;
+%>
 
-                <!--  Price + Discount -->
-                <% 
-                  const variant = defaultVariant;
-                  if (variant?.discount_price && variant.discount_price < variant.price) { 
-                    const discountPercent = Math.round(((variant.price - variant.discount_price) / variant.price) * 100);
-                %>
-                  <p class="mb-1">
-                    <span class="text-muted text-decoration-line-through me-2">₹<%= variant.price %></span>
-                    <span class="text-success fw-bold">₹<%= variant.discount_price %></span>
-                    <span class="badge bg-danger ms-1"><%= discountPercent %>% OFF</span>
-                  </p>
+<% if (variant?.offerPercentage > 0) { %>
 
-                <% } else { %>
-                  <p class="fw-bold text-success mb-1">₹<%= variant?.price %></p>
-                <% } %>
+<p class="mb-1">
+  <span class="text-muted text-decoration-line-through me-2">
+    ₹<%= variant.price %>
+  </span>
+
+  <span class="text-success fw-bold">
+    ₹<%= variant.finalPrice %>
+  </span>
+
+  <span class="badge bg-danger ms-1">
+    <%= variant.offerPercentage %>% OFF
+  </span>
+</p>
+
+<% } else { %>
+
+<p class="fw-bold text-success mb-1">
+  ₹<%= variant.price %>
+</p>
+
+<% } %>
+             
 <button 
   type="button"
   class="btn add-cart-btn openCartModal"
@@ -288,8 +300,7 @@
             </small>
           </div>
         </div>
-
-        <form method="POST" action="/cart">
+<form id="cartForm">
              <input type="hidden" name="returnUrl" id="returnUrl">
           <input type="hidden" name="productId" id="modalProductId">
           <input type="hidden" name="variantId" id="modalVariantId">
@@ -438,19 +449,71 @@ document.getElementById("returnUrl").value = returnUrl;
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<% if (homeMessage) { %>
+
 <script>
-  Swal.fire({
-    icon: 'success',
-    title: 'Added to Cart!',
-    text: '<%= homeMessage %>',
-     timer: 2000,
-    showConfirmButton: false
+
+document.getElementById("cartForm").addEventListener("submit", async (e) => {
+
+  e.preventDefault();
+
+  const productId = document.getElementById("modalProductId").value;
+  const variantId = document.getElementById("modalVariantId").value;
+  const size = document.getElementById("selectedSize").value;
+  const returnUrl = document.getElementById("returnUrl").value;
+
+  if (!size) {
+    Swal.fire({
+      icon: "warning",
+      title: "Please select size"
+    });
+    return;
+  }
+
+  const response = await fetch("/cart", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      productId,
+      variantId,
+      size,
+      returnUrl
+    })
   });
+
+  const data = await response.json();
+
+  if (data.success) {
+
+    Swal.fire({
+      icon: "success",
+      title: "Added to Cart",
+      timer: 1500,
+      showConfirmButton: false
+    });
+
+    const cartCount = document.getElementById("cart-count");
+
+    if (cartCount) {
+      cartCount.innerText = data.cartCount;
+      cartCount.classList.remove("d-none");
+    }
+
+    bootstrap.Modal.getInstance(
+      document.getElementById("cartModal")
+    ).hide();
+
+  } else {
+
+    Swal.fire({
+      icon: "warning",
+      title: data.message
+    });
+
+  }
+
+});
 </script>
-<% } %>
-
-
-
 <%-include("../../views/partials/user/footer")%>
 

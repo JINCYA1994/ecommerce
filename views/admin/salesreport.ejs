@@ -1,0 +1,625 @@
+<%- include('../partials/admin/header') %>
+
+<div class="container-fluid py-4">
+
+  <!-- Heading -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+  <h1 class="fw-bold">
+
+    Sales Report
+
+  </h1>
+
+</div>
+
+  <!-- Filter -->
+
+  <div class="d-flex gap-3 mb-4">
+
+    <select
+      id="filterType"
+      class="form-select w-auto">
+
+      <option value="day">
+
+        Daily
+
+      </option>
+
+      <option value="week">
+
+        Weekly
+
+      </option>
+
+      <option value="month">
+
+        Monthly
+
+      </option>
+
+      <option value="year">
+
+        Yearly
+
+      </option>
+
+      <option value="custom">
+
+        Custom
+
+      </option>
+
+    </select>
+
+
+    <div
+      id="customDate"
+      style="display:none">
+
+      <div class="d-flex gap-2">
+
+        <input
+          type="date"
+          id="startDate"
+          class="form-control">
+
+
+        <input
+          type="date"
+          id="endDate"
+          class="form-control">
+
+      </div>
+
+    </div>
+
+
+    <button
+      id="applyBtn"
+      class="btn btn-warning text-white">
+
+      Apply Filter
+
+    </button>
+
+  </div>
+
+
+
+  <!-- Cards -->
+
+  <div class="row g-4 mb-4">
+
+    <div class="col-lg-2">
+
+      <div class="card shadow border-0 h-100">
+
+        <div class="card-body text-center py-5">
+
+          <h6 class="text-secondary">
+
+            Total Orders
+
+          </h6>
+
+          <h2 id="salesCount">
+
+            0
+
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="col-lg-2">
+
+      <div class="card shadow border-0 h-100">
+
+        <div class="card-body text-center py-5">
+
+          <h6 class="text-secondary">
+      Gross Sales
+
+          </h6>
+
+          <h2 id="grossSales">
+
+            ₹0.00
+
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="col-lg-2">
+
+      <div class="card shadow border-0 h-100">
+
+        <div class="card-body text-center py-5">
+
+          <h6 class="text-secondary">
+
+       Revenue
+
+          </h6>
+
+          <h2 id="revenue">
+
+            ₹0.00
+
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="col-lg-2">
+
+      <div class="card shadow border-0 h-100">
+
+        <div class="card-body text-center py-5">
+
+          <h6 class="text-secondary">
+
+            Offer Discount
+
+          </h6>
+
+          <h2 id="offerDiscount">
+
+            ₹0.00
+
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="col-lg-2">
+
+      <div class="card shadow border-0 h-100">
+
+        <div class="card-body text-center py-5">
+
+          <h6 class="text-secondary">
+
+            Coupon Deduction
+
+          </h6>
+
+          <h2 id="couponDiscount">
+
+            ₹0.00
+
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="col-lg-2">
+
+      <div class="card shadow border-0 h-100">
+
+        <div class="card-body text-center py-5">
+
+          <h6 class="text-secondary">
+
+            Refund Amount
+
+          </h6>
+
+          <h2 id="refundAmount">
+
+            ₹0.00
+
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Table -->
+
+  <div class="card border-0 shadow">
+
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+
+      <h4 class="mb-0">
+
+        Order History
+
+      </h4>
+
+
+      <div>
+
+        <button
+          class="btn btn-primary btn-sm me-2"
+          onclick="downloadPdf()">
+
+          PDF
+
+        </button>
+
+
+        <button
+          class="btn btn-success btn-sm"
+          onclick="downloadExcel()">
+
+          Excel
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="table-responsive">
+
+      <table class="table align-middle mb-0">
+
+        <thead>
+
+        <tr>
+
+<th>Order#</th>
+
+<th>Date</th>
+
+<th>Customer</th>
+
+<th>Payment Method</th>
+
+<th>Total Amount</th>
+
+<th>Offer Discount</th>
+
+<th>Coupon Deduction</th>
+
+<th>Delivered</th>
+
+<th>Cancelled</th>
+
+<th>Returned</th>
+
+<th>Refund</th>
+
+</tr>
+
+        </thead>
+
+
+        <tbody id="tbody">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+
+  <div
+    class="pagination d-flex justify-content-center mt-4">
+
+  </div>
+
+</div>
+
+
+<script>
+
+const filterType =document.getElementById("filterType");
+
+
+filterType.addEventListener("change",()=>{
+
+document.getElementById("customDate").style.display =
+
+filterType.value === "custom"? "block": "none";}
+
+);
+
+
+document.getElementById("applyBtn").addEventListener("click",()=>{
+
+fetchData(1);
+
+}
+
+);
+
+
+async function fetchData(page = 1){
+
+try{
+
+const filter =filterType.value;
+
+
+const startDate =document.getElementById("startDate").value;
+
+
+const endDate =document.getElementById("endDate").value;
+
+
+const response =await fetch(
+
+`/admin/sales-report/data?page=${page}&filter=${filter}&startDate=${startDate}&endDate=${endDate}`
+
+);
+console.log(response);
+
+const data =await response.json();
+
+console.log(data);
+
+if(!data.success){
+
+return;
+
+}
+
+
+document.getElementById("salesCount").innerText =data.summary.totalOrders || 0;
+
+document.getElementById("grossSales").innerText ="₹" +(data.summary.grossSales|| 0);
+
+document.getElementById("couponDiscount").innerText ="₹" +(data.summary.totalCouponDiscount || 0);
+
+document.getElementById("offerDiscount").innerText ="₹" +(data.summary.offerDiscount || 0);
+
+document.getElementById("revenue").innerText ="₹" +(data.summary.revenue|| 0);
+document.getElementById("refundAmount").innerText ="₹" +(data.summary.refundAmount || 0);
+
+let rows = "";
+
+
+if(
+
+data.orders.length === 0
+
+){
+
+rows = `
+
+<tr>
+
+<td
+colspan="11"
+class="text-center">
+
+No Sales Found
+
+</td>
+
+</tr>
+
+`;
+
+}
+
+else{
+data.orders.forEach((order)=>{
+
+rows += `
+
+<tr>
+
+<td>
+
+${order.orderId}
+
+</td>
+
+<td>
+
+${new Date(
+order.ordered_at
+).toLocaleDateString()}
+
+</td>
+
+<td>
+
+${order.user_id?.username || "-"}
+
+</td>
+
+<td>
+
+${order.payment_id?.payment_method || "COD"}
+
+</td>
+
+<td>
+
+₹${order.total_price || 0}
+
+</td>
+
+<td>
+
+₹${order.offer_discount || 0}
+
+</td>
+
+<td>
+
+₹${order.coupon_discount || 0}
+
+</td>
+
+<td>
+
+${order.deliveredCount || 0}
+
+</td>
+
+<td>
+
+${order.cancelledCount || 0}
+
+</td>
+
+<td>
+
+${order.returnedCount || 0}
+
+</td>
+
+<td>
+
+₹${order.refund || 0}
+
+</td>
+
+
+</tr>
+
+`;
+
+});
+
+
+}
+
+
+document.getElementById("tbody").innerHTML = rows;
+
+let buttons = "";
+
+for(let i=1;i<=data.totalPages;i++){
+
+buttons += `
+
+<button
+
+class="btn btn-outline-success mx-1"
+
+onclick="fetchData(${i})">
+
+${i}
+
+</button>
+
+`;
+
+}
+document.querySelector(".pagination").innerHTML =buttons;}
+
+catch(error){
+
+console.log(error);
+
+}
+
+}
+
+
+function downloadPdf(){
+
+const filter =
+
+filterType.value;
+
+
+const startDate =
+
+document.getElementById(
+
+"startDate"
+
+).value;
+
+
+const endDate =
+
+document.getElementById(
+
+"endDate"
+
+).value;
+
+
+window.location.href =
+
+`/admin/sales-report/pdf?filter=${filter}&startDate=${startDate}&endDate=${endDate}`;
+
+}
+
+
+function downloadExcel(){
+
+const filter =
+
+filterType.value;
+
+
+const startDate =
+
+document.getElementById(
+
+"startDate"
+
+).value;
+
+
+const endDate =
+
+document.getElementById(
+
+"endDate"
+
+).value;
+
+
+window.location.href =
+
+`/admin/sales-report/excel?filter=${filter}&startDate=${startDate}&endDate=${endDate}`;
+
+}
+
+
+fetchData();
+
+</script>
+
+
+<%- include('../partials/admin/footer') %>

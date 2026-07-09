@@ -528,7 +528,7 @@ const updateProfileImage = async (req, res) => {
     // Upload to Cloudinary
     const imageUrl = await uploadToCloudinary(req.file);
 
-    // Update in DB
+    // Update in DByOtp
     await User.findByIdAndUpdate(userId, { profileImage: imageUrl });
 req.session.profileMessage='Image Added Successfully'
     res.redirect('/profile');

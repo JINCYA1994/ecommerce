@@ -41,25 +41,31 @@
         <!-- Product Name -->
         <h3 class="fw-bold mb-3"><%= product.product_name %></h3>
 
-        <% 
-          const price = (activeVariant && activeVariant.price) || product.variants[0].price;
-          const discount = (activeVariant && activeVariant.discount_price) || product.variants[0].discount_price;
-        %>
+      <div class="d-flex align-items-center mb-2">
 
-        <div class="d-flex align-items-center mb-2">
-          <% if (discount && discount < price) { %>
-            <!-- Show Discounted Price -->
-            <h4 class="fw-bold text-success me-3">₹<%= discount %></h4>
-            <h5 class="text-muted text-decoration-line-through me-2">₹<%= price %></h5>
-            <span class="badge bg-success">
-              <%= Math.round(((price - discount) / price) * 100) %>% off
-            </span>
-          <% } else { %>
-            <!-- Show Only Original Price -->
-            <h4 class="fw-bold text-success">₹<%= price %></h4>
-          <% } %>
-        </div>
+  <% if(activeVariant.offerPercentage > 0){ %>
 
+    <h4 class="fw-bold text-success me-3">
+      ₹<%= activeVariant.finalPrice %>
+    </h4>
+
+    <h5 class="text-muted text-decoration-line-through me-2">
+      ₹<%= activeVariant.price %>
+    </h5>
+
+    <span class="badge bg-success">
+      <%= activeVariant.offerPercentage %>% OFF
+    </span>
+
+  <% } else { %>
+
+    <h4 class="fw-bold text-success">
+      ₹<%= activeVariant.price %>
+    </h4>
+
+  <% } %>
+
+</div>
         <!-- Ratings -->
         <div class="mb-3">
           ⭐⭐⭐⭐☆ <small>(<%= reviews.length %> Customer Reviews)</small>
@@ -120,15 +126,19 @@
 
         <!-- Buttons -->
         <div class="mt-4 d-flex gap-3 align-items-center">
-          <form action="/cart" method="POST" class="d-inline">
+          <!-- <form action="/cart" method="POST" class="d-inline"> -->
             <!-- Example hidden fields to send product and selected variant to server -->
+             <form id="addToCartForm" action="/cart" method="POST" class="d-inline">
             <input type="hidden" name="productId" value="<%= product._id %>">
             <input type="hidden" name="variantId" value="<%= (activeVariant && activeVariant._id) || product.variants[0]._id %>" id="formVariantId">
             <input type="hidden" name="quantity" id="formQuantity" value="1">
               <input type="hidden" name="size" id="formSize">
             <button type="submit" class="btn btn-dark px-4">Add To Cart</button>
           </form>
-
+<i id="wishlistIcon"
+   class="fa-regular fa-heart fs-4 text-secondary"
+   style="cursor:pointer;">
+</i>
           <!-- <form action="/checkout" method="POST" class="d-inline">
             <input type="hidden" name="productId" value="<%= product._id %>">
             <input type="hidden" name="variantId" value="<%= (activeVariant && activeVariant._id) || product.variants[0]._id %>">
@@ -136,13 +146,13 @@
             <button type="submit" class="btn btn-danger px-4">Buy Now</button>
           </form> -->
 
-          <i id="wishlistIcon" class="fa-regular fa-heart fs-4 text-secondary" style="cursor:pointer;" onclick="toggleWishlist(this)"></i>
+          <!-- <i id="wishlistIcon" class="fa-regular fa-heart fs-4 text-secondary" style="cursor:pointer;" onclick="toggleWishlist(this)"></i> -->
         </div>
 
       </div>
     </div>
 
-    <!-- REVIEWS -->
+    REVIEWS
     <hr class="my-5">
     <h4 class="fw-bold mb-3">Customer Reviews (<%= reviews.length %>)</h4>
 
@@ -158,11 +168,18 @@
         </div>
       <% }) %>
     <% } %>
+<% if (canReview) { %>
 
-    <button class="btn btn-outline-dark mb-3" onclick="toggleReviewForm()">Write a Review</button>
+<button class="btn btn-outline-dark mb-3"
+onclick="toggleReviewForm()">
+Write a Review
+</button>
 
-    <!-- Review Form -->
-    <form id="reviewForm" action="/product/<%= product._id %>/review" method="POST" class="border p-3 rounded" style="display:none;">
+<form id="reviewForm"
+action="/product/<%= product._id %>/review"
+method="POST"
+class="border p-3 rounded"
+style="display:none;">
       <div class="mb-3">
         <label class="form-label">Your Name</label>
         <input type="text" name="name" class="form-control" required>
@@ -184,7 +201,13 @@
       </div>
       <button type="submit" class="btn btn-success">Submit Review</button>
     </form>
+<% } else { %>
 
+<p class="text-muted">
+Only customers who have received this product can leave a review.
+</p>
+
+<% } %>
     <!-- RELATED PRODUCTS -->
     <hr class="my-5">
     <h4 class="fw-bold mb-4">Related Products</h4>
@@ -292,7 +315,7 @@
   100% { opacity: 0; transform: translateY(-20px); }
 }
 </style>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- scripts -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -417,6 +440,149 @@
 
   });
 </script>
+<script>
+const addToCartForm = document.getElementById("addToCartForm");
+
+if(addToCartForm){
+
+  addToCartForm.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const productId = document.querySelector('[name="productId"]').value;
+    const variantId = document.querySelector('[name="variantId"]').value;
+    const size = document.getElementById("formSize").value;
+
+    if(!size){
+      Swal.fire({
+        icon:"warning",
+        title:"Select Size",
+        text:"Please select a size first"
+      });
+      return;
+    }
+
+    const response = await fetch("/cart", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        productId,
+        variantId,
+        size
+      })
+    });
+
+    const data = await response.json();
+
+    if(data.success){
+
+      Swal.fire({
+        icon:"success",
+        title:"Added To Cart",
+        timer:1500,
+        showConfirmButton:false
+      });
+
+      const cartCount = document.getElementById("cart-count");
+
+      if(cartCount){
+        cartCount.innerText = data.cartCount;
+        cartCount.classList.remove("d-none");
+      }
+
+    }else{
+
+      Swal.fire({
+        icon:"warning",
+        title:data.message
+      });
+
+    }
+
+  });
+
+}
+</script>
 
 
+<script>
+
+document.getElementById("wishlistIcon").addEventListener("click", async function(){
+
+  const productId = document.querySelector('[name="productId"]').value;
+  const variantId = document.querySelector('[name="variantId"]').value;
+  const size = document.getElementById("formSize").value;
+
+  if(!size){
+    Swal.fire({
+      icon:"warning",
+      title:"Select Size",
+      text:"Please select a size first"
+    });
+    return;
+  }
+
+  try{
+
+    const response = await fetch("/add-wishlist",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        productId,
+        var_id: variantId,
+        size
+      })
+    });
+
+    const data = await response.json();
+console.log(data)
+    if(data.success){
+
+      Swal.fire({
+        icon:"success",
+        title:"Added to Wishlist ❤️",
+        timer:1500,
+        showConfirmButton:false
+      });
+
+      // heart red color
+      this.classList.remove("fa-regular","text-secondary");
+      this.classList.add("fa-solid","text-danger");
+
+      // wishlist count update
+      const wishlistCount =
+        document.getElementById("wishlist-count");
+
+      if(wishlistCount){
+        wishlistCount.innerText = data.count;
+        wishlistCount.classList.remove("d-none");
+      }
+
+    }else{
+
+      Swal.fire({
+        icon:"info",
+        title:data.message || "Already in wishlist"
+      });
+
+    }
+
+  }catch(err){
+
+    console.log(err);
+
+    Swal.fire({
+      icon:"error",
+      title:"Something went wrong"
+    });
+
+  }
+
+});
+
+</script>
 <%- include("../../views/partials/user/footer") %>

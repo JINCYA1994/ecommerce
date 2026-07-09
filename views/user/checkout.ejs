@@ -82,14 +82,9 @@ Edit
   const variant = item.product_id.variants.find(v =>
     v._id.toString() === item.var_id.toString()
   );
+const originalPrice = variant?.price || 0;
+const sellingPrice = item.finalPrice || originalPrice;
 
-  const originalPrice = Number(variant?.price || 0);
-  const discountPrice = Number(variant?.discount_price || 0);
-
-  const sellingPrice =
-    discountPrice && discountPrice < originalPrice
-      ? discountPrice
-      : originalPrice;
 
   const image = variant?.images?.[0] || "/images/default.png";
 %>
@@ -106,22 +101,27 @@ Edit
       <small>Size: <%= item.size %></small><br>
       <small>Qty: <%= item.quantity %></small>
 
-      <% if (discountPrice > 0 && discountPrice < originalPrice) { %>
-        <div>
-          <small class="text-muted text-decoration-line-through">
-            ₹<%= originalPrice %>
-          </small>
-          <small class="text-danger fw-bold ms-2">
-            ₹<%= sellingPrice %>
-          </small>
-        </div>
-      <% } else { %>
-        <div>
-          ₹<%= originalPrice %>
-        </div>
-      <% } %>
+<% if (sellingPrice < originalPrice) { %>
 
-    </div>
+<div>
+  <small class="text-muted text-decoration-line-through">
+    ₹<%= originalPrice %>
+  </small>
+
+  <small class="text-danger fw-bold ms-2">
+    ₹<%= sellingPrice %>
+  </small>
+</div>
+
+<% } else { %>
+
+<div>
+  ₹<%= originalPrice %>
+</div>
+
+<% } %>
+
+</div>
   </div>
 
   <strong>
@@ -134,35 +134,51 @@ Edit
 
         <hr>
 
-        <!-- COUPON -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Apply Coupon</label>
-          <div class="input-group">
-            <input type="text"
-                   class="form-control"
-                   placeholder="Enter coupon code"
-                   name="couponCode">
-            <button class="btn btn-outline-dark">
-              APPLY
-            </button>
-          </div>
-        </div>
+
+
+  <div class="input-group mb-2">
+    <input type="text"  id="couponInput"
+           class="form-control"
+           placeholder="Enter coupon code"
+           name="couponCode">
+        
+    <button class="btn btn-outline-dark"  id="applyCouponBtn">
+      APPLY
+    </button>
+
+<!-- <button class="btn btn-sm btn-danger w-100 mt-2 d-none" id="removeCouponBtn">
+  REMOVE COUPON
+</button> -->
+
+  </div>
+
+
+
+<button class="btn btn-sm btn-warning w-100"
+        data-bs-toggle="modal"
+        data-bs-target="#couponModal">
+  VIEW AVAILABLE COUPONS
+</button>
+</div>
 
         <hr>
 
         <!-- PRICE SUMMARY -->
         <div class="d-flex justify-content-between mb-2">
           <span>Subtotal</span>
-          <span>₹<%= subtotal %></span>
+          <span   id="subtotal">₹<%= subtotal %></span>
         </div>
 
         <div class="d-flex justify-content-between mb-2 text-success">
           <span>Coupon Discount</span>
-          <span>- ₹<%= discount %></span>
+          <span id="discount"  >- ₹<%= discount %></span>
         </div>
-
+  <div class="d-flex justify-content-between mb-2 ">
+          <span>Taxes</span>
+          <span id="taxes"  >₹<%= taxes %></span>
+        </div>
         <div class="d-flex justify-content-between mb-2">
-          <span>Shipping</span>
+          <span  id="shipping"   >Shipping</span>
           <span>₹<%= shipping %></span>
         </div>
 
@@ -170,13 +186,14 @@ Edit
 
         <div class="d-flex justify-content-between fw-bold fs-5">
           <span>Total</span>
-          <span>₹<%= finalAmount %></span>
+          <span  id="finalAmount" >₹<%= finalAmount %></span>
         </div>
 
         <hr>
 
         <!-- PAYMENT METHODS -->
-        <form action="/place-order" method="POST">
+        <!-- <form action="/place-order" method="POST"> -->
+          <form id="orderForm">
           <input type="hidden" name="redirectTo" value="/checkout">
 
           <input type="hidden" name="selectedAddress" id="selectedAddressInput">
@@ -227,7 +244,196 @@ Edit
 
   </div>
 </div>
+<!-- COUPON MODAL -->
+<div class="modal fade" id="couponModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
 
+      <!-- HEADER -->
+      <div class="modal-header">
+        <h5 class="modal-title">Available Coupons</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body">
+        <div class="row">
+
+          <% coupons.forEach(coupon => { 
+
+          
+            let saveAmount = "";
+
+            if (coupon.discount_type === "flat") {
+              saveAmount = "₹" + coupon.discount_value;
+            } else if (coupon.discount_type === "percentage") {
+              saveAmount = coupon.discount_value + "%";
+
+              if (coupon.max_discount) {
+                saveAmount += " (Up to ₹" + coupon.max_discount + ")";
+              }
+            }
+
+            const isEligible = subtotal >= coupon.min_purchase;
+
+          %>
+
+          <div class="col-md-6 mb-3">
+            <div class="coupon-card p-3">
+
+              <!-- TOP -->
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="text-muted">
+                  Min Order: ₹<%= coupon.min_purchase %>
+                </small>
+
+                <span class="badge bg-success">
+                  SAVE <%= saveAmount %>
+                </span>
+              </div>
+
+              <!-- CODE -->
+              <h5 class="fw-bold"><%= coupon.code %></h5>
+
+              <!-- VALID DATE -->
+              <small class="text-muted d-block mb-2">
+                Valid till <%= new Date(coupon.end_date).toLocaleDateString() %>
+              </small>
+
+              <!-- BUTTON -->
+              <% if (isEligible) { %>
+
+                <button class="btn btn-outline-dark btn-sm copyBtn"
+                        data-code="<%= coupon.code %>">
+                  COPY
+                </button>
+
+              <% } else { %>
+
+                <button class="btn btn-light btn-sm text-muted" disabled>
+                  Add ₹<%= coupon.min_purchase - subtotal %> more
+                </button>
+
+              <% } %>
+
+            </div>
+          </div>
+
+          <% }) %>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+
+document.querySelectorAll(".copyBtn").forEach(btn => {
+
+  btn.addEventListener("click", function () {
+
+    navigator.clipboard.writeText(this.dataset.code);
+
+    Swal.fire({
+      icon: "success",
+      title: "Copied!",
+      text: "Coupon code copied successfully",
+      timer: 1500,
+      showConfirmButton: false
+    });
+
+  });
+
+});
+
+const applyBtn = document.getElementById("applyCouponBtn");
+
+let couponApplied = false;
+
+applyBtn.addEventListener("click", async () => {
+
+  // REMOVE COUPON
+  if (couponApplied) {
+
+    const res = await fetch("/remove-coupon", {
+      method: "POST"
+    });
+
+    const data = await res.json();
+
+    document.getElementById("discount").innerText = "-₹0";
+    document.getElementById("finalAmount").innerText = "₹" + data.finalAmount;
+
+    applyBtn.innerText = "APPLY";
+    applyBtn.classList.remove("btn-danger");
+    applyBtn.classList.add("btn-outline-dark");
+
+    document.getElementById("couponInput").value = "";
+
+    couponApplied = false;
+
+    Swal.fire({
+      icon: "success",
+      title: "Coupon Removed"
+    });
+
+    return;
+  }
+
+  // APPLY COUPON
+  const code = document.getElementById("couponInput").value.trim();
+
+  if (!code) {
+    Swal.fire({
+      icon: "warning",
+      title: "Enter coupon code"
+    });
+    return;
+  }
+
+  const res = await fetch("/apply-coupon", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ code })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+
+    document.getElementById("discount").innerText = "-₹" + data.discount;
+
+    document.getElementById("finalAmount").innerText =
+      "₹" + data.finalAmount;
+
+    applyBtn.innerText = "REMOVE";
+
+    applyBtn.classList.remove("btn-outline-dark");
+
+    applyBtn.classList.add("btn-danger");
+
+    couponApplied = true;
+
+    Swal.fire({
+      icon: "success",
+      title: "Coupon Applied"
+    });
+
+  } else {
+
+    Swal.fire({
+      icon: "error",
+      title: data.message
+    });
+
+  }
+
+});
+
+</script>
 
 <script>
   // Automatically set selected address into hidden input
@@ -359,6 +565,142 @@ Update Address
 </div>
 </div>
 </div>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+
+<script>
+document.getElementById("orderForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const selectedAddress = document.getElementById("selectedAddressInput").value;
+
+  if (!selectedAddress) {
+      Swal.fire("Select an address");
+    return;
+  }
+
+  const paymentMethod = document.querySelector("input[name='paymentMethod']:checked").value;
+
+// COD
+if (paymentMethod === "COD") {
+
+  window.location.href =
+    "/place-order-cod?addressId=" + selectedAddress;
+
+  return;
+}
+
+// WALLET
+if (paymentMethod === "Wallet") {
+
+  window.location.href =
+    "/place-order-wallet?addressId=" + selectedAddress;
+
+  return;
+}
+
+// ONLINE PAYMENT
+const res = await fetch("/place-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ selectedAddress })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+   
+const options = {
+
+  key: "<%= process.env.RAZORPAY_KEY_ID %>",
+  amount: data.razorpayOrder.amount,
+  currency: "INR",
+  order_id: data.razorpayOrder.id,
+
+  handler: async function (response) {
+
+    const verifyRes = await fetch("/verify-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ...response,
+        addressId: selectedAddress,
+         orderId: data.orderId
+      })
+    });
+
+    const verifyData = await verifyRes.json();
+
+    if (verifyData.success) {
+
+      window.location.href =
+        "/order-success/" + verifyData.orderId;
+
+    } else {
+
+      window.location.href =
+        "/order-failure?error=verification_failed";
+
+    }
+  },
+
+  modal: {
+
+    ondismiss: async function () {
+   await fetch("/update-payment-failed", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        orderId: data.orderId
+      })
+
+    });   
+
+window.location.href =
+  "/order-failure?error=payment_cancelled&orderId=" + data.orderId;
+
+    }
+  }
+
+};
+    const rzp = new Razorpay(options);
+
+
+rzp.on("payment.failed", async function(response) {
+ await fetch("/update-payment-failed", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      orderId: data.orderId
+    })
+
+  });
+ window.location.href =
+  "/order-failure?error=" +
+  encodeURIComponent(response.error.description) +
+  "&orderId=" + data.orderId;
+  
+});
+    rzp.open();
+  }
+});
+</script>
+
+
 <script>
 
 
@@ -519,8 +861,29 @@ e.preventDefault();
 })
 
 </script>
+
 <!-- Include SweetAlert before using it -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<% if (checkoutError) { %>
+<script>
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: '<%=checkoutError %>',
+     timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
+
+
+
+
+
+
+
 
 <% if(messageAdded){ %>
 <script>
@@ -545,6 +908,27 @@ e.preventDefault();
   });
 </script>
 <% } %>
+<style>
+.coupon-card {
+  border: 1px dashed #ddd;
+  border-radius: 12px;
+  background: #fff;
+  position: relative;
+  transition: 0.3s;
+}
 
+.coupon-card:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
 
+.coupon-card h5 {
+  letter-spacing: 1px;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 20px;
+}
+</style>
 <%- include("../partials/user/footer") %>

@@ -1,9 +1,596 @@
 <%-include("../../views/partials/admin/header")%>
 
-<section class="content-main">
-  <div class="content-header">
-    <h2 class="content-title card-title">Dashboard</h2>
-  </div>
+
+
+<style>
+:root{
+    --primary:#111827;
+    --secondary:#374151;
+    --gold:#d4af37;
+    --gold-dark:#b89225;
+    --bg:#f8fafc;
+    --white:#fff;
+    --border:#e5e7eb;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --shadow:0 10px 25px rgba(0,0,0,.08);
+    --radius:18px;
+}
+
+body{
+    background:var(--bg);
+    font-family:'Montserrat',sans-serif;
+}
+
+.dashboard-container{
+    max-width:1400px;
+    margin:90px auto 50px;
+    padding:0 25px;
+}
+
+.page-title{
+    font-size:2.4rem;
+    font-weight:700;
+    color:var(--primary);
+    margin-bottom:35px;
+    text-align:center;
+    letter-spacing:1px;
+}
+
+.filter-card{
+    background:#fff;
+    padding:25px;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    margin-bottom:35px;
+}
+
+.btn-gold{
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    transition:.3s;
+}
+
+.btn-gold:hover{
+    background:var(--gold-dark);
+    color:#fff;
+}
+
+.dashboard-card{
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:25px;
+    margin-bottom:30px;
+}
+
+.dashboard-card h5{
+    font-weight:700;
+    color:var(--primary);
+    margin-bottom:20px;
+    border-left:5px solid var(--gold);
+    padding-left:12px;
+}
+
+.chart-container{
+    position:relative;
+    height:420px;
+}
+
+.top-list{
+    margin:0;
+    padding:0;
+    list-style:none;
+}
+
+.top-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 0;
+    border-bottom:1px solid var(--border);
+}
+
+.top-item:last-child{
+    border-bottom:none;
+}
+
+.rank{
+    width:40px;
+    height:40px;
+    background:var(--gold);
+    color:#fff;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:700;
+}
+
+.product-info{
+    flex:1;
+    margin-left:15px;
+}
+
+.product-name{
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:3px;
+}
+
+.product-sales{
+    color:var(--muted);
+    font-size:.9rem;
+}
+
+.badge-sold{
+    background:#f3f4f6;
+    color:#111827;
+    padding:8px 14px;
+    border-radius:30px;
+    font-weight:600;
+}
+
+@media(max-width:992px){
+
+.dashboard-container{
+margin-top:75px;
+}
+
+.chart-container{
+height:320px;
+}
+
+.page-title{
+font-size:2rem;
+}
+
+}
+</style>
+
+<div class="dashboard-container">
+
+<h2 class="page-title">
+FootChic Dashboard
+</h2>
+
+<div class="filter-card">
+
+<div class="row g-3 align-items-end">
+
+<div class="col-md-3">
+
+<label class="form-label fw-semibold">
+Filter
+</label>
+
+<select id="timeFilter" class="form-select">
+
+<option value="daily" <%= filter==="daily"?"selected":"" %>>
+Today
+</option>
+
+<option value="weekly" <%= filter==="weekly"?"selected":"" %>>
+Weekly
+</option>
+
+<option value="monthly" <%= filter==="monthly"?"selected":"" %>>
+Monthly
+</option>
+
+<option value="yearly" <%= filter==="yearly"?"selected":"" %>>
+Yearly
+</option>
+
+<option value="custom" <%= filter==="custom"?"selected":"" %>>
+Custom Range
+</option>
+
+</select>
+
+</div>
+
+<div class="col-md-3 custom-range"
+style="display:<%= filter==='custom'?'block':'none' %>">
+
+<label class="form-label fw-semibold">
+Start Date
+</label>
+
+<input
+type="date"
+id="startDate"
+class="form-control"
+value="<%= startDate %>">
+
+</div>
+
+<div class="col-md-3 custom-range"
+style="display:<%= filter==='custom'?'block':'none' %>">
+
+<label class="form-label fw-semibold">
+End Date
+</label>
+
+<input
+type="date"
+id="endDate"
+class="form-control"
+value="<%= endDate %>">
+
+</div>
+
+<div class="col-md-3">
+
+<button
+class="btn btn-gold w-100"
+onclick="updateDashboard()">
+
+Apply Filter
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="dashboard-card">
+
+<h5>
+Sales Overview
+</h5>
+
+<div class="chart-container">
+
+<canvas id="salesChart"></canvas>
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col-lg-6">
+
+<div class="dashboard-card">
+
+<h5>
+
+Top Selling Products
+
+</h5>
+
+<ul class="top-list">
+
+<% topProducts.forEach((product,index)=>{ %>
+
+<li class="top-item">
+
+<div class="rank">
+
+<%= index+1 %>
+
+</div>
+
+<div class="product-info">
+
+<div class="product-name">
+
+<%= product.product_name %>
+
+</div>
+
+<div class="product-sales">
+
+Total Sold :
+<%= product.totalSold %>
+
+</div>
+
+</div>
+
+<span class="badge-sold">
+
+<%= product.totalSold %>
+
+</span>
+
+</li>
+
+<% }) %>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="col-lg-6">
+
+<div class="dashboard-card">
+
+<h5>
+
+Top Selling Categories
+
+</h5>
+
+<ul class="top-list">
+
+<% topCategories.forEach((category,index)=>{ %>
+
+<li class="top-item">
+
+<div class="rank">
+
+<%= index+1 %>
+
+</div>
+
+<div class="product-info">
+
+<div class="product-name">
+
+<%= category.category_name %>
+
+</div>
+
+<div class="product-sales">
+
+Total Sold :
+<%= category.totalSold %>
+
+</div>
+
+</div>
+
+<span class="badge-sold">
+
+<%= category.totalSold %>
+
+</span>
+
+</li>
+
+<% }) %>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const salesData = <%- JSON.stringify(salesData) %>;
+const labels = <%- JSON.stringify(labels) %>;
+
+const ctx = document.getElementById("salesChart").getContext("2d");
+
+let salesChart = new Chart(ctx,{
+
+    type:"line",
+
+    data:{
+
+        labels:labels,
+
+        datasets:[{
+
+            label:"Sales (₹)",
+
+            data:salesData,
+
+            borderColor:"#d4af37",
+
+            backgroundColor:"rgba(212,175,55,.12)",
+
+            borderWidth:3,
+
+            tension:.4,
+
+            fill:true,
+
+            pointRadius:5,
+
+            pointHoverRadius:7,
+
+            pointBackgroundColor:"#fff",
+
+            pointBorderColor:"#d4af37",
+
+            pointBorderWidth:3
+
+        }]
+
+    },
+
+    options:{
+
+        responsive:true,
+
+        maintainAspectRatio:false,
+
+        interaction:{
+            intersect:false,
+            mode:"index"
+        },
+
+        plugins:{
+
+            legend:{
+                display:false
+            }
+
+        },
+
+        scales:{
+
+            x:{
+
+                grid:{
+                    display:false
+                },
+
+                ticks:{
+                    color:"#6b7280"
+                }
+
+            },
+
+            y:{
+
+                beginAtZero:true,
+
+                ticks:{
+                    color:"#6b7280"
+                },
+
+                grid:{
+                    color:"#edf2f7"
+                }
+
+            }
+
+        }
+
+    }
+
+});
+
+document.getElementById("timeFilter").addEventListener("change",function(){
+
+    const customFields=document.querySelectorAll(".custom-range");
+
+    customFields.forEach(field=>{
+
+        field.style.display=this.value==="custom"
+        ? "block"
+        : "none";
+
+    });
+
+});
+
+async function updateDashboard(){
+
+    const filter=document.getElementById("timeFilter").value;
+
+    const startDate=document.getElementById("startDate").value;
+
+    const endDate=document.getElementById("endDate").value;
+
+    try{
+
+        const response=await fetch(
+        `/admin/dashboard-data?filter=${filter}&startDate=${startDate}&endDate=${endDate}`
+        );
+
+        const data=await response.json();
+
+        salesChart.data.labels=data.labels;
+
+        salesChart.data.datasets[0].data=data.salesData;
+
+        salesChart.update();
+
+        if(data.topProducts){
+
+            const productList=document.querySelectorAll(".top-list")[0];
+
+            productList.innerHTML="";
+
+            data.topProducts.forEach((product,index)=>{
+
+                productList.innerHTML+=`
+
+                <li class="top-item">
+
+                    <div class="rank">${index+1}</div>
+
+                    <div class="product-info">
+
+                        <div class="product-name">
+                            ${product.product_name}
+                        </div>
+
+                        <div class="product-sales">
+                            Total Sold : ${product.totalSold}
+                        </div>
+
+                    </div>
+
+                    <span class="badge-sold">
+
+                        ${product.totalSold}
+
+                    </span>
+
+                </li>
+
+                `;
+
+            });
+
+        }
+
+        if(data.topCategories){
+
+            const categoryList=document.querySelectorAll(".top-list")[1];
+
+            categoryList.innerHTML="";
+
+            data.topCategories.forEach((category,index)=>{
+
+                categoryList.innerHTML+=`
+
+                <li class="top-item">
+
+                    <div class="rank">${index+1}</div>
+
+                    <div class="product-info">
+
+                        <div class="product-name">
+                            ${category.category_name}
+                        </div>
+
+                        <div class="product-sales">
+                            Total Sold : ${category.totalSold}
+                        </div>
+
+                    </div>
+
+                    <span class="badge-sold">
+
+                        ${category.totalSold}
+
+                    </span>
+
+                </li>
+
+                `;
+
+            });
+
+        }
+
+    }
+
+    catch(error){
+
+        console.log(error);
+
+    }
+
+}
+
+</script>
 
  
 

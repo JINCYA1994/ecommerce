@@ -1,0 +1,339 @@
+<%- include("../../views/partials/user/header") %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Wishlist | FootChic</title>
+
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/style.css">
+
+<style>
+
+body{
+background:#f6f2ea;
+font-family:"Segoe UI",sans-serif;
+}
+
+.wishlist-wrapper{
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.wishlist-card{
+width:1000px;
+background:#fff;
+border-radius:25px;
+padding:40px;
+box-shadow:0 10px 30px rgba(0,0,0,0.08);
+}
+
+.wishlist-card h2{
+margin-bottom:30px;
+font-size:28px;
+}
+
+th{
+background:#f1ece4;
+padding:12px;
+font-weight:600;
+}
+
+td{
+padding:15px;
+vertical-align:middle;
+}
+
+.product-img{
+width:60px;
+height:60px;
+object-fit:cover;
+border-radius:8px;
+}
+
+.remove-btn{
+border:1px solid red;
+background:#fff;
+color:red;
+padding:6px 14px;
+border-radius:20px;
+font-size:14px;
+}
+
+.cart-btn{
+background:#c99a5b;
+border:none;
+padding:8px 16px;
+border-radius:20px;
+color:#fff;
+font-size:14px;
+}
+
+.cart-btn:hover{
+background:#b88646;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="wishlist-wrapper">
+
+<div class="wishlist-card">
+
+<h2>My Wishlist ❤️</h2>
+
+<% if(wishlist && wishlist.length > 0){ %>
+
+<table class="table">
+
+<thead>
+<tr>
+<th>Image</th>
+<th>Name</th>
+<th>Price</th>
+<th>Add To Cart</th>
+<th>Remove</th>
+</tr>
+</thead>
+
+<tbody>
+
+<% wishlist.forEach(item=>{ %>
+
+<tr>
+
+<td>
+<img src="<%= item.productId.variants[0].images[0] %>" class="product-img">
+</td>
+
+<td>
+<%= item.productId.product_name%>
+</td>
+
+<td>
+₹<%= item.productId.variants[0].price %>
+</td>
+
+<td>
+    <button 
+  class="cart-btn add-cart" 
+  data-id="<%= item._id %>"
+  data-product-id="<%= item.productId._id %>"
+  data-variant-id="<%= item.var_id %>"
+  data-size="<%= item.size %>">
+  Add to Cart
+</button>
+<!-- <button class="cart-btn add-cart" data-id="<%= item._id %>">
+Add to Cart
+</button> -->
+</td>
+
+<td>
+<button class="remove-btn remove-wishlist" data-id="<%= item._id %>">
+Remove
+</button>
+</td>
+
+</tr>
+
+<% }) %>
+
+</tbody>
+
+</table>
+
+<% } else { %>
+
+<div class="text-center">
+
+<h4>Your wishlist is empty ❤️</h4>
+
+<a href="/shop" class="btn btn-dark mt-3">
+Continue Shopping
+</a>
+
+</div>
+
+<% } %>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+const removeBtns = document.querySelectorAll(".remove-wishlist");
+
+removeBtns.forEach(btn=>{
+
+btn.addEventListener("click",async()=>{
+
+const id = btn.getAttribute("data-id");
+
+const result = await Swal.fire({
+title:"Remove Item?",
+text:"Remove this product from wishlist?",
+icon:"warning",
+
+showCancelButton:true
+});
+
+if(result.isConfirmed){
+
+const res = await fetch(`/wishlist/${id}`,{
+method:"DELETE"
+});
+
+const data = await res.json();
+
+if(data.success){
+
+btn.closest("tr").remove();
+
+// wait for DOM update
+setTimeout(() => {
+  const remainingRows = document.querySelectorAll("tbody tr");
+
+  if (remainingRows.length === 0) {
+    document.querySelector('.wishlist-card').innerHTML = `
+      <h2>My Wishlist ❤️</h2>
+      <div class="text-center">
+        <h4>Your wishlist is empty ❤️</h4>
+        <a href="/shop" class="btn btn-dark mt-3">
+          Continue Shopping
+        </a>
+      </div>
+    `;
+  }
+}, 0);
+const badge =
+document.getElementById(
+"wishlist-count"
+);
+
+badge.innerText = data.count;
+
+if(data.count<=0){
+
+badge.classList.add("d-none");
+
+}
+
+Swal.fire("Removed!","Item removed from wishlist","success");
+
+}
+
+}
+
+});
+
+});
+
+
+
+
+
+
+const cartBtns = document.querySelectorAll(".add-cart");
+
+cartBtns.forEach(btn => {
+
+  btn.addEventListener("click", async () => {
+
+    const itemId = btn.dataset.id;
+    const productId = btn.dataset.productId;
+    const variantId = btn.dataset.variantId;
+    const size = btn.dataset.size;
+
+    const res = await fetch("/cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        productId,
+        variantId,
+        size,
+        itemId   //  very important
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+
+      btn.closest("tr").remove();
+setTimeout(()=>{
+
+const rows =
+document.querySelectorAll("tbody tr");
+
+if(rows.length===0){
+
+document.querySelector(
+".wishlist-card"
+).innerHTML=`
+
+<h2>My Wishlist ❤️</h2>
+
+<div class="text-center">
+
+<h4>Your wishlist is empty ❤️</h4>
+
+<a href="/shop"
+class="btn btn-dark mt-3">
+
+Continue Shopping
+
+</a>
+
+</div>
+
+`;
+
+}
+
+},0);
+      //wishlist count update
+      const wishlistBadge = document.getElementById("wishlist-count");
+      wishlistBadge.innerText = data.wishlistCount;
+
+      if (data.wishlistCount <= 0) {
+        wishlistBadge.classList.add("d-none");
+      }
+
+      //  cart count update
+      const cartBadge = document.getElementById("cart-count");
+      cartBadge.innerText = data.cartCount;
+      cartBadge.classList.remove("d-none");
+
+      Swal.fire({
+        icon: "success",
+        title: "Added to cart"
+      });
+
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: data.message || "Error"
+      });
+    }
+
+  });
+
+});
+
+</script>
+
+</body>
+
+</html>
+
+<%- include("../../views/partials/user/footer") %>

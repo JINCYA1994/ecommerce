@@ -1,0 +1,979 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+
+  .pagination {
+  margin-bottom: 0;
+}
+.pagination .page-link {
+    border-radius: 10px !important;
+    margin: 0 4px;
+    padding: 8px 14px;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    color: #333;
+  }
+
+  .pagination .page-link:hover {
+    background: #f1f1f1;
+  }
+
+  .pagination .active .page-link {
+    background: #2d7f3a !important;
+    border-color: #2d7f3a !important;
+    color: white !important;
+  }
+
+
+
+
+
+
+
+
+/* CARD */
+.custom-card{
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+/* TABLE */
+.custom-table{
+    margin-bottom: 0;
+}
+
+/* TABLE HEADER */
+.custom-table thead{
+    background: #111;
+}
+
+.custom-table thead th{
+    background: #111 !important;
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 22px 15px;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+/* TABLE BODY */
+.custom-table tbody td{
+    padding: 24px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+    font-size: 15px;
+    color: #444;
+}
+
+/* HOVER */
+.custom-table tbody tr:hover{
+    background: #fafafa;
+}
+
+/* TITLE */
+.page-title{
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 0;
+}
+
+/* BUTTON */
+.btn-round{
+    border-radius: 14px;
+    padding: 12px 24px;
+    font-weight: 600;
+}
+
+.btn-warning{
+    background: #d4a017 !important;
+    border: none !important;
+    color: white !important;
+}
+
+/* STATUS BADGE */
+.badge-status{
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ACTION BUTTONS */
+.action-btns .btn{
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 14px;
+    margin: 2px;
+}
+/* MODAL */
+
+.modal-content{
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.15);
+}
+
+.modal-header{
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 22px 25px;
+}
+
+.modal-title{
+    color: #111;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.modal-body{
+    padding: 25px;
+    background: #fafafa;
+}
+
+.modal-footer{
+    border-top: 1px solid #eee;
+    padding: 18px 25px;
+    background: #fff;
+}
+
+/* INPUT */
+
+.modal .form-control,
+.modal .form-select{
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    padding: 12px 14px;
+    box-shadow: none !important;
+}
+
+.modal .form-control:focus,
+.modal .form-select:focus{
+    border-color: #d4a017;
+}
+
+/* LABEL */
+
+.modal label{
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #222;
+}
+
+/* BUTTON */
+
+.modal .btn-success{
+    background: #111 !important;
+    border: none !important;
+    border-radius: 12px;
+    padding: 10px 22px;
+    font-weight: 600;
+}
+
+.modal .btn-secondary{
+    border-radius: 12px;
+    padding: 10px 20px;
+}
+</style>
+<div class="container mt-5 pt-4">
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+  <div>
+    <h3 class="page-title mb-0">
+      Offer Management
+    </h3>
+  </div>
+
+  <div class="d-flex gap-2 align-items-center">
+
+    <form action="/admin/offers"
+          method="GET"
+          class="d-flex gap-2 align-items-center">
+
+      <input
+        type="text"
+        name="search"
+        class="form-control"
+        placeholder="Search offer..."
+        value="<%= search || '' %>"
+        style="width:280px;"
+      >
+
+      <button class="btn btn-dark px-3" type="submit">
+        <i class="fa fa-search"></i>
+      </button>
+
+      <a href="/admin/offers"
+         class="btn btn-secondary px-3">
+
+        Clear
+
+      </a>
+
+    </form>
+
+    <button class="btn btn-warning btn-round"
+            data-bs-toggle="modal"
+            data-bs-target="#offerModal">
+
+      <i class="fas fa-plus me-2"></i>
+
+      Create New Offer
+
+    </button>
+
+  </div>
+
+</div>
+  <!-- Table -->
+  <div class="custom-card">
+    <div class="table-responsive">
+      <table class="table custom-table text-center align-middle mb-0">
+
+        <thead>
+          <tr>
+            <th>Offer Name</th>
+            <th>Type</th>
+            <th>Discount</th>
+            <th>StartDate</th>
+            <th>Expiry</th>
+               <th>Target</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% if(offers && offers.length > 0){ %>
+
+            <% offers.forEach(offer => { %>
+
+              <tr>
+                <td class="fw-bold"><%= offer.offerTitle %></td>
+
+                
+                <td>
+  <%= offer.offerType %>
+</td>
+
+               <td>
+   <%= offer.discountPercentage%>
+</td>
+
+<td>
+                  <%= new Date(offer.startDate).toDateString() %>
+                </td>
+                
+<td>
+                  <%= new Date(offer.endDate).toDateString() %>
+                </td>
+
+<td>
+
+  <% if(offer.offerType === "PRODUCT"){ %>
+
+      <%= offer.product_id?.product_name %>
+
+  <% } else { %>
+
+      <%= offer.category_id?.name %>
+
+  <% } %>
+
+</td>
+
+
+
+
+                <!-- STATUS -->
+                <td>
+                  <% 
+                    const today = new Date();
+                    let status = "Active";
+
+                    if (!offer.isActive) {
+                      status = "InActive";
+                    } else if (today > new Date(offer.endDate)) {
+                      status = "Expired";
+                    }
+                  %>
+
+                  <% if(status === "Active"){ %>
+                    <span class="badge bg-success badge-status">Active</span>
+                  <% } else if(status === "Expired"){ %>
+                    <span class="badge bg-danger badge-status">Expired</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary badge-status">InActive</span>
+                  <% } %>
+                </td>
+
+                <!-- ACTIONS -->
+                <td class="action-btns">
+                <button
+  class="btn btn-sm btn-primary btn-round edit-btn"
+
+  data-id="<%= offer._id %>"
+  data-title="<%= offer.offerTitle %>"
+  data-type="<%= offer.offerType %>"
+  data-discount="<%= offer.discountPercentage %>"
+  data-start="<%= new Date(offer.startDate).toISOString().split('T')[0] %>"
+  data-end="<%= new Date(offer.endDate).toISOString().split('T')[0] %>"
+  data-product="<%= offer.product_id?._id || '' %>"
+  data-category="<%= offer.category_id?._id || '' %>"
+  data-active="<%= offer.isActive %>"
+
+>
+  Edit
+</button>
+            
+
+                  <form method="POST"
+                    action="/admin/offers/delete/<%= offer._id %>"
+                    class="d-inline delete-form">
+                    <button class="btn btn-sm btn-danger btn-round">
+                      Delete
+                    </button>
+                  </form>
+                </td>
+
+              </tr>
+
+            <% }) %>
+
+          <% } else { %>
+
+            <tr>
+              <td colspan="8" class="text-center text-muted py-4">
+                No Offer found
+              </td>
+            </tr>
+
+          <% } %>
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+
+      <% if(currentPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link"
+            href="/admin/offers?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>">
+            Previous
+          </a>
+        </li>
+      <% } %>
+
+      <% for(let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link"
+            href="/admin/offers?page=<%= i %><%= search ? '&search=' + search : '' %>">
+            <%= i %>
+          </a>
+        </li>
+      <% } %>
+
+      <% if(currentPage < totalPages) { %>
+        <li class="page-item">
+          <a class="page-link"
+            href="/admin/offers?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>">
+            Next
+          </a>
+        </li>
+      <% } %>
+
+    </ul>
+  </nav>
+
+</div>
+
+<!-- OFFER MODAL -->
+<div class="modal fade" id="offerModal" tabindex="-1">
+
+  <div class="modal-dialog modal-lg">
+
+    <div class="modal-content">
+
+      <form id="offerForm">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+
+          <h5 class="modal-title" id="offerModalTitle">
+            Create Offer
+          </h5>
+
+          <button type="button"
+            class="btn-close"
+            data-bs-dismiss="modal">
+          </button>
+
+        </div>
+
+        <!-- BODY -->
+        <div class="modal-body">
+
+          <input type="hidden" id="offerId">
+
+          <div class="row g-3">
+
+            <!-- OFFER TITLE -->
+            <div class="col-md-6">
+
+              <label>Offer Title</label>
+
+              <input type="text"
+                id="offerTitle"
+                class="form-control">
+
+              <small class="text-danger"
+                id="offerTitleError"></small>
+
+            </div>
+
+            <!-- OFFER TYPE -->
+            <div class="col-md-6">
+
+              <label>Offer Type</label>
+
+              <select id="offerType"
+                class="form-control">
+
+                <option value="">
+                  Select Type
+                </option>
+
+                <option value="PRODUCT">
+                  Product Offer
+                </option>
+
+                <option value="CATEGORY">
+                  Category Offer
+                </option>
+
+              </select>
+
+              <small class="text-danger"
+                id="offerTypeError"></small>
+
+            </div>
+
+    
+            <!-- DISCOUNT VALUE -->
+            <div class="col-md-6">
+
+              <label>Discount Percentage (%)</label>
+
+              <input type="number"
+                id="discountPercentage"
+                class="form-control"
+                min="0">
+
+              <small class="text-danger"
+                id="discountPercentageError"></small>
+
+            </div>
+
+            <!-- PRODUCT FIELD -->
+            <div class="col-md-6 d-none"
+              id="productField">
+
+              <label>Select Product</label>
+
+              <select id="product_id"
+                class="form-control">
+
+                <option value="">
+                  Select Product
+                </option>
+
+                <% products.forEach(product => { %>
+
+                  <option value="<%= product._id %>">
+
+                    <%= product.product_name %>
+
+                  </option>
+
+                <% }) %>
+
+              </select>
+
+              <small class="text-danger"
+                id="productError"></small>
+
+            </div>
+
+            <!-- CATEGORY FIELD -->
+            <div class="col-md-6 d-none"
+              id="categoryField">
+
+              <label>Select Category</label>
+
+              <select id="category_id"
+                class="form-control">
+
+                <option value="">
+                  Select Category
+                </option>
+
+                <% categories.forEach(category => { %>
+
+                  <option value="<%= category._id %>">
+
+                    <%= category.name %>
+
+                  </option>
+
+                <% }) %>
+
+              </select>
+
+              <small class="text-danger"
+                id="categoryError"></small>
+
+            </div>
+
+            <!-- START DATE -->
+            <div class="col-md-6">
+
+              <label>Start Date</label>
+
+              <input type="date"
+                id="startDate"
+                class="form-control">
+
+              <small class="text-danger"
+                id="startDateError"></small>
+
+            </div>
+
+            <!-- END DATE -->
+            <div class="col-md-6">
+
+              <label>Expiry Date</label>
+
+              <input type="date"
+                id="endDate"
+                class="form-control">
+
+              <small class="text-danger"
+                id="endDateError"></small>
+
+            </div>
+
+            <!-- STATUS -->
+            <div class="col-12">
+
+              <div class="form-check mt-2">
+
+                <input type="checkbox"
+                  id="isActive"
+                  class="form-check-input"
+                  checked>
+
+                <label class="form-check-label"
+                  for="isActive">
+
+                  Offer is Active
+
+                </label>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer">
+
+          <button type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal">
+
+            Cancel
+
+          </button>
+
+          <button type="submit"
+            class="btn btn-success"    id="saveOfferBtn">
+
+            Save Offer
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+       
+
+
+
+</div>
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+document.getElementById("offerType")
+.addEventListener("change", function(){
+
+    const offerType = this.value;
+
+    const productField =
+    document.getElementById("productField");
+
+    const categoryField =
+    document.getElementById("categoryField");
+
+    productField.classList.add("d-none");
+    categoryField.classList.add("d-none");
+
+    if(offerType === "PRODUCT"){
+
+        productField.classList.remove("d-none");
+
+    }
+
+    if(offerType === "CATEGORY"){
+
+        categoryField.classList.remove("d-none");
+
+    }
+
+});
+
+</script>
+<script>
+document.addEventListener("submit", function (e) {
+  if (e.target.classList.contains("delete-form")) {
+    e.preventDefault();
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Delete thisOffer?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then(result => {
+      if (result.isConfirmed) {
+        e.target.submit();
+      }
+    });
+
+
+
+
+  }
+});
+</script>
+
+<script>
+
+document.querySelectorAll(".edit-btn")
+.forEach(button => {
+
+    button.addEventListener("click", function(){
+
+        // OPEN MODAL
+        const modal =
+        new bootstrap.Modal(
+            document.getElementById("offerModal")
+        );
+
+        modal.show();
+
+        // CHANGE TITLE
+        document.getElementById("offerModalTitle")
+        .innerText = "Edit Offer";
+
+        document.getElementById("saveOfferBtn")
+        .innerText = "Update Offer";
+
+        // SET VALUES
+        document.getElementById("offerId").value =
+        this.dataset.id;
+
+        document.getElementById("offerTitle").value =
+        this.dataset.title;
+
+        document.getElementById("offerType").value =
+        this.dataset.type;
+
+        document.getElementById("discountPercentage").value =
+        this.dataset.discount;
+
+        document.getElementById("startDate").value =
+        this.dataset.start;
+
+        document.getElementById("endDate").value =
+        this.dataset.end;
+
+        document.getElementById("isActive").checked =
+        this.dataset.active === "true";
+
+        // SHOW FIELD
+        const productField =
+        document.getElementById("productField");
+
+        const categoryField =
+        document.getElementById("categoryField");
+
+        productField.classList.add("d-none");
+        categoryField.classList.add("d-none");
+
+        if(this.dataset.type === "PRODUCT"){
+
+            productField.classList.remove("d-none");
+
+            document.getElementById("product_id").value =
+            this.dataset.product;
+
+        }
+
+        if(this.dataset.type === "CATEGORY"){
+
+            categoryField.classList.remove("d-none");
+
+            document.getElementById("category_id").value =
+            this.dataset.category;
+
+        }
+
+    });
+
+});
+
+</script>
+
+<script>
+
+document.getElementById("offerForm")
+.addEventListener("submit", async function(e){
+
+    e.preventDefault();
+
+    let isValid = true;
+
+    const offerTitle =
+    document.getElementById("offerTitle").value.trim();
+
+    const offerType =
+    document.getElementById("offerType").value;
+
+   
+    const discountPercentage =
+    document.getElementById("discountPercentage").value;
+
+    const startDate =
+    document.getElementById("startDate").value;
+
+    const endDate =
+    document.getElementById("endDate").value;
+
+    const isActive =
+    document.getElementById("isActive").checked;
+
+    // CLEAR ERRORS
+    document.querySelectorAll("small.text-danger")
+    .forEach(el => el.innerText = "");
+
+    // VALIDATION
+
+    if(offerTitle === ""){
+
+        document.getElementById("offerTitleError")
+        .innerText = "Offer title required";
+
+        isValid = false;
+    }
+
+    if(discountPercentage === "" || discountPercentage<= 0){
+
+        document.getElementById("discountPercentageError")
+        .innerText = "Enter valid discount";
+
+        isValid = false;
+    }
+
+    if(
+        
+        discountPercentage > 100
+    ){
+
+        document.getElementById("discountPercentageError")
+        .innerText = "Cannot exceed 100%";
+
+        isValid = false;
+    }
+if(offerType === "PRODUCT" &&
+   !document.getElementById("product_id").value){
+
+    document.getElementById("productError")
+    .innerText = "Select a product";
+
+    isValid = false;
+}
+
+if(offerType === "CATEGORY" &&
+   !document.getElementById("category_id").value){
+
+    document.getElementById("categoryError")
+    .innerText = "Select a category";
+
+    isValid = false;
+}
+    if(!startDate){
+
+        document.getElementById("startDateError")
+        .innerText = "Select start date";
+
+        isValid = false;
+    }
+
+    if(!endDate){
+
+        document.getElementById("endDateError")
+        .innerText = "Select end date";
+
+        isValid = false;
+
+    } else {
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if(end <= start){
+
+            document.getElementById("endDateError")
+            .innerText =
+            "End date must be after start date";
+
+            isValid = false;
+        }
+    }
+
+    if(!isValid) return;
+
+    // AJAX
+
+    try {
+const offerId =
+document.getElementById("offerId").value;
+
+const url = offerId
+? `/admin/offers/edit/${offerId}`
+: "/admin/offers/add";
+
+const response = await fetch(url, {
+      
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                offerTitle,
+                offerType,
+               discountPercentage,
+                startDate,
+                endDate,
+                isActive, 
+                product_id:
+    document.getElementById("product_id").value,
+
+    category_id:
+    document.getElementById("category_id").value,
+
+            })
+        });
+
+        const data = await response.json();
+
+        if(data.success){
+
+            Swal.fire({
+
+                icon: "success",
+                title: "Success",
+                text: data.message,
+                confirmButtonColor: "#28a745"
+
+            }).then(() => {
+
+                location.reload();
+            });
+
+        } else {
+
+            Swal.fire({
+
+                icon: "error",
+                title: "Error",
+                text: data.message,
+                confirmButtonColor: "#d33"
+
+            });
+        }
+
+    } catch(err){
+
+        console.log(err);
+
+        Swal.fire({
+
+            icon: "error",
+            title: "Error",
+            text: "Something went wrong"
+
+        });
+    }
+
+});
+
+</script>
+
+<% if (successMessage) { %>
+<script>
+  Swal.fire({
+    icon: 'success',
+    title: 'Success',
+    text: '<%= successMessage %>',
+    timer: 2000,
+    showConfirmButton: false
+  });
+</script>
+<% } %>
+
+<% if (errorMessage) { %>
+<script>
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: '<%= errorMessage %>'
+  });
+</script>
+<% } %>
+<%- include("../../views/partials/admin/footer") %> 

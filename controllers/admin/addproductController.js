@@ -55,9 +55,9 @@ if (
         if (!v.price || isNaN(v.price) || Number(v.price) <= 0) {
           errors.push(`Variant ${i + 1}: Price must be a positive number.`);
         }
-        if (v.discountPrice && Number(v.discountPrice) >= Number(v.price)) {
-          errors.push(`Variant ${i + 1}: Discount must be less than price.`);
-        }
+        // if (v.discountPrice && Number(v.discountPrice) >= Number(v.price)) {
+        //   errors.push(`Variant ${i + 1}: Discount must be less than price.`);
+        // }
         if (!v.size || isNaN(v.size) || Number(v.size) <= 0) {
           errors.push(`Variant ${i + 1}: Invalid size.`);
         }
@@ -107,7 +107,7 @@ if (
         tempVariants[colorKey] = {
           color: variant.color.trim(),
           price: Number(variant.price),
-          discount_price: Number(variant.discountPrice),
+          // discount_price: Number(variant.discountPrice),
           images,
           sizes: [sizeObj],
         };

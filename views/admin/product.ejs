@@ -474,5 +474,18 @@ document.addEventListener("submit", function (e) {
   }
 });
 </script>
+<% if(message){ %>
 
+<script>
+
+Swal.fire({
+  icon: '<%= message.type %>',
+  title: '<%= message.text %>',
+  timer: 1500,
+  showConfirmButton: false
+});
+
+</script>
+
+<% } %>
 <%- include("../../views/partials/admin/footer") %>

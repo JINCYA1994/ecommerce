@@ -40,7 +40,7 @@ const getEditProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { productId, variantId, sizeId } = req.params;
-    const { product_name, product_description, category, color, price, discount_price, size, stock } = req.body;
+    const { product_name, product_description, category, color, price,  size, stock } = req.body;
 
     console.log("Update Body:", req.body);
     if (req.files) console.log("Update Files:", Object.keys(req.files));
@@ -76,9 +76,9 @@ const updateProduct = async (req, res) => {
       errors.price = 'Price must be greater than 0';
     }
 
-    if (discount_price && (Number(discount_price) < 0 || Number(discount_price) > Number(price))) {
-      errors.discount_price = 'Invalid discount price';
-    }
+    // if (discount_price && (Number(discount_price) < 0 || Number(discount_price) > Number(price))) {
+    //   errors.discount_price = 'Invalid discount price';
+    // }
 
     const sizeNumber = Number(size);
     if (!size || isNaN(sizeNumber) || sizeNumber < 6 || sizeNumber > 10) {
@@ -140,7 +140,7 @@ if (totalImages < 4) {
     product.category_id = category;
     variant.color = color.trim();
     variant.price = Number(price);
-    variant.discount_price = discount_price ? Number(discount_price) : 0;
+    // variant.discount_price = discount_price ? Number(discount_price) : 0;
     sizeObj.size = Number(size);
     sizeObj.stock = Number(stock);
 

@@ -2,8 +2,11 @@
  const Order=require('../../models/orderSchema')
  const OrderItem=require('../../models/orderItemSchema')
  const Product = require('../../models/productSchema');
- 
- 
+ const Wallet = require('../../models/walletSchema');
+ const Payment = require('../../models/paymentSchema');
+const Coupon = require('../../models/couponSchema')
+const calculateOrderTotal =require("../../helpers/calculateOrderTotal");
+
  const getordersPage=async (req,res)=>{
 
 
@@ -179,56 +182,6 @@ const updateOrderStatus = async (orderId) => {
 
 
 
-// const updateOrderStatus = async (orderId) => {
-
-//   const items = await OrderItem.find({ order_id: orderId });
-//   const statuses = items.map(item => item.status);
-
-//   let newStatus = "Processing";
-
-//   const allCancelled = statuses.every(s => s === "Cancelled");
-//   const allReturned = statuses.every(s => s === "Returned");
-//   const allDelivered = statuses.every(s => s === "Delivered");
-
-//   const someReturned = statuses.some(s => s === "Returned");
-//   const someDelivered = statuses.some(s => s === "Delivered");
-//   const someCancelled = statuses.some(s => s === "Cancelled");
-
-//   //  PRIORITY ORDER IMPORTANT
-
-//   if (allCancelled) {
-//     newStatus = "Cancelled";
-//   }
-
-//   else if (allReturned) {
-//     newStatus = "Returned";
-//   }
-
-//   else if (someReturned) {
-//     newStatus = "Partially Returned";
-//   }
-
-//   else if (allDelivered) {
-//     newStatus = "Delivered";
-//   }
-
-//   else if (someDelivered && someCancelled) {
-//     newStatus = "Partially Delivered";
-//   }
-
-//   else if (statuses.includes("Shipped")) {
-//     newStatus = "Shipped";
-//   }
-
-//   else {
-//     newStatus = "Processing";
-//   }
-
-//   await Order.findByIdAndUpdate(orderId, {
-//     status: newStatus
-//   });
-// };
-
 const viewOrderDetails = async (req, res) => {
   try {
 
@@ -282,52 +235,516 @@ const viewOrderDetails = async (req, res) => {
   }
 };
 
+// const handleReturn = async (req, res) => {
+//   try {
+//     const {  productId, action } = req.body;
+   
+//     const orderItem = await OrderItem.findById(productId);
+//     if (!orderItem) return res.redirect('/admin/orders');
+
+// const order = await Order.findById(orderItem.order_id);
+//     //  APPROVE
+//    if (action === "approve") {
+
+//   orderItem.status = "Returned";
+
+//   await orderItem.save();
+
+
+//   // NEW TOTALS
+
+//   const totals = await calculateOrderTotal(
+
+//     order,
+
+//     orderItem._id
+
+//   );
+
+
+//   // REFUND
+
+//   let refundAmount =
+
+//     orderItem.final_amount;
+
+
+//   // COUPON REMOVED ?
+
+//   if (
+
+//     order.coupon_discount > 0 &&
+
+//     order.coupons_id &&
+
+//     totals.couponDiscount === 0
+
+//   ) {
+
+//     refundAmount +=
+
+//       order.coupon_discount;
+
+//   }
+
+
+//   // PAYMENT CHECK
+
+//   const payment = await Payment.findById(
+
+//     order.payment_id
+
+//   );
+
+
+//   const shouldRefund =
+
+//     payment &&
+
+//     payment.payment_method !== "COD" &&
+
+//     payment.status === "Success";
+
+
+//   if (shouldRefund) {
+
+//     const wallet = await Wallet.findOne({
+
+//       userId: order.user_id
+
+//     });
+
+
+//     if (wallet) {
+
+//       wallet.balance += refundAmount;
+
+
+//       wallet.transactions.push({
+
+//         type: "credit",
+
+//         amount: refundAmount,
+
+//         description:
+
+//           `Refund for ${order.orderId}`,
+
+//         date: new Date()
+
+//       });
+
+
+//       await wallet.save();
+
+//     }
+
+//   }
+
+
+//   // STOCK RESTORE
+
+//   const product = await Product.findOne({
+
+//     "variants._id":
+
+//       orderItem.var_id
+
+//   });
+
+
+//   if (product) {
+
+//     const variant = product.variants.id(
+
+//       orderItem.var_id
+
+//     );
+
+
+//     const sizeObj = variant.sizes.find(
+
+//       s => s.size === orderItem.size
+
+//     );
+
+
+//     if (sizeObj) {
+
+//       sizeObj.stock +=
+
+//         orderItem.quantity;
+
+//     }
+
+
+//     await product.save();
+
+//   }
+
+
+//   // UPDATE ORDER TOTALS
+
+//   if (totals.subtotal === 0) {
+
+//     order.status = "Returned";
+
+//   }
+
+
+//   order.subtotal =
+
+//     totals.subtotal;
+
+
+//   order.shipping =
+
+//     totals.shipping;
+
+
+//   order.taxes =
+
+//     totals.taxes;
+
+
+//   order.coupon_discount =
+
+//     totals.couponDiscount;
+
+
+//   order.total_price =
+
+//     totals.total;
+
+
+//   if (
+
+//     totals.couponDiscount === 0
+
+//   ) {
+
+//     order.coupons_id = null;
+
+
+//     order.total_discount =
+
+//       order.offer_discount;
+
+//   }
+
+
+//   await order.save();
+
+// }
+//     //  REJECT
+//     else if (action === "reject") {
+//       orderItem.status = "Return Rejected";
+//       await orderItem.save();
+//     }
+
+//     await updateOrderStatus(orderItem.order_id);
+  
+//     res.redirect(`/admin/orders/${order.orderId}`);
+  
+//   }
+//  catch (error) {
+//     console.log(error);
+//     res.redirect('/admin/orders');
+//   }
+// };
+
 const handleReturn = async (req, res) => {
+
   try {
-    const { orderId, productId, action } = req.body;
+
+    const { productId, action } = req.body;
 
     const orderItem = await OrderItem.findById(productId);
-    if (!orderItem) return res.redirect('/admin/orders');
 
-    //  APPROVE
+    if (!orderItem) {
+
+      return res.redirect("/admin/orders");
+
+    }
+
+    const order = await Order.findById(
+
+      orderItem.order_id
+
+    );
+
+
+    // APPROVE
+
     if (action === "approve") {
 
       orderItem.status = "Returned";
+
       await orderItem.save();
 
-      // STOCK INCREMENT
-      const product = await Product.findOne({ 'variants._id': orderItem.var_id });
 
-      if (product) {
-        const variant = product.variants.id(orderItem.var_id);
+      // NEW TOTALS
 
-        const sizeObj = variant.sizes.find(
-          s => s.size === orderItem.size
-        );
+      const totals = await calculateOrderTotal(
 
-        if (sizeObj) sizeObj.stock += orderItem.quantity;
+        order,
 
-        await product.save();
+        orderItem._id
+
+      );
+
+
+      // REFUND
+
+      let refundAmount =
+
+        orderItem.final_amount || 0;
+
+
+      // COUPON REMOVED ?
+
+      // if (
+
+      //   order.coupon_discount > 0 &&
+
+      //   order.coupons_id &&
+
+      //   totals.couponDiscount === 0
+
+      // ) {
+
+      //   refundAmount +=
+
+      //     order.coupon_discount;
+
+      // }
+
+const shippingDifference =
+  totals.shipping - order.shipping;
+
+if (shippingDifference > 0) {
+  refundAmount -= shippingDifference;
+}
+
+if (totals.items.length === 0) {
+
+  refundAmount += order.shipping;
+
+}
+orderItem.refund_amount = refundAmount;
+await orderItem.save();
+      // PAYMENT CHECK
+
+      const payment = await Payment.findById(
+
+        order.payment_id
+
+      );
+
+
+      const shouldRefund =
+
+        payment &&
+
+        payment.payment_method !== "COD" &&
+
+        payment.status === "Success";
+
+
+      if (shouldRefund) {
+
+        const wallet = await Wallet.findOne({
+
+          userId: order.user_id
+
+        });
+
+
+        if (wallet) {
+
+          wallet.balance += refundAmount;
+
+
+          wallet.transactions.push({
+
+            type: "credit",
+
+            amount: refundAmount,
+
+            description:
+
+              `Refund for ${order.orderId}`,
+
+            date: new Date()
+
+          });
+
+
+          await wallet.save();
+
+        }
+
       }
 
+
+      // STOCK RESTORE
+
+      const product = await Product.findOne({
+
+        "variants._id":
+
+          orderItem.var_id
+
+      });
+
+
+      if (product) {
+
+        const variant = product.variants.id(
+
+          orderItem.var_id
+
+        );
+
+
+        if (variant) {
+
+          const sizeObj = variant.sizes.find(
+
+            s => s.size === orderItem.size
+
+          );
+
+
+          if (sizeObj) {
+
+            sizeObj.stock +=
+
+              orderItem.quantity;
+
+          }
+
+
+          await product.save();
+
+        }
+
+      }
+
+
+      // UPDATE ORDER TOTALS
+
+      order.subtotal =
+
+        totals.subtotal;
+
+
+      order.shipping =
+
+        totals.shipping;
+
+
+      order.taxes =
+
+        totals.taxes;
+
+
+      order.coupon_discount =
+
+        totals.couponDiscount;
+
+
+      order.total_price =
+
+        totals.total;
+
+
+      if (
+
+        totals.couponDiscount === 0
+
+      ) {
+
+        order.coupons_id = null;
+
+
+        order.total_discount =
+
+          order.offer_discount;
+
+      }
+
+      else {
+
+        order.total_discount =
+
+          order.offer_discount +
+
+          totals.couponDiscount;
+
+      }
+
+
+      await order.save();
+
     }
 
-    //  REJECT
-    else if (action === "reject") {
-      orderItem.status = "Return Rejected";
+
+    // REJECT
+
+    else if (
+
+      action === "reject"
+
+    ) {
+
+      orderItem.status =
+
+        "Return Rejected";
+
+
       await orderItem.save();
+
     }
 
-    await updateOrderStatus(orderItem.order_id);
-    const order = await Order.findById(orderItem.order_id);
-    res.redirect(`/admin/orders/${order.orderId}`);}
- catch (error) {
-    console.log(error);
-    res.redirect('/admin/orders');
+
+    // FINAL ORDER STATUS
+
+    await updateOrderStatus(
+
+      orderItem.order_id
+
+    );
+
+
+    return res.redirect(
+
+      `/admin/orders/${order.orderId}`
+
+    );
+
   }
+
+  catch (error) {
+
+    console.log(
+
+      "Handle Return Error:",
+
+      error
+
+    );
+
+
+    return res.redirect(
+
+      "/admin/orders"
+
+    );
+
+  }
+
 };
-
-
 
 
 

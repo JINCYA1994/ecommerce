@@ -15,9 +15,9 @@ const getProducts = async (req, res) => {
 
     let query = {  isDeleted: { $ne: true } };
 
-    // if (search) {
-    //   query.product_name = { $regex: search, $options: "i" };
-    // }
+   const message = req.session.message;
+
+      req.session.message = null;
       if (search) {
   query.product_name = {
     $regex: search.split(" ").join(".*"),
@@ -40,7 +40,7 @@ const getProducts = async (req, res) => {
       currentPage: page,
       totalPages,
       success: req.flash("success"),
-      error: req.flash("error")
+      error: req.flash("error"),message 
     });
   } catch (err) {
     console.error(err);
@@ -111,7 +111,7 @@ if (limit > size.stock) {
       return res.json({ success: false, message: "Update failed" });
     }
 
-    res.json({ success: true });
+    res.json({ success: true,message :'product updated' });
 
   } catch (error) {
     console.log("Update limit error:", error);
@@ -125,6 +125,7 @@ const listProduct=async(req,res)=>{
   try{
     const{productId}=req.params
     await Product.updateOne({_id:productId},{$set:{isListed:true}})
+       req.session.message = { type: 'success', text: 'Product listed successfully'}
     res.redirect('/admin/products')
   }catch(err){
     console.error(err)
@@ -137,6 +138,7 @@ const unlistProduct=async(req,res)=>{
   try{
     const{productId}=req.params
     await Product.updateOne({_id:productId},{$set:{isListed:false}})
+    req.session.message = { type: 'success', text: 'Product unlisted successfully'}
     res.redirect('/admin/products')
   }catch(err){
     console.error(err)
@@ -157,6 +159,7 @@ await Product.updateOne(
  { $set: { "variants.$[v].sizes.$[s].isListed": true } },
   { arrayFilters: [{ "v._id": variantId }, { "s._id": sizeId }] }
 );
+req.session.message = { type: 'success', text: 'Variant listed successfully'}
     res.redirect(`/admin/products?page=${page || 1}`)
   } catch (err) {
     console.error(err)
@@ -176,6 +179,8 @@ await Product.updateOne(
  { $set: { "variants.$[v].sizes.$[s].isListed": false } },
   { arrayFilters: [{ "v._id": variantId }, { "s._id": sizeId }] }
 );
+
+req.session.message = { type: 'success', text: 'Variant Unlisted successfully'}
     res.redirect(`/admin/products?page=${page || 1}`)
   } catch (err) {
     console.error(err)
@@ -185,26 +190,7 @@ await Product.updateOne(
 }
 
 
-//delete
 
-// const deleteSize=async(req,res)=>{
-//   try{
-//   const { productId, variantId, sizeId } = req.params;  
-
-// await Product.updateOne(
-//   {_id:productId },
-//  { $set: { "variants.$[v].sizes.$[s].isDeleted": true } },
-//   { arrayFilters: [{ "v._id": variantId }, { "s._id": sizeId }] }
-// );
-
-// console.log("Size deleted successfully")
-// res.redirect(`/admin/products?page=${page || 1}`)
-// }
-// catch(err){
-// console.log(err.message)
-// res.redirect('/admin/products')
-// }
-// }
 const deleteSize = async (req, res) => {
   try {
     const { productId, variantId, sizeId } = req.params;

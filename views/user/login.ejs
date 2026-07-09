@@ -136,7 +136,17 @@ body{
   cursor:pointer;
   margin-top:10px;
 }
+.input-wrapper{
+    margin-bottom:18px;
+}
 
+.error-text{
+    display:block;
+    color:#dc3545;
+    font-size:14px;
+    margin-top:4px;
+    margin-left:12px;
+}
 /* Google button – match login button */
 .google-btn{
   width:100%;
@@ -199,17 +209,37 @@ body{
       <form id="loginForm">
         <input type="hidden" id="message" value="<%= message %>" name="message"/>
 
-        <div class="input-group-ui">
-          <i class="fa-solid fa-envelope"></i>
-          <input type="text" id="email" name="email" placeholder="Enter your email">
-        </div>
-
+      
+<div class="input-wrapper">
     <div class="input-group-ui">
-  <i class="fa-solid fa-lock"></i>
-  <input type="password" id="password" name="password" placeholder="Enter your password">
-  <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
-</div>
+        <i class="fa-solid fa-envelope"></i>
+        <input
+            type="text"
+            id="email"
+            name="email"
+            placeholder="Enter your email">
+    </div>
 
+    <small id="emailError" class="error-text"></small>
+</div>
+<div class="input-wrapper">
+    <div class="input-group-ui">
+        <i class="fa-solid fa-lock"></i>
+
+        <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password">
+
+        <i
+            class="fa-solid fa-eye"
+            id="togglePassword"
+            style="cursor:pointer;"></i>
+    </div>
+
+    <small id="passwordError" class="error-text"></small>
+</div>
         <a href="/forgot-password" class="forgot">Forgot your password?</a>
 
         <button type="submit" class="btn-login-ui">Login</button>
@@ -241,31 +271,50 @@ document.addEventListener('DOMContentLoaded',function(){
 
 async function formvalidate(e) {
   
-  e.preventDefault()
-    var email =document.getElementById('email').value; 
-    var password =document.getElementById('password').value.trim(); 
+         e.preventDefault()
+var email =document.getElementById('email').value; 
+var password =document.getElementById('password').value.trim(); 
+document.getElementById("emailError").innerHTML = "";
+document.getElementById("passwordError").innerHTML = "";
 
-if(email === "" || password === "")
-     { 
-        
-  swal("All fields are required");
-  e.preventDefault(); 
-  return 
- } 
+let valid = true;
 
+if(email.trim() === ""){
 
-const emailformat=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-if(!emailformat.test(email)){
- swal( "Please enter a valid email address")
-  e.preventDefault(); 
-  return 
+    document.getElementById("emailError").innerHTML ="Email is required";
+    valid = false;
 }
 
-        if (password.length < 6) {
-          swal("Password must be at least 6 characters",);
-          e.preventDefault();
-          return 
-        }
+if(password.trim() === ""){
+
+    document.getElementById("passwordError").innerHTML =
+    "Password is required";
+
+    valid = false;
+}
+
+if(!valid){
+    return;
+}
+const emailformat=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if(!emailformat.test(email)){
+
+    document.getElementById("emailError").innerHTML =
+    "Please enter a valid email";
+
+    return;
+}
+
+
+if(password.length < 6){
+
+    document.getElementById("passwordError").innerHTML =
+    "Password must be at least 6 characters";
+
+    return;
+}
+    
 try{
 
 const response = await fetch("/login",{
@@ -278,16 +327,36 @@ body:JSON.stringify({email,password})
 
 const data = await response.json()
 
+// if(data.success){
+
+
 if(data.success){
 
-window.location.href="/home"
+    window.location.href="/home";
 
 }else{
 
-swal(data.message)
+    if(data.field==="email"){
+
+        document.getElementById("emailError").innerHTML =
+        data.message;
+
+    }
+
+    if(data.field==="password"){
+
+        document.getElementById("passwordError").innerHTML =
+        data.message;
+
+    }
+
+    if(!data.field){
+
+        swal(data.message);
+
+    }
 
 }
-
 }catch(error){
 
 swal("Something went wrong")

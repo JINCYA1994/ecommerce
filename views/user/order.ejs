@@ -97,6 +97,18 @@
           </div>
 
           <div class="col-md-3 text-end">
+<% if(order.status === "Payment Failed"){ %>
+<!-- 
+<button
+  class="btn btn-sm btn-danger  retry-payment-btn"
+  data-orderid="<%= order.orderId %>">
+  Retry Payment
+</button> -->
+ <button class="btn btn-sm btn-danger retry-btn"
+        onclick="retryPayment('<%= order.orderId %>')">
+   Retry Payment
+</button>
+<% } %>
 
             <a href="/orders/<%= order.orderId %>" class="btn btn-sm btn-outline-dark mb-2">
               View Details
@@ -287,8 +299,9 @@
     </div>
   </div>
 </div>
-
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+
 document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.cancel-btn').forEach(btn => {
@@ -318,6 +331,244 @@ document.querySelectorAll('.return-product-btn').forEach(btn => {
 
 
 </script>
+<!-- <script>
+
+document.querySelectorAll(".retry-payment-btn")
+.forEach(button => {
+
+  button.addEventListener("click", async function () {
+
+    const orderId = this.dataset.orderid;
+
+    // CREATE RETRY ORDER
+    const res = await fetch("/create-retry-payment", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({ orderId })
+
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+
+      Swal.fire({
+        icon: "error",
+        title: "Retry Failed"
+      });
+
+      return;
+    }
+
+    const options = {
+
+      key: data.keyId,
+
+      amount: data.amount,
+
+      currency: "INR",
+
+      order_id: data.razorpayOrderId,
+
+      handler: async function (response) {
+
+        // USE SAME VERIFY PAYMENT
+        const verifyRes = await fetch("/verify-payment", {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+
+            ...response,
+
+            orderId: orderId
+
+          })
+
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+
+          window.location.href =
+            "/order-success/" + verifyData.orderId;
+
+        } else {
+
+          Swal.fire({
+            icon: "error",
+            title: "Verification Failed"
+          });
+
+        }
+
+      }
+
+    };
+
+    const rzp = new Razorpay(options);
+
+    rzp.open();
+
+  });
+
+});
+
+</script> -->
+
+<script>
+function retryPayment(orderId) {
+
+  // ORDER ID CHECK
+  if (!orderId) {
+
+    alert("Invalid order");
+
+    window.location.href = "/orders";
+
+    return;
+
+  }
+
+  // CREATE NEW RAZORPAY ORDER
+  fetch("/payment/razorpay/create-order", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      orderId
+    })
+
+  })
+
+  .then(res => res.json())
+
+  .then(data => {
+
+    // CREATE ORDER FAILED
+    if (!data.success) {
+
+      alert("Unable to retry payment");
+
+      return;
+
+    }
+
+    // RAZORPAY OPTIONS
+    const options = {
+
+      key: data.keyId,
+
+      amount: data.amount,
+
+      currency: "INR",
+
+      order_id: data.razorpayOrderId,
+
+      name: "Your Store",
+
+      description: "Retry Payment",
+
+      // PAYMENT SUCCESS
+      handler: function (response) {
+
+        fetch("/verify-payment", {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+
+            razorpay_order_id:
+              response.razorpay_order_id,
+
+            razorpay_payment_id:
+              response.razorpay_payment_id,
+
+            razorpay_signature:
+              response.razorpay_signature,
+
+            orderId: orderId
+
+          })
+
+        })
+
+        .then(res => res.json())
+
+        .then(result => {
+
+          // PAYMENT VERIFIED
+          if (result.success) {
+
+            window.location.href =
+              "/order-success/" + orderId;
+
+          }
+
+          // VERIFICATION FAILED
+          else {
+
+            window.location.href =
+              "/order-failure?orderId=" + orderId;
+
+          }
+
+        });
+
+      },
+
+      // POPUP CLOSED
+      modal: {
+
+        ondismiss: function () {
+
+          window.location.href =
+            "/order-failure?orderId=" + orderId;
+
+        }
+
+      }
+
+    };
+
+    // OPEN RAZORPAY
+    const rzp = new Razorpay(options);
+
+    // PAYMENT FAILED EVENT
+    rzp.on("payment.failed", function (response) {
+
+      window.location.href =
+        "/order-failure?error=" +
+        encodeURIComponent(response.error.description) +
+        "&orderId=" + orderId;
+
+    });
+
+    rzp.open();
+
+  });
+
+}
+</script>
+
 
 
 <% if (orderMessage) { %>

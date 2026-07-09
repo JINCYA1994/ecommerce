@@ -1,0 +1,327 @@
+<%- include("../../views/partials/user/header") %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Wallet | FootChic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+  <style>
+
+    body{
+      background:#f6f2ea;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    .wallet-wrapper{
+      padding:50px 0;
+      min-height:100vh;
+    }
+
+    .wallet-title{
+      font-size:48px;
+      font-weight:700;
+      margin-bottom:10px;
+    }
+
+    .title-line{
+      width:170px;
+      height:3px;
+      background:#d4a24c;
+      margin-bottom:40px;
+    }
+
+    .wallet-card{
+      background:#fff;
+      border-radius:25px;
+      padding:60px 40px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.08);
+      text-align:center;
+      margin-bottom:40px;
+    }
+
+    .wallet-card h6{
+      color:#8b8b8b;
+      font-size:24px;
+      margin-bottom:25px;
+    }
+
+    .wallet-balance{
+      font-size:70px;
+      font-weight:700;
+      color:#d4a24c;
+    }
+
+    .history-card{
+      background:#fff;
+      border-radius:25px;
+      padding:35px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.08);
+    }
+
+    .history-title{
+      font-size:38px;
+      font-weight:700;
+      margin-bottom:10px;
+    }
+
+    .history-line{
+      width:210px;
+      height:3px;
+      background:#d4a24c;
+      margin-bottom:35px;
+    }
+
+    .table thead{
+      background:#111;
+      color:#fff;
+    }
+
+    .table th{
+      padding:18px;
+      font-size:15px;
+      border:none;
+    }
+
+    .table td{
+      padding:22px 18px;
+      vertical-align:middle;
+      font-size:17px;
+    }
+
+    .credit{
+      color:#27ae60;
+      font-weight:700;
+    }
+
+    .debit{
+      color:#e74c3c;
+      font-weight:700;
+    }
+
+    .status{
+      color:#666;
+      font-weight:500;
+    }
+
+    .empty-history{
+      text-align:center;
+      padding:40px 0;
+      color:#777;
+      font-size:20px;
+    }
+
+    @media(max-width:768px){
+
+      .wallet-title{
+        font-size:35px;
+      }
+
+      .wallet-balance{
+        font-size:42px;
+      }
+
+      .history-title{
+        font-size:28px;
+      }
+
+      .table{
+        font-size:14px;
+      }
+
+      .table td{
+        padding:14px 8px;
+      }
+
+      .table th{
+        padding:14px 8px;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container wallet-wrapper">
+
+  <h1 class="wallet-title">My Wallet</h1>
+  <div class="title-line"></div>
+
+  <!-- WALLET BALANCE -->
+
+  <div class="wallet-card">
+
+    <h6>Available Balance</h6>
+
+    <div class="wallet-balance">
+      ₹<%= wallet.balance.toFixed(2) %>
+    </div>
+
+  </div>
+
+  <!-- TRANSACTION HISTORY -->
+
+  <div class="history-card">
+
+    <h2 class="history-title">Transaction History</h2>
+    <div class="history-line"></div>
+
+    <% if(wallet.transactions.length > 0){ %>
+
+      <div class="table-responsive">
+
+        <table class="table align-middle">
+
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>DESCRIPTION</th>
+              <th>TYPE</th>
+              <th>AMOUNT</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <% wallet.transactions.forEach(transaction => { %>
+
+              <tr>
+
+                <td>
+                  <%= new Date(transaction.date).toLocaleDateString('en-GB',{
+                    day:'2-digit',
+                    month:'short',
+                    year:'numeric'
+                  }) %>
+                </td>
+
+                <td>
+                  <%= transaction.description %>
+                </td>
+
+                <td>
+                  <% if(transaction.type === "credit"){ %>
+
+                    <span class="credit">Credited</span>
+
+                  <% } else { %>
+
+                    <span class="debit">Debited</span>
+
+                  <% } %>
+                </td>
+
+                <td>
+
+                  <% if(transaction.type === "credit"){ %>
+
+                    <span class="credit">
+                      +₹<%= transaction.amount.toFixed(2) %>
+                    </span>
+
+                  <% } else { %>
+
+                    <span class="debit">
+                      -₹<%= transaction.amount.toFixed(2) %>
+                    </span>
+
+                  <% } %>
+
+                </td>
+
+                <td>
+                  <span class="status">Completed</span>
+                </td>
+
+              </tr>
+
+            <% }) %>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    <% } else { %>
+
+      <div class="empty-history">
+        No transactions found
+      </div>
+
+    <% } %>
+
+  </div>
+
+</div>
+<% if(totalPages > 1){ %>
+
+<nav class="mt-4">
+
+  <ul class="pagination justify-content-center">
+
+    <% if(currentPage > 1){ %>
+
+      <li class="page-item">
+
+        <a class="page-link"
+
+        href="/wallet?page=<%= currentPage - 1 %>">
+
+          Previous
+
+        </a>
+
+      </li>
+
+    <% } %>
+
+
+    <% for(let i=1; i<=totalPages; i++){ %>
+
+      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+
+        <a class="page-link"
+
+        href="/wallet?page=<%= i %>">
+
+          <%= i %>
+
+        </a>
+
+      </li>
+
+    <% } %>
+
+
+    <% if(currentPage < totalPages){ %>
+
+      <li class="page-item">
+
+        <a class="page-link"
+
+        href="/wallet?page=<%= currentPage + 1 %>">
+
+          Next
+
+        </a>
+
+      </li>
+
+    <% } %>
+
+  </ul>
+
+</nav>
+
+<% } %>
+</body>
+</html>
+
+<%- include("../../views/partials/user/footer") %>

@@ -20,6 +20,35 @@ const orderSchema = new Schema({
     ref: 'Address',
     required: true
   },
+subtotal: {
+  type: Number,
+  default: 0
+},
+shipping: {
+  type: Number,
+  default: 0
+},
+
+taxes: {
+  type: Number,
+  default: 0
+},
+
+coupon_discount: {
+  type: Number,
+  default: 0
+},
+
+offer_discount: {
+  type: Number,
+  default: 0
+},
+
+total_discount: {
+  type: Number,
+  default: 0
+},
+
 
   total_price: {
     type: Number,
@@ -38,12 +67,13 @@ const orderSchema = new Schema({
 
   payment_id: {
     type: Schema.Types.ObjectId,
-    ref: 'Payment'
+    ref: 'Payment',
+     default: null
   },
 
   status: {
     type: String,
-    enum: ["Processing", "Shipped", "Delivered", "Cancelled","Returned","Partially Delivered","Partially Delivered"],
+    enum: ["Processing", "Shipped", "Delivered", "Cancelled","Returned", "Partially Returned","Partially Delivered","Payment Failed"],
     default: "Processing"
   },
 

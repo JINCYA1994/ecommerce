@@ -11,6 +11,7 @@ const passport=require('./config/passport')
 const flash = require("connect-flash");
 const methodOverride = require('method-override');
 const cartCount = require('./middlewares/cartCount');
+const wishlistCount=require('./middlewares/wishlistCount')
 
 
 connectDB()
@@ -39,6 +40,7 @@ app.use(
   })
 );
 app.use(cartCount);
+app.use(wishlistCount)
 app.use(passport.initialize())
 app.use(passport.session())
 

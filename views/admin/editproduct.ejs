@@ -158,11 +158,7 @@
             <div class="text-danger small mt-1" id="priceError"></div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Discount Price</label>
-            <input type="number" class="form-control" name="discount_price" id="discountPrice" value="<%= variant.discount_price %>">
-            <div class="text-danger small mt-1" id="discountPriceError"></div>
-          </div>
+        
 
           <hr>
           <h4 class="mb-3 text-success">Selected Size</h4>
@@ -408,7 +404,7 @@ editBtn.style.display='none'
     const category = document.getElementById('category').value.trim();
     const color = document.getElementById('color').value.trim();
     const price = document.getElementById('price').value.trim();
-    const discountPrice = document.getElementById('discountPrice').value.trim();
+    // const discountPrice = document.getElementById('discountPrice').value.trim();
     const size = document.getElementById('size').value.trim();
     const stock = document.getElementById('stock').value.trim();
 
@@ -417,7 +413,7 @@ editBtn.style.display='none'
     document.getElementById('categoryError').textContent = '';
     document.getElementById('colorError').textContent = '';
     document.getElementById('priceError').textContent = '';
-    document.getElementById('discountPriceError').textContent = '';
+    // document.getElementById('discountPriceError').textContent = '';
     document.getElementById('sizeError').textContent = '';
     document.getElementById('stockError').textContent = '';
     document.getElementById('imageError').textContent = '';
@@ -452,10 +448,10 @@ editBtn.style.display='none'
       valid = false;
     }
 
-    if (discountPrice && (Number(discountPrice) > Number(price) || Number(discountPrice) < 0)) {
-      document.getElementById('discountPriceError').textContent = "Invalid discount price";
-      valid = false;
-    }
+    // if (discountPrice && (Number(discountPrice) > Number(price) || Number(discountPrice) < 0)) {
+    //   document.getElementById('discountPriceError').textContent = "Invalid discount price";
+    //   valid = false;
+    // }
 
     if (!stock || Number(stock) < 0 || Number(stock) > 100) {
       document.getElementById('stockError').textContent = "Stock must be between 0 and 100";

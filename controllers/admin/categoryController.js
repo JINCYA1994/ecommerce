@@ -1,42 +1,5 @@
  const Category=require('../../models/categorySchema')
-const Product = require('../../models/productSchema');
-// const getcategory=async(req,res)=>{
-// try {
-//     let search = req.query.search || "";
-//     let page = parseInt(req.query.page) || 1;
-//     let limit = 5;
-
-    
-//     let query = { isDeleted: { $ne: true } };
-//     if (search) {
-//       query.name = { $regex: search, $options: "i" }; 
-//     }
-
-  
-//     const totalCategories = await Category.countDocuments(query);
-
- 
-//     const categories = await Category.find(query)
-//       .skip((page - 1) * limit)
-//       .limit(limit)
-//       .sort({ createdAt: -1 });
-
-
-//     const totalPages = Math.ceil(totalCategories / limit);
-
-//     res.render('category', {
-//       categories,
-//       search,
-//       currentPage: page,
-//       totalPages,
-//   success: req.flash('success'),
-//   error: req.flash('error')
-//     });
-//   } catch (err) {
-//     console.error("Error loading categories:", err);
-//     res.status(500).send("Server Error");
-//   }
-// };
+ const Product = require('../../models/productSchema');
 
 
 const getcategory = async (req, res) => {

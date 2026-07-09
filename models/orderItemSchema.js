@@ -8,7 +8,11 @@ const orderItemSchema = new Schema({
     ref: 'Order',
     required: true
   },
-
+   product_id:{
+        type:Schema.Types.ObjectId,
+        ref:"Product",
+        required:true
+    },
   var_id: {
     type: Schema.Types.ObjectId,
   
@@ -39,7 +43,24 @@ size:{type:Number,required:true},
     type: Number,
     required: true
   },
+coupon_share: {
+  type: Number,
+  default: 0
+},
 
+tax_share: {
+  type: Number,
+  default: 0
+},
+
+final_amount: {
+  type: Number,
+  default: 0
+},
+refund_amount: {
+    type: Number,
+    default: 0
+},
   price: {
     type: Number,
     required: true

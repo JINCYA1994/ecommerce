@@ -1,410 +1,540 @@
-
-
 <%-include("../../views/partials/user/header")%>
 
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Signup | FootChic</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- CSS Links -->
-  <link rel="stylesheet" href="/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-papX2UML7TRO7kDk4UfBkx9Uj7DvuP+nayKYBy7KIlEw6cUwzbf7tMoD7g8bkBl9mrUPex8Z/YrbRu6f8j8Ig==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <!DOCTYPE html>
+  <html lang="en">
 
-   <style>
-body {
-  background: #f5f5f5;
-  font-family: Arial, sans-serif;
+  <head>
+    <meta charset="UTF-8">
+    <title>Signup | FootChic</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSS Links -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      integrity="sha512-papX2UML7TRO7kDk4UfBkx9Uj7DvuP+nayKYBy7KIlEw6cUwzbf7tMoD7g8bkBl9mrUPex8Z/YrbRu6f8j8Ig=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <style>
+      body {
+        background: #f5f5f5;
+        font-family: Arial, sans-serif;
+      }
+
+      /* MAIN WRAPPER */
+      .login-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 25px;
+      }
+
+      /* CARD */
+      .login-card {
+        width: 950px;
+        max-width: 100%;
+        min-height: 550px;
+        display: flex;
+        border-radius: 25px;
+        overflow: hidden;
+        background: #fff;
+        border: 2px solid #000;
+        box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      /* LEFT PANEL */
+      .login-left {
+        width: 45%;
+        background: linear-gradient(135deg, #111, #444);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 40px 25px;
+      }
+
+      .brand h1 {
+        font-size: 34px;
+        margin-top: 15px;
+        font-weight: 800;
+        color: #fff;
+      }
+
+      .brand p {
+        font-size: 14px;
+        opacity: 0.85;
+        margin-top: 10px;
+        line-height: 1.6;
+        color: #fff;
+      }
+
+      /* LOGO CIRCLE */
+      .logo-circle {
+        width: 95px;
+        height: 95px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 12px;
+        box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.25);
+      }
+
+      .logo-circle img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+      }
+
+      /* RIGHT PANEL */
+      .signup-right {
+        width: 55%;
+        padding: 50px 45px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: #fff;
+      }
+
+      .signup-right h2 {
+        text-align: center;
+        font-weight: 800;
+        margin-bottom: 5px;
+        font-size: 28px;
+      }
+
+      .signup-right small {
+        display: block;
+        text-align: center;
+        color: #777;
+        margin-bottom: 25px;
+        font-size: 14px;
+      }
+
+      /* INPUT BOX */
+      .input-box {
+        background: #f1f1f1;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        padding: 0px 15px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        transition: 0.2s;
+      }
+
+      .input-box:focus-within {
+        border: 1px solid #000;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.15);
+      }
+
+      .input-box i {
+        font-size: 16px;
+        margin-right: 10px;
+        color: #444;
+      }
+
+      .input-box input {
+        border: none;
+        outline: none;
+        background: transparent;
+        width: 100%;
+        height: 52px;
+        font-size: 14px;
+      }
+
+      /* SIGNUP BUTTON */
+      .btn-signup {
+        width: 100%;
+        height: 52px;
+        font-weight: 700;
+        background: #c99a5b;
+        color: #fff;
+        border-radius: 12px;
+        border: none;
+        margin-top: 10px;
+        transition: 0.3s;
+      }
+
+      .btn-signup:hover {
+        background: #222;
+        transform: scale(1.02);
+      }
+
+      /* LOGIN LINK */
+      .login-link {
+        text-align: center;
+        margin-top: 18px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        color: #000;
+        display: block;
+      }
+
+      .login-link:hover {
+        text-decoration: underline;
+      }
+
+      /* DIVIDER */
+      .divider {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .divider:not(:empty)::before {
+        margin-right: 10px;
+      }
+
+      .divider:not(:empty)::after {
+        margin-left: 10px;
+      }
+
+      /* GOOGLE BUTTON */
+      .google-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 12px;
+        font-weight: 700;
+        color: #444;
+        background-color: #fff;
+        text-decoration: none;
+        transition: 0.3s;
+      }
+
+      .google-btn:hover {
+        box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.15);
+        transform: scale(1.01);
+      }
+
+      .google-btn img {
+        width: 22px;
+        height: 22px;
+        margin-right: 10px;
+      }
+
+      /* RESPONSIVE */
+      @media(max-width: 768px) {
+        .login-card {
+          flex-direction: column;
+          min-height: auto;
+        }
+
+        .login-left {
+          width: 100%;
+          padding: 35px 20px;
+        }
+
+        .signup-right {
+          width: 100%;
+          padding: 40px 25px;
+        }
+
+        .brand h1 {
+          font-size: 26px;
+        }
+      }
+
+      .input-wrapper {
+        margin-bottom: 18px;
+      }
+
+ .error-text{
+    display:block;
+    color:#dc3545 !important;
+    font-size:13px;
+    margin-top:4px;
+    margin-left:12px;
+    text-align:left !important;
+    margin-bottom:0 !important;
 }
+    </style>
+  </head>
 
-/* MAIN WRAPPER */
-.login-wrapper {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 25px;
-}
-
-/* CARD */
-.login-card {
-  width: 950px;
-  max-width: 100%;
-  min-height: 550px;
-  display: flex;
-  border-radius: 25px;
-  overflow: hidden;
-  background: #fff;
-  border: 2px solid #000;
-  box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.2);
-}
-
-/* LEFT PANEL */
-.login-left {
-  width: 45%;
-  background: linear-gradient(135deg, #111, #444);
-  color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 40px 25px;
-}
-
-.brand h1 {
-  font-size: 34px;
-  margin-top: 15px;
-  font-weight: 800;
-  color: #fff;
-}
-
-.brand p {
-  font-size: 14px;
-  opacity: 0.85;
-  margin-top: 10px;
-  line-height: 1.6;
-  color: #fff;
-}
-
-/* LOGO CIRCLE */
-.logo-circle {
-  width: 95px;
-  height: 95px;
-  background: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto 12px;
-  box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.25);
-}
-
-.logo-circle img {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-}
-
-/* RIGHT PANEL */
-.signup-right {
-  width: 55%;
-  padding: 50px 45px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: #fff;
-}
-
-.signup-right h2 {
-  text-align: center;
-  font-weight: 800;
-  margin-bottom: 5px;
-  font-size: 28px;
-}
-
-.signup-right small {
-  display: block;
-  text-align: center;
-  color: #777;
-  margin-bottom: 25px;
-  font-size: 14px;
-}
-
-/* INPUT BOX */
-.input-box {
-  background: #f1f1f1;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0px 15px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  transition: 0.2s;
-}
-
-.input-box:focus-within {
-  border: 1px solid #000;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.15);
-}
-
-.input-box i {
-  font-size: 16px;
-  margin-right: 10px;
-  color: #444;
-}
-
-.input-box input {
-  border: none;
-  outline: none;
-  background: transparent;
-  width: 100%;
-  height: 52px;
-  font-size: 14px;
-}
-
-/* SIGNUP BUTTON */
-.btn-signup {
-  width: 100%;
-  height: 52px;
-  font-weight: 700;
-  background: #c99a5b;
-  color: #fff;
-  border-radius: 12px;
-  border: none;
-  margin-top: 10px;
-  transition: 0.3s;
-}
-
-.btn-signup:hover {
-  background: #222;
-  transform: scale(1.02);
-}
-
-/* LOGIN LINK */
-.login-link {
-  text-align: center;
-  margin-top: 18px;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  color: #000;
-  display: block;
-}
-
-.login-link:hover {
-  text-decoration: underline;
-}
-
-/* DIVIDER */
-.divider {
-  margin: 20px 0;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #888;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  border-bottom: 1px solid #ddd;
-}
-
-.divider:not(:empty)::before {
-  margin-right: 10px;
-}
-
-.divider:not(:empty)::after {
-  margin-left: 10px;
-}
-
-/* GOOGLE BUTTON */
-.google-btn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  padding: 12px;
-  font-weight: 700;
-  color: #444;
-  background-color: #fff;
-  text-decoration: none;
-  transition: 0.3s;
-}
-
-.google-btn:hover {
-  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.15);
-  transform: scale(1.01);
-}
-
-.google-btn img {
-  width: 22px;
-  height: 22px;
-  margin-right: 10px;
-}
-
-/* RESPONSIVE */
-@media(max-width: 768px) {
-  .login-card {
-    flex-direction: column;
-    min-height: auto;
-  }
-
-  .login-left {
-    width: 100%;
-    padding: 35px 20px;
-  }
-
-  .signup-right {
-    width: 100%;
-    padding: 40px 25px;
-  }
-
-  .brand h1 {
-    font-size: 26px;
-  }
-}
+  <body>
 
 
-   </style>
-</head>
+    <div class="login-wrapper">
+      <div class="login-card">
 
-<body>
+        <!-- LEFT PANEL -->
+        <div class="login-left">
+          <div class="brand">
+            <div class="logo-circle">
+              <img src="/img/footchiclogo.png" alt="Footchic Logo">
+            </div>
+            <h1>Welcome to FootChic</h1>
+            <p>
+              Create your account and explore premium footwear collections.
+              Stylish, comfortable and trendy designs waiting for you!
+            </p>
+          </div>
+        </div>
 
 
- <div class="login-wrapper">
-  <div class="login-card">
 
-    <!-- LEFT PANEL -->
-    <div class="login-left">
-      <div class="brand">
-      <div class="logo-circle">
-       <img src="/img/footchiclogo.png" alt="Footchic Logo">
-       </div>
-           <h1>Welcome to FootChic</h1>
-          <p>
-            Create your account and explore premium footwear collections.
-            Stylish, comfortable and trendy designs waiting for you!
-          </p>
+        <!-- RIGHT PANEL -->
+        <div class="signup-right">
+          <h2>Create Account</h2>
+          <small>Signup to continue shopping</small>
+          <form id="signupForm">
+            <input type="hidden" id="message" value="<%= message %>" name="message" />
+
+
+            <div class="input-wrapper">
+              <div class="input-box">
+                <i class="fa-solid fa-user"></i>
+
+                <input type="text" id="username" name="username" placeholder="Username">
+              </div>
+
+              <small id="usernameError" class="error-text"></small>
+            </div>
+
+
+            <div class="input-wrapper">
+              <div class="input-box">
+                <i class="fa-solid fa-envelope"></i>
+
+                <input type="text" id="email" name="email" placeholder="Email">
+              </div>
+
+              <small id="emailError" class="error-text"></small>
+            </div>
+
+            <div class="input-wrapper">
+
+              <div class="input-box">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <input type="password" id="password" name="password" placeholder="Enter your password">
+
+                <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
+
+              </div>
+
+              <small id="passwordError" class="error-text"></small>
+
+            </div>
+
+            <div class="input-wrapper">
+
+              <div class="input-box">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password">
+
+                <i class="fa-solid fa-eye" id="toggleConfirmPassword" style="cursor:pointer;"></i>
+
+              </div>
+
+              <small id="confirmPasswordError" class="error-text"></small>
+
+            </div>
+            <div class="input-box">
+              <i class="fa-solid fa-user-plus"></i>
+              <input type="text" name="referredBy" class="form-control" placeholder=" Enter Referral Code (Optional)">
+
+            </div>
+
+            <button type="submit" class="btn-signup">Signup</button>
+          </form>
+
+          <a href="/login" class="login-link">Already have an account? Login</a>
+
+          <div class="divider">OR</div>
+
+          <a href="/auth/google" class="google-btn">
+            <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Google Icon" />
+            Continue with Google
+          </a>
+
+        </div>
       </div>
     </div>
 
+  </body>
 
-   
-      <!-- RIGHT PANEL -->
-      <div class="signup-right">
-       <h2>Create Account</h2>
-        <small>Signup to continue shopping</small>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const message = document.getElementById('message').value;
+      if (message) {
+        swal(message);
+      }
+      document.getElementById("signupForm").addEventListener("submit", formvalidate);})
 
-        <form action="/signup" method="POST">
-          <input type="hidden" id="message" value="<%= message %>" name="message"/>
+    
+      async function formvalidate(e) {
+        e.preventDefault()
+        document.getElementById("usernameError").innerHTML = "";
+        document.getElementById("emailError").innerHTML = "";
+        document.getElementById("passwordError").innerHTML = "";
+        document.getElementById("confirmPasswordError").innerHTML = "";
 
-          <div class="input-box">
-            <i class="fa-solid fa-user"></i>
-            <input type="text" id="username" name="username" placeholder="Username">
-          </div>
+        const username = document.getElementById("username").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const confirmPassword = document.getElementById("confirmPassword").value.trim();
+        const referredBy = document.querySelector("[name='referredBy']").value.trim();
+        let valid = true;
 
-          <div class="input-box">
-            <i class="fa-solid fa-envelope"></i>
-            <input type="text" id="email" name="email" placeholder="Email">
-          </div>
+        if (username === "") {
+          document.getElementById("usernameError").innerHTML = "Username is required";
+          valid = false;
+        }
 
-          <!-- <div class="input-box">
-            <i class="fa-solid fa-lock"></i>
-            <input type="password" id="password" name="password" placeholder="Password">
-          </div> -->
+        if (email === "") {
+          document.getElementById("emailError").innerHTML = "Email is required";
+          valid = false;
+        }
 
-    <div class="input-box">
-  <i class="fa-solid fa-lock"></i>
-  <input type="password" id="password" name="password" placeholder="Enter your password">
-  <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
-</div>
+        if (password === "") {
+          document.getElementById("passwordError").innerHTML = "Password is required";
+          valid = false;
+        }
 
-        <div class="input-box">
-  <i class="fa-solid fa-lock"></i>
-  <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password">
-  <i class="fa-solid fa-eye" id="togglePassword" style="cursor:pointer;"></i>
-</div>      
-          <!-- <div class="input-box">
-            <i class="fa-solid fa-lock"></i>
-            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password">
-          </div> -->
+        if (confirmPassword === "") {
+          document.getElementById("confirmPasswordError").innerHTML = "Confirm Password is required";
+          valid = false;
+        }
 
-          <button type="submit" class="btn-signup">Signup</button>
-        </form>
+        if (!valid) {
+          e.preventDefault();
+          return false;
+        }
 
-        <a href="/login" class="login-link">Already have an account? Login</a>
+        const emailformat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        <div class="divider">OR</div>
+        if (!emailformat.test(email)) {
+          document.getElementById("emailError").innerHTML = "Please enter a valid email";
+          e.preventDefault();
+          return false;
+        }
 
-        <a href="/auth/google" class="google-btn">
-          <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Google Icon" />
-          Continue with Google
-        </a>
+        const strongpassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
 
-      </div>
-    </div>
-  </div>
+        if (!strongpassword.test(password)) {
+          document.getElementById("passwordError").innerHTML =
+            "Password must contain uppercase, lowercase, number & special character";
+          e.preventDefault();
+          return false;
+        }
 
-</body>
-
-<script>
-document.addEventListener('DOMContentLoaded',function(){
-  const message = document.getElementById('message').value; 
-    if (message) {
-         swal(message); 
-         }
-  document.querySelector('form').addEventListener('submit', formvalidate); });
-
-  function formvalidate(e) { 
-    var username=document.getElementById('username').value.trim()
-    var email =document.getElementById('email').value.trim(); 
-    var password =document.getElementById('password').value.trim(); 
-    var confirmPassword = document.getElementById('confirmPassword').value.trim(); 
-    if (username=== ""||email === "" || password === "" || confirmPassword === "")
-     { 
-        
-  swal("All fields are required");
-  e.preventDefault(); 
-  return false
- } 
-const emailformat=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-if(!emailformat.test(email)){
- swal( "Please enter a valid email address")
-  e.preventDefault(); 
-  return false
-}
-
-if (password !== confirmPassword) {
-  swal("Passwords do not match");
-   e.preventDefault(); 
-  
-  return false; 
-  } 
-  const strongpassword=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
-if(!strongpassword.test(password)){
-swal("Password must have at least:\n- 1 uppercase letter\n- 1 lowercase letter\n- 1 number\n- 1 special character\n- Minimum 6 characters");
-  e.preventDefault(); 
-  return false
-}
-
-  return true;
-   
-  }
-  
-const togglePassword = document.getElementById("togglePassword");
-const password = document.getElementById("password");
-
-togglePassword.addEventListener("click", function () {
-
-  const type = password.getAttribute("type") === "password" ? "text" : "password";
-  password.setAttribute("type", type);
-
-  this.classList.toggle("fa-eye");
-  this.classList.toggle("fa-eye-slash");
-
-});
+        if (password !== confirmPassword) {
+          document.getElementById("confirmPasswordError").innerHTML =
+            "Passwords do not match";
+          e.preventDefault();
+          return false;
+        }
 
 
 
+        try {
+          const response = await fetch("/signup", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              username,
+              email,
+              password,
+              confirmPassword,
+              referredBy
+            })
+          });
 
-</script>
+          const data = await response.json();
+
+          if (data.success) {
+
+            window.location.href =
+              `/verify-otp?email=${data.email}&purpose=${data.purpose}`;
+
+          } else {
+
+            if (data.field) {
+              document.getElementById(data.field + "Error").innerHTML = data.message;
+            } else {
+              swal(data.message);
+            }
+
+          }
+        }
+
+        catch (error) {
+
+          swal("Something went wrong")
+
+        }
 
 
 
 
+      }
 
-</html>
 
 
-<%-include("../../views/partials/user/footer")%>
+      const togglePassword = document.getElementById("togglePassword");
+      const password = document.getElementById("password");
+
+      togglePassword.addEventListener("click", function () {
+
+        const type = password.type === "password" ? "text" : "password";
+
+        password.type = type;
+
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+
+      });
+
+
+      const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+      const confirmPassword = document.getElementById("confirmPassword");
+
+      toggleConfirmPassword.addEventListener("click", function () {
+
+        const type = confirmPassword.type === "password" ? "text" : "password";
+
+        confirmPassword.type = type;
+
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+
+      });
+
+
+  </script>
+
+
+
+
+
+  </html>
+
+
+  <%-include("../../views/partials/user/footer")%>
